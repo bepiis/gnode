@@ -42,6 +42,9 @@ int main()
     double jdata[25] = {2, 5, 9, 11, 7, 5, 3, 6, -2, 5, 9, 6, 7, 3, 1, 11, -2, 3, 1, 3, 7, 5, 1, 3, 4};
     
     double hh_data[9] = {2, -1, -2, -4, 6, 3, -4, -2, 8};
+    double hess_data[9] = {-149, -50, -154, 537, 180, 546, -27, -9, -25};
+    
+    matrix<double> hess_test(3, 3, hess_data);
     
     matrix<double> HH_test(3, 3, hh_data);
     
@@ -53,7 +56,7 @@ int main()
     
     //matrix<double> scol = Aj.sub_col(1, 4, 1);
     //pprint_matrix(&scol);
-    
+  /*
     matrix<double> HH_cpy(HH_test);
     auto res = transformation::house::householder(HH_test);
     
@@ -63,18 +66,58 @@ int main()
     pprint_matrix(&res.second);
     
     std::cout << "\n\n";
-    matrix<double> Q = transformation::house::Qaccumulate(res.first, res.second, res.first.cols());
+    matrix<double> Q = transformation::house::Qaccumulate(res.first, res.second, res.first.cols(), 0);
     
     pprint_matrix(&Q);
     std::cout << "\n\n";
+    */
+    matrix<double> randM = matrix<double>::random_dense_matrix(10,10, 1000, -1000);
     
-    matrix<double> randM = matrix<double>::random_matrix(10,10, 1000, -1000);
+    randM.print();
     
-    auto hess = transformation::house::hessenberg(HH_cpy);
+    auto hess = transformation::house::hessenberg(randM);
     
-    pprint_matrix(&hess.first);
+    std::cout << "hess = \n";
+    hess.first.print();
     
-    transformation::house::Qaccumulate(hess.first, hess.second, hess.first.cols());
+    //pprint_matrix(&hess.first);
+    
+    matrix<double> Qrand = transformation::house::Qaccumulate(hess.first, hess.second, hess.first.cols(), 1);
+    
+    for(size_t c=0; c < hess.first.cols() - 2; c++)
+    {
+        for(size_t r = c + 2; r < hess.first.rows(); r++)
+        {
+            hess.first(r, c) = 0.0;
+        }
+    }
+    
+    hess.first.print();
+    
+    Qrand.print();
+    
+    matrix<double> QrandT = Qrand.transpose();
+    
+    matrix<double> m1 = mat_mul_alg1(&Qrand, &hess.first);
+    matrix<double> m2 = mat_mul_alg1(&m1, &QrandT);
+    
+    matrix<double> Ih = mat_mul_alg1(&QrandT, &Qrand);
+    
+    for(size_t r = 0; r < Ih.rows(); r++)
+    {
+        for(size_t c=0; c < Ih.cols(); c++)
+        {
+            if(Ih(r, c) < 0.00001)
+            {
+                Ih(r, c) = 0.0;
+            }
+        }
+    }
+    
+    m2.print();
+    
+    Ih.print();
+    
     
    // transformation::house::forward_accumulate(res.first, res.second);
     
@@ -97,6 +140,9 @@ int main()
     std::cout << "\n\n";
     pprint_matrix(&outgs.second);
     std::cout << "\n\n";
+    
+    matrix<double> k(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
+    k.print();
     //pprint_matrix(&hv);
 }
     

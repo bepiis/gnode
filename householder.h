@@ -23,19 +23,6 @@ namespace transformation
 namespace house
 {
 
-template<class T>
-void ppprint_matrix(matrix<T>& mat)
-{
-    for(int i=0; i < mat.rows(); i++)
-    {
-        for(int j=0; j < mat.cols(); j++)
-        {
-            std::cout << mat.get_value(i, j) << "\t";
-        }
-        std::cout << "\n";
-    }
-}
-
 /*
  * Determines the vector v and constant beta from input x = cvec such that
  * for matrix P = I(m) - beta*v*(v^T), Px = norm2(x)I(:, 1) = norm2(x)e1
@@ -142,15 +129,28 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
     return std::make_pair(std::reference_wrapper(A), B);
 }
 
+void colpiv_householder(matrix<double>& A)
+{
+    
+}
+
 /*
  * Accumulates the matrix Q = Q0 * Q1 * ... Qn
  * from its factorized form, being the lower triangle of R, and B
  * where the LT of R contains essential house vectors, and B is a vector
  * of corresponding beta coeffs
  *
+ * Works with QR and QH (hessenberg) reductions.
+ *      For QR reductions, col_bias = 0
+ *      For QH reductions, col_bias = 1
+ *          In hessenburg reduction, the jth house vector gets stored in col j - 1
+ *          since col j is one index too short to store the entire vector.
+ *
+ * Q *= Qj for j = 0, 1, 2, ... n - 1
+ *
  * TODO: work with k optimization
  */
-matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, size_t k)
+matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, size_t k, size_t col_bias)
 {
     size_t M = R.rows();
     size_t N = R.cols();
@@ -165,15 +165,25 @@ matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, siz
     
     matrix<double> Qsub;
     
-    for(int j = n - 2; j >= 0; j--)
+    for(int j = n - 2 - (int)col_bias; j >= 0; j--)
     {
-        vhouse = matrix<double>(M - j, 1);
+        vhouse = matrix<double>(M - j - col_bias, 1);
         vhouse(0, 0) = 1.0;
         
         //matrix<double> Ajp1 = R.sub_col(j + 1, M - j - 1, j);
-        vhouse.set_sub_col(R.sub_col(j + 1, M - j - 1, j), 1, 0);
+        vhouse.set_sub_col(R.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j), 1, 0);
         
-        Qsub = Q.sub_matrix(j, Q.rows()-j, j , Q.cols()-j);
+        //std::cout << "vhouse" << j << " = \n";
+        //vhouse.print();
+
+        
+        Qsub = Q.sub_matrix(j + col_bias, Q.rows()-j - col_bias, j + col_bias , Q.cols()-j - col_bias);
+        
+        //std::cout << "Qsub" << j << " = \n";
+        //Qsub.print();
+        
+        //std::cout << "beta" << j << " = " << B(0, j) <<  "\n";
+        
         
         //double beta = 2/(1+matrix<double>::col_norm2sq_from(Ajp1, 0, 0));
         // 2mn + 2n FLOPS
@@ -182,8 +192,11 @@ matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, siz
         // Q <- (Im - beta*v*v^T)Q
         Qsub -= B(0, j) * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
         
+        //std::cout << "Qsubp" << j << " = \n";
+        //Qsub.print();
+        
 
-        Q.set_sub_matrix(Qsub, j, j);
+        Q.set_sub_matrix(Qsub, j + col_bias, j + col_bias);
         
     }
     
@@ -191,16 +204,25 @@ matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, siz
     delete vhouse.base_ptr();
     delete Qsub.base_ptr();
     
+    
     return Q;
 }
 
-// TODO: Allow for Qaccumulate to obtain Q for hessenberg decomp.
+
+/*
+ * Computes an upper hessenberg reduction for a N x N square matrix A
+ * and stores essential house vectors in the zeroed portion of A (lower hess))
+ * note that house vectors will be offset to the left by one column since A becomes upper hessenberg.
+ * Thus, if Qaccumulate needs to be used, col_bias = 1
+ *
+ * A <- QAQ^T, where Q is orthogonal, and A becomes upper hessenberg
+ */
 std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must be square*/ )
 {
     size_t N = A.rows();
     std::pair<matrix<double>, double> phouse;
     matrix<double> vhouse, Ablk, Apar;
-    matrix<double> B(0, N - 2);
+    matrix<double> B(1, N - 2);
     
     for(size_t k=0; k < N - 2; k++)
     {
@@ -208,25 +230,42 @@ std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must 
         
         vhouse = phouse.first;
         double beta = phouse.second;
+        //std::cout << "beta = " << beta << "\n";
         B(0, k) = beta;
         
         Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
         
+        //std::cout<< "Ablk = \n";
+        //Ablk.print();
         // A <- QA
-        Ablk -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Ablk));
+        Ablk -= outer_prod_1D(beta * vhouse, inner_left_prod(vhouse, Ablk));
         
         A.set_sub_matrix(Ablk, k + 1, k);
         
+        //std::cout << "vhouse = \n";
+        //vhouse.print();
+        
+        //std::cout<< "A = \n";
+        //A.print();
+        
         Apar = A.sub_matrix(0, N, k + 1, N - k - 1);
         
+        //std::cout<< "Apar = \n";
+        //Apar.print();
+        
         // A <- A(Q^T)
-        Apar -= beta * outer_prod_1D(inner_right_prod(Apar, vhouse), vhouse.transpose());
+        Apar -= outer_prod_1D(inner_right_prod(Apar, vhouse), beta * vhouse.transpose());
+        
+
         
         A.set_sub_matrix(Apar, 0, k + 1);
         
+        //std::cout << "Ap = \n";
+        //A.print();
         
         // as usual, store essential house vectors where zeros
         // have been introduced
+        
         size_t i=1;
         for(size_t j = k + 2; j < N; j++, i++)
         {
@@ -239,7 +278,7 @@ std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must 
 }
 
 /*
- * Uses the above two methods to obtain the traditional QR factorization.
+ * Uses the above householder and Qaccumulate to obtain the traditional QR factorization.
  * Note that explicitly forming Q is usually not needed, and thus
  * using this fn instead of householder() is usually not needed, saving the
  * extra computation required to un-factorize Q
@@ -249,7 +288,7 @@ std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& A)
     matrix<double> R(A);
     std::pair<matrix<double>&, matrix<double>> house_result = householder(R);
     
-    matrix<double> Q = Qaccumulate(house_result.first, house_result.second, house_result.first.cols());
+    matrix<double> Q = Qaccumulate(house_result.first, house_result.second, house_result.first.cols(), 0);
     
     // cleanup
     R.zero_lower_triangle();

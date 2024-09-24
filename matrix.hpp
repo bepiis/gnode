@@ -31,11 +31,17 @@ public:
     matrix();
     
     //constructs matrix of size m * n = r * c
+    // TODO: read https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom
     matrix(size_t r, size_t c);
     
     matrix(size_t r, size_t c, const T* data);
+    matrix(size_t r, size_t c, std::initializer_list<T> data);
+    
+    matrix(std::initializer_list<T> data);
+    matrix<T>& reshape(size_t new_r, size_t new_c);
+
     matrix(const matrix<T>& from);
-    matrix(matrix<T>&& from);
+    matrix(matrix<T>&& from) noexcept;
     
     ~matrix();
     
@@ -60,11 +66,11 @@ public:
     void set_identity(void);
     void zero_lower_triangle(void);
     void zero_upper_triangle(void);
-    
+    void print(void) const;
     
     static matrix<T> identity(size_t m);
-    static matrix<T> unit_permutation_matrix(size_t order);
-    static matrix<T> random_matrix(size_t m, size_t n, float lowerbound, float upperbound);
+    static matrix<size_t> unit_permutation_matrix(size_t order);
+    static matrix<T> random_dense_matrix(size_t m, size_t n, float lowerbound, float upperbound);
     
     bool content_equals(const matrix<T>& other) const;
     bool equals(const matrix<T>& other) const;
@@ -75,13 +81,9 @@ public:
     matrix<T>& operator+=(const matrix<T>& rhs);
     matrix<T>& operator-=(const matrix<T>& rhs);
     
-    //matrix<T>& operator*(T&& scalar);
-    //matrix<T>& 
-    
     matrix<T> row(size_t r) const;
     
     matrix<T>& set_row(const matrix<T>& rvec, size_t r);
-   // void set_row(matrix<T>&& cvec);
     
     //matrix<T> row(size_t rfrom, size_t rto);
     
@@ -98,9 +100,13 @@ public:
     matrix<T>& swap_cols(size_t c1, size_t c2);
     
     matrix<T>& sub_rows(size_t r1, size_t r2, T factor);
+    
+    // A <- PA
     matrix<T>& permute_rows(const matrix<size_t>& permute_mat);
     
+    // B <- [A1 | A2]^T
     matrix<T>* split_rows(size_t at_row);
+    // B <- [A1 | A2]
     matrix<T>* split_cols(size_t at_col);
     
     matrix<T> sub_matrix(size_t start_row, size_t nrows, size_t start_col, size_t ncols) const;
@@ -143,12 +149,7 @@ public:
     
     static double col_norm2sq_from(const matrix<T>& mat, size_t c, size_t from);
     static double col_norm2(const matrix<T>& mat, size_t c);
-
-    //struct s_iter;
-//private:
-    
-    // matrix construction from linear pointer
-    //matrix(T* bot, T* top);
+    static matrix<double> cols_norm2sq(const matrix<T>& mat);
 
 private:
     
@@ -238,10 +239,13 @@ matrix<T> inner_left_prod(const matrix<T>& rvec, const matrix<T>& cvecs)
     }
     
     matrix<T> res(1, cvecs.cols());
-    for(size_t c=0; c < rv.cols(); c++)
+    for(size_t c=0; c < cvecs.cols(); c++)
     {
         res(0, c) = inner_prod_1D(rv, cvecs.col(c), 0);
     }
+    
+    //std::cout << "inner_left_prod = \n";
+    //res.print();
     
     return res;
 }
@@ -320,10 +324,10 @@ matrix<T> matrix<T>::identity(size_t m)
     return I;
 }
 
-template<class T>
-matrix<T> matrix<T>::unit_permutation_matrix(size_t order)
+template<> 
+matrix<size_t> matrix<size_t>::unit_permutation_matrix(size_t order)
 {
-    matrix<T> perm(order, 1);
+    matrix<size_t> perm(order, 1);
     for(size_t i=0; i < order; i++)
     {
         perm(i, 0) = i;
@@ -332,7 +336,7 @@ matrix<T> matrix<T>::unit_permutation_matrix(size_t order)
 }
 
 template<class T>
-matrix<T> matrix<T>::random_matrix(size_t m, size_t n, float lowerbound, float upperbound)
+matrix<T> matrix<T>::random_dense_matrix(size_t m, size_t n, float lowerbound, float upperbound)
 {
     matrix<T> rmat(m, n);
     
@@ -372,11 +376,41 @@ matrix<T>::matrix(size_t r, size_t c, const T* data)
 }
 
 template<class T>
+matrix<T>::matrix(size_t r, size_t c, std::initializer_list<T> data)
+: matrix<T>(r, c)
+{
+    std::move(data.begin(), data.begin() + std::min(m_size, data.size()), bptr);
+}
+
+template<class T>
+matrix<T>::matrix(std::initializer_list<T> data)
+: matrix<T>(data.size(), 1, data)
+{
+}
+
+template<class T>
+matrix<T>& matrix<T>::reshape(size_t new_r, size_t new_c)
+{
+    size_t new_s = new_r * new_c;
+    
+    if(new_s != m_size)
+    {
+        throw std::range_error("reshape requires that new dimensions fit the existing size. Use resize or realloc to resize and/or reshape.");
+    }
+    
+    m_size = new_s;
+    m_rows = new_r;
+    m_cols = new_c;
+    m_shape.first = new_r;
+    m_shape.second = new_c;
+}
+
+template<class T>
 matrix<T>::matrix(const matrix<T>& from)
 : matrix<T>(from.rows(), from.cols(), from.base_ptr()) {}
 
 template<class T>
-matrix<T>::matrix(matrix<T>&& from)
+matrix<T>::matrix(matrix<T>&& from) noexcept
 {
     bptr = (T*)std::move(from.base_ptr());
     
@@ -484,7 +518,7 @@ void matrix<T>::set_identity(void)
 }
 
 template<class T>
-void matrix<T>::zero_lower_triangle(void)
+inline void matrix<T>::zero_lower_triangle(void)
 {
     for(size_t c = 0; c < m_cols; c++)
     {
@@ -496,7 +530,7 @@ void matrix<T>::zero_lower_triangle(void)
 }
 
 template<class T>
-void matrix<T>::zero_upper_triangle(void)
+inline void matrix<T>::zero_upper_triangle(void)
 {
     for(size_t r = 0; r < m_rows; r++)
     {
@@ -505,6 +539,20 @@ void matrix<T>::zero_upper_triangle(void)
             (*this)(r, c) = static_cast<T>(0.0);
         }
     }
+}
+
+template<class T>
+inline void matrix<T>::print(void) const
+{
+    for(size_t r=0; r < m_rows; r++)
+    {
+        for(size_t c=0; c < m_cols; c++)
+        {
+            std::cout << (*this)(r, c) << "\t";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n\n";
 }
 
 template<class T>
@@ -1038,6 +1086,25 @@ template<class T>
 double matrix<T>::col_norm2(const matrix<T>& mat, size_t c)
 {
     return std::sqrt(matrix<T>::col_norm2sq_from(mat, c, 0));
+}
+
+template<class T>
+matrix<double> matrix<T>::cols_norm2sq(const matrix<T>& mat)
+{
+    matrix<double> norms(1, mat.cols());
+    
+    for(size_t c=0; c < mat.cols(); c++)
+    {
+        double norm = 0.0;
+        for(size_t r=0; r < mat.rows(); r++)
+        {
+            double mrc = static_cast<double>(mat(r, c));
+            norm += mrc * mrc;
+        }
+        norms(0, c) = norm;
+    }
+    
+    return norms;
 }
 
 
