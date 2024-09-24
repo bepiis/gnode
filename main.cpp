@@ -66,6 +66,16 @@ int main()
     matrix<double> Q = transformation::house::Qaccumulate(res.first, res.second, res.first.cols());
     
     pprint_matrix(&Q);
+    std::cout << "\n\n";
+    
+    matrix<double> randM = matrix<double>::random_matrix(10,10, 1000, -1000);
+    
+    auto hess = transformation::house::hessenberg(HH_cpy);
+    
+    pprint_matrix(&hess.first);
+    
+    transformation::house::Qaccumulate(hess.first, hess.second, hess.first.cols());
+    
    // transformation::house::forward_accumulate(res.first, res.second);
     
     //res.first(1, 0) = 0;

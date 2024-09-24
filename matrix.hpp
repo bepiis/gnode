@@ -125,15 +125,16 @@ public:
     {
         return std::make_pair(m_shape.second, m_shape.first);
     }
+    
     std::pair<size_t, size_t> rvec_shape(void) const
     {
         return std::make_pair(1, m_shape.second);
     }
+    
     std::pair<size_t, size_t> cvec_shape(void) const
     {
         return std::make_pair(m_shape.first, 1);
     }
-    
     
     bool is_square(void) const { return (m_rows == m_cols); }
     bool is_symmetric(void) const;

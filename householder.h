@@ -23,6 +23,19 @@ namespace transformation
 namespace house
 {
 
+template<class T>
+void ppprint_matrix(matrix<T>& mat)
+{
+    for(int i=0; i < mat.rows(); i++)
+    {
+        for(int j=0; j < mat.cols(); j++)
+        {
+            std::cout << mat.get_value(i, j) << "\t";
+        }
+        std::cout << "\n";
+    }
+}
+
 /*
  * Determines the vector v and constant beta from input x = cvec such that
  * for matrix P = I(m) - beta*v*(v^T), Px = norm2(x)I(:, 1) = norm2(x)e1
@@ -91,7 +104,7 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
     
     std::pair<matrix<double>, double> phouse;
     matrix<double> Asub;
-    matrix<double> B(1, N);
+    matrix<double> B(1, N - 1);
     matrix<double> vhouse;
     
     for(size_t j=0; j < N; j++)
@@ -144,13 +157,15 @@ matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, siz
     
     int n = (int)N;
     
+    //std::cout << "betalen = " << B.cols() << "\n";
+    
     matrix<double> Im = matrix<double>::identity(M);
     matrix<double> Q = Im.sub_matrix(0, M, 0, k);
     matrix<double> vhouse;
     
     matrix<double> Qsub;
     
-    for(int j = n - 2; j >=0; j--)
+    for(int j = n - 2; j >= 0; j--)
     {
         vhouse = matrix<double>(M - j, 1);
         vhouse(0, 0) = 1.0;
@@ -162,6 +177,9 @@ matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, siz
         
         //double beta = 2/(1+matrix<double>::col_norm2sq_from(Ajp1, 0, 0));
         // 2mn + 2n FLOPS
+        //std::cout << "beta" << j << " = " << B(0, j) << "\n";
+        
+        // Q <- (Im - beta*v*v^T)Q
         Qsub -= B(0, j) * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
         
 
@@ -174,6 +192,50 @@ matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, siz
     delete Qsub.base_ptr();
     
     return Q;
+}
+
+// TODO: Allow for Qaccumulate to obtain Q for hessenberg decomp.
+std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must be square*/ )
+{
+    size_t N = A.rows();
+    std::pair<matrix<double>, double> phouse;
+    matrix<double> vhouse, Ablk, Apar;
+    matrix<double> B(0, N - 2);
+    
+    for(size_t k=0; k < N - 2; k++)
+    {
+        phouse = house(A.sub_col(k + 1, N - k - 1, k));
+        
+        vhouse = phouse.first;
+        double beta = phouse.second;
+        B(0, k) = beta;
+        
+        Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
+        
+        // A <- QA
+        Ablk -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Ablk));
+        
+        A.set_sub_matrix(Ablk, k + 1, k);
+        
+        Apar = A.sub_matrix(0, N, k + 1, N - k - 1);
+        
+        // A <- A(Q^T)
+        Apar -= beta * outer_prod_1D(inner_right_prod(Apar, vhouse), vhouse.transpose());
+        
+        A.set_sub_matrix(Apar, 0, k + 1);
+        
+        
+        // as usual, store essential house vectors where zeros
+        // have been introduced
+        size_t i=1;
+        for(size_t j = k + 2; j < N; j++, i++)
+        {
+            A(j, k) = vhouse(i, 0);
+        }
+        
+    }
+    
+    return std::make_pair(std::reference_wrapper(A), B);
 }
 
 /*
