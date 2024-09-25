@@ -150,6 +150,7 @@ public:
     static double col_norm2sq_from(const matrix<T>& mat, size_t c, size_t from);
     static double col_norm2(const matrix<T>& mat, size_t c);
     static matrix<double> cols_norm2sq(const matrix<T>& mat);
+    static T max_element(const matrix<T>& mat, size_t coffs);
 
 private:
     
@@ -1014,6 +1015,7 @@ matrix<T> append_vertical(const matrix<T>* lhs, const matrix<T>* rhs)
     return ret;
 }
 
+// TODO: could be more efficient
 template<class T>
 bool matrix<T>::is_symmetric(void) const
 {
@@ -1106,6 +1108,31 @@ matrix<double> matrix<T>::cols_norm2sq(const matrix<T>& mat)
     
     return norms;
 }
+
+template<class T>
+T matrix<T>::max_element(const matrix<T>& mat, size_t coffs)
+{
+    T max = static_cast<T>(0.0);
+    size_t max_r = 0;
+    size_t max_c = 0;
+    
+    for(size_t r=0; r < mat.rows(); r++)
+    {
+        for(size_t c=coffs; c < mat.cols(); c++)
+        {
+            if(mat(r, c) > max)
+            {
+                max = mat(r, c);
+                max_r = r;
+                max_c = c;
+            }
+        }
+
+    }
+    
+    return max;
+}
+
 
 
 //#include "matrix.cpp"

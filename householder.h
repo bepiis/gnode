@@ -36,6 +36,7 @@ namespace house
  * the lower triangle of upper triangular matrix R, where zeros have been introduced
  *
  */
+
 std::pair<matrix<double>, double> house(const matrix<double>& cvec)
 {
     double sig = inner_prod_1D(cvec, cvec, 1);
@@ -131,6 +132,59 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
 
 void colpiv_householder(matrix<double>& A)
 {
+    matrix<double> c = matrix<double>::cols_norm2sq(A);
+    matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
+    
+    size_t r = 0;
+    double tau = matrix<double>::max_element(c, 0);
+    
+    size_t M = A.rows();
+    size_t N = A.cols();
+    
+    std::pair<matrix<double>, double> phouse;
+    matrix<double> Asub;
+    matrix<double> Im = matrix<double>::identity(M);
+    
+    while(tau > 0 && r < N)
+    {
+        
+        // looking for first index k which satisfies c(k) = tau
+        size_t k = r;
+        for(; k < N; k++)
+        {
+            if(c(0, k) == tau)
+            {
+                break;
+            }
+        }
+        
+        piv(r, 0) = k;
+        
+        A.swap_cols(r, k);
+        c.swap_cols(r, k);
+                
+        phouse = house(A.sub_col(r, M - r, r));
+        double beta = phouse.second;
+        
+        Asub = A.sub_matrix(r, M-r, r, N-r);
+        
+        Asub -= beta * outer_prod_1D(phouse.first, inner_left_prod(phouse.first, Asub));
+        
+        size_t i = 1;
+        for(size_t j = r + 1; j < M; j++, i++)
+        {
+            A(j, r) = phouse.first(i, 0);
+        }
+        
+        // update norm vector c by subtrating out A(r, :)**2
+        for(size_t j = r + 1; j < N; j++)
+        {
+            c(0, j) -= A(r, j) * A(r, j);
+        }
+        
+        tau = matrix<double>::max_element(c, r + 1);
+        r++;
+    }
     
 }
 
