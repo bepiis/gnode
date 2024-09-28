@@ -1,5 +1,9 @@
-#ifndef TD_POOL_H
-#define TD_POOL_H
+//
+//  tdpool.h
+//  Created by Ben Westcott on 9/12/24.
+//
+
+#pragma once
 
 #include <thread>
 #include <vector>
@@ -10,17 +14,6 @@
 #include <memory>
 #include <queue>
 #include <stdexcept>
-
-/*
- * std::result_of        -- determines the return type of the parameterization
- * std::future           -- wraps the result of an async operation that will be available in the future
- * std::packaged_task    -- wraps any callable target to be invoked asynchronously. return value(s) and exceptions thrown by the target are stored in a shared state which can be accessed through a future.
- *
- * std::forward<T>       -- If the parameter to a function is an rvalue reference, then forward can be used on the parameter to deduce its original value category when passing to another funciton.
- * std::bind<F, Args...> -- associated args to f's input arguments
- *
- *
- */
 
 class tdpool
 {
@@ -137,4 +130,3 @@ private:
     
 };
 
-#endif

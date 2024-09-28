@@ -1,14 +1,11 @@
 //
 //  jacobi.h
-//  mmnn
-//
 //  Created by Ben Westcott on 9/12/24.
 //
 
-#ifndef JACOBI_H
-#define JACOBI_H
+#pragma once
 
-#include "matrix.hpp"
+#include "matrix.h"
 #include "linalg_exceptions.h"
 #include <cmath>
 #include <tuple>
@@ -232,9 +229,3 @@ matrix<double>& diagonalize(matrix<double>& A)
 }
 
 }
-
-
-
-
-
-#endif /* JACOBI_H */

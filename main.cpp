@@ -1,31 +1,17 @@
-#include "matrix.hpp"
-#include "tdpool.hpp"
-#include "mat_mul.hpp"
-#include "lu_decomp.h"
-#include "householder.h"
+//
+//  main.cpp
+//  newmat
+//
+//  Created by Ben Westcott on 9/25/24.
+//
+
 #include <iostream>
-#include <vector>
-#include "pivot.h"
-#include "jacobi.h"
-#include "matrix_iterators.h"
-#include "gram_schmidt.h"
-
-//#define NS_PRIVATE_IMPLEMENTATION
-//#define MTL_PRIVATE_IMPLEMENTATION
-
-//#include "Metal/Metal.hpp"
-
-/*
- * 1.0 2.0          5.0 6.0             1(5) 1(6)       2(7) 2(8)       19  22
- * 3.0 4.0    *     7.0 8.0    =        3(5) 3(6)   +   4(7) 4(8)  =    43  50
- *
- */
-
-// https://math.nist.gov/MatrixMarket
-// TODO: HASH???
+#include "matrix.h"
+#include "products.h"
+#include "householder.h"
 
 template<class T>
-void pprint_matrix(matrix<T>* mat)
+void print_matrix(matrix<T>* mat)
 {
     for(int i=0; i < mat->rows(); i++)
     {
@@ -37,276 +23,175 @@ void pprint_matrix(matrix<T>* mat)
     }
 }
 
-int main()
+int main(int argc, const char * argv[])
 {
-    double jdata[25] = {2, 5, 9, 11, 7, 5, 3, 6, -2, 5, 9, 6, 7, 3, 1, 11, -2, 3, 1, 3, 7, 5, 1, 3, 4};
-    
-    double hh_data[9] = {2, -1, -2, -4, 6, 3, -4, -2, 8};
-    double hess_data[9] = {-149, -50, -154, 537, 180, 546, -27, -9, -25};
-    
-    matrix<double> hess_test(3, 3, hess_data);
-    
-    matrix<double> HH_test(3, 3, hh_data);
-    
-    matrix<double> Aj(5, 5, jdata);
-    pprint_matrix(&HH_test);
-    
-    matrix<double> hv = transformation::house::householder_vector(0, HH_test);
-    std::cout<< "\n\n";
-    
-    //matrix<double> scol = Aj.sub_col(1, 4, 1);
-    //pprint_matrix(&scol);
-  /*
-    matrix<double> HH_cpy(HH_test);
-    auto res = transformation::house::householder(HH_test);
-    
-    pprint_matrix(&res.first);
-    std::cout<< "\n\n";
-    
-    pprint_matrix(&res.second);
+    matrix<double> hhbig = matrix<double>::random_dense_matrix(50, 20, 1000, -1000);
+    //matrix<double> hhbig(5, 3, {-468.92, -383.638, 591.607, -663.279, 833.265, -612.95, -817.78, -704.544, -740.979, 37.389, -150.828, -323.814, -872.728, -222.411, 589.552});
+    matrix<double> hhbigcpy(hhbig);
+    print_matrix(&hhbig);
     
     std::cout << "\n\n";
-    matrix<double> Q = transformation::house::Qaccumulate(res.first, res.second, res.first.cols(), 0);
     
-    pprint_matrix(&Q);
+    auto bigout = transformation::house::QR(hhbig);
+    
+    print_matrix(&bigout.first);
     std::cout << "\n\n";
-    */
-    matrix<double> randM = matrix<double>::random_dense_matrix(10,10, 1000, -1000);
+    print_matrix(&bigout.second);
+    auto res = mat_mul_alg1(&bigout.first, &bigout.second);
     
-    randM.print();
+    print_matrix(&bigout.second);
+    std::cout << "\n\n\n\n";
     
-    auto hess = transformation::house::hessenberg(randM);
+    print_matrix(&bigout.first);
+    std::cout << "\n\n\n\n";
     
-    std::cout << "hess = \n";
-    hess.first.print();
-    
-    //pprint_matrix(&hess.first);
-    
-    matrix<double> Qrand = transformation::house::Qaccumulate(hess.first, hess.second, hess.first.cols(), 1);
-    
-    for(size_t c=0; c < hess.first.cols() - 2; c++)
+    matrix<double> absdiff(50, 20);
+    for(size_t i=0; i < absdiff.size(); i++)
     {
-        for(size_t r = c + 2; r < hess.first.rows(); r++)
+        absdiff[i] = std::abs(res[i]) - std::abs(hhbigcpy[i]);
+        if(absdiff[i] < 10E-9)
         {
-            hess.first(r, c) = 0.0;
+            absdiff[i] = 0;
         }
     }
     
-    hess.first.print();
+    print_matrix(&absdiff);
     
-    Qrand.print();
+    matrix<double> hh(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
     
-    matrix<double> QrandT = Qrand.transpose();
+    auto outhh = transformation::house::QR(hh);
     
-    matrix<double> m1 = mat_mul_alg1(&Qrand, &hess.first);
-    matrix<double> m2 = mat_mul_alg1(&m1, &QrandT);
+    std::cout << "\n\n";
     
-    matrix<double> Ih = mat_mul_alg1(&QrandT, &Qrand);
+    print_matrix(&outhh.first);
     
-    for(size_t r = 0; r < Ih.rows(); r++)
+    std::cout << "\n\n";
+    
+    print_matrix(&outhh.second);
+    
+    /*
+    
+    matrix<double> hessbig = matrix<double>::random_dense_matrix(50, 50, 1000, -1000);
+    matrix<double> hessbigcpy(hessbig);
+    
+    auto hessout = transformation::house::hessenberg(hessbig);
+    
+    matrix<double> Q = transformation::house::Qaccumulate(hessout.first, hessout.second, hessout.first.cols(), 1);
+    matrix<double> QT = Q.transpose();
+    
+    
+    //hessout.first.set_lower_hessenberg();
+    for(size_t c=0; c < hessout.first.cols() - 2; c++)
     {
-        for(size_t c=0; c < Ih.cols(); c++)
+        for(size_t r = c + 2; r < hessout.first.rows(); r++)
         {
-            if(Ih(r, c) < 0.00001)
-            {
-                Ih(r, c) = 0.0;
-            }
+            hessout.first(r, c) = 0.0;
         }
     }
     
-    m2.print();
-    
-    Ih.print();
+    print_matrix(&hessout.first);
     
     
-   // transformation::house::forward_accumulate(res.first, res.second);
     
-    //res.first(1, 0) = 0;
-    //res.first(2, 0) = 0;
-    //res.first(2, 1) = 0;
+    matrix<double> res2 = mat_mul_alg1(&Q, &hessout.first);
     
-    //pprint_matrix(&Q);
-    std::cout << "\n\n";
     
-    //matrix<double> chk = mat_mul_alg1(&Q, &res.first);
+    matrix<double> res3 = mat_mul_alg1(&res2, &QT);
+    //matrix<double> res = mat_mul_alg1(&res2, &QT);
+   // std::cout << "\n\n\n\n";
+    //print_matrix(&QT);
     
-    //pprint_matrix(&chk);
+    print_matrix(&res3);
     
-    matrix<double> gs_test(3, 3, hh_data);
+    matrix<double> absdiff(50, 50);
+    for(size_t i=0; i < absdiff.size(); i++)
+    {
+        absdiff[i] = std::abs(res3[i]) - std::abs(hessbigcpy[i]);
+        if(absdiff[i] < 10E-9)
+        {
+            absdiff[i] = 0;
+        }
+    }
     
-    std::pair<matrix<double>, matrix<double>> outgs = transformation::GS::QR(gs_test);
+    print_matrix(&absdiff);*/
+
     
-    pprint_matrix(&outgs.first);
-    std::cout << "\n\n";
-    pprint_matrix(&outgs.second);
-    std::cout << "\n\n";
     
-    matrix<double> k(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
-    k.print();
-    //pprint_matrix(&hv);
 }
-    
+
+
 /*
-int main()
+int main(int argc, const char * argv[])
 {
-    double dat1[16];
-    double dat2[16];
     
-    //std::cout << std::thread::hardware_concurrency() << "\n";
-
-    //NS::SharedPtr< MTL::Device > pDevice = NS::TransferPtr( MTL::CreateSystemDefaultDevice() );
+    // default constructor
+    std::cout << "default constructor: \n";
     
-    for(size_t i=0; i < 16; i++)
-    {
-        dat1[i] = 2*i;
-        dat2[i] = 2*i + 1;
-    }
-    
-    matrix<double> m1(4, 4, dat1);
-    matrix<double> m2(4, 4, dat2);
-    
-    //pprint_matrix(&m1);
-    //std::cout << "\n\n";
-    //pprint_matrix(&m2);
-    //std::cout << "\n\n";
-
-    
-        
-    //matrix<double> m12 = mat_mul_alg1(&m1, &m2);
-    
-    //pprint_matrix(&m12);
-    
-    //std::cout << "\n\n";
-    
-    //m1.swap_rows(1, 3);
-    
-    double sdata[9] = {1.0, 4.0, 5.0, 6.0, 8.0, 22.0, 32.0, 5.0, 5.0};
-    double bv[3] = {1.0, 2.0, 3.0};
-    
-    int ddata[9] = {1, 1, 1, 2, 2, 2, 3, 3, 3};
-    matrix<int> ddm(3, 3, ddata);
-    
-    matrix<double> b(3, 1, bv);
-    
-    
-    matrix<double> sm(3, 3, sdata);
-    
-    
-    //std::cout << "\n" << find_row_swap(0, m1) << "\n";
-    matrix<double> res = LU_solve(sm, b);
-    
-    double hdata[16] = {4, 1, -2, 2, 1, 2, 0, 1, -2, 0, 3, -2, 2, 1, -2, -1};
-    matrix<double> htest(4, 4, hdata);
-    
-    
-    //matrix<double> hv = householder_vector(0, htest);
-    
-    //pprint_matrix(&hv);
-    //std::cout << "\n\n";
-    
-    //matrix<double> hm = householder_matrix(hv);
-    
-    //pprint_matrix(&hm);
-    
-    matrix<double> A0 = transformation::householder_iteration(0, htest);
-    
-    pprint_matrix(&A0);
-    
-    matrix<double> A1 = transformation::householder_iteration(1, A0);
-    
-    std::cout << "\n\n";
-    for(size_t j=0; j < A1.size(); j++)
-    {
-        if(std::abs(A1[j]) < 0.001)
-        {
-            A1[j] = 0.0;
-        }
-    }
-    
-    pprint_matrix(&A1);
-    
-    
-    double jdata[25] = {2, 5, 9, 11, 7, 5, 3, 6, -2, 5, 9, 6, 7, 3, 1, 11, -2, 3, 1, 3, 7, 5, 1, 3, 4};
-    //double jdatap[25] = {2, 4, 9, 10, 7, 8, 3, 6, -2, 5, 9, 6, 7, 3, 1, 11, -2, 3, 1, 3, 7, 5, 1, 3, 4};
-    //double jdata2[16] = {4, -30, 60, -35, -30, 300, -675, 420, 60, -675, 1620, -1050, -35, 420, -1050, 700};
-    matrix<double> Aj(5, 1, jdata);
-    
-    matrix<double> t(5, 1, jdata);
-    
-    pprint_matrix(&Aj);
-    
-    std::cout << "\n" << inner_prod_1D(Aj, t) << "\n";
-    
-    double imdata[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    double ivdata[3] = {1, 2, 3};
-    
-    matrix<double> im(3, 3, imdata);
-    matrix<double> iv(1, 3, ivdata);
-    matrix<double> ivT = iv.transpose();
-    
-    matrix<double> iPleft = inner_left_prod(iv, im);
-    matrix<double> iPright = inner_right_prod(im, ivT);
-    
-    pprint_matrix(&iPleft);
-    std::cout << "\n";
-    pprint_matrix(&iPright);
-    
+    matrix<double> md;
     std::cout << "\n\n";
     
-    double sd[4] = {3, 2, 1, 2};
-    matrix<double> s(2, 2, sd);
-    //matrix<double> s = matrix<double>::random_matrix(5, 5, -10.0, 10.0);
-    matrix<double> out = transformation::GS::MGS(s);
+    // size w/ data
+    std::cout << "size and data constructor: \n";
     
-    pprint_matrix(&out);
-    
+    const double dat0[9] = {2, 4, 6, 8, 10, 12, 14, 16, 18};
+    matrix<double> msd(9, dat0);
     std::cout << "\n\n";
-    
-    std::pair<matrix<double>, matrix<double>> QR = transformation::GS::QR(sm);
-    
-    pprint_matrix(&QR.first);
-    
-    std::cout << "\n\n";
-    
-    pprint_matrix(&QR.second);
-    //std::cout << inner_prod_1D(out.col(0), out.col(1));
-    
-    //transformation::eigen_result res2 = transformation::jacobi::eigen(Aj);
-    
-    //pprint_matrix(&res2.values);
-    
-    //transformation::jacobi::tridiagonalize(Aj, 0.001);
-    
-    //std::cout << "finished";
-    
-    //matrix<double> Qj = transformation::jacobi_rotation_matrix(Aj, 0, 1);
-    
-    //pprint_matrix(&Qj);
-    //std::cout << "\n\n";
-    
-    //matrix<double> QjT = Qj.transpose();
-    //matrix<double> QTA = mat_mul_alg1(&QjT, &Aj);
-    //matrix<double> Ap = mat_mul_alg1(&QTA, &Qj);
-    
-    //pprint_matrix(&Ap);
-    //Lop<int> L = Lop<int>(ddm);
-    //Rop<int> R = Rop<int>(ddm);
-    
-    
-    //std::vector<std::unique_ptr<operation<int>>> v;
-    //v.emplace_back(std::make_unique<Lop<int>>(L));
-    //v.emplace_back(std::make_unique<Rop<int>>(R));
-    
-   // L.add_multiple(1, 0, 4);
-    //matrix<int>& perm = L.swap(0, 1);
-    
-    //matrix<int> res2 = mat_mul_alg1(&perm, &ddm);
-    
-    
-    //pprint_matrix(&res2);
-    
-    //pprint_matrix(&P);
 
     
-}*/
+    // row and cols
+    std::cout << "row and col constructor: \n";
 
+    matrix<double> mrc(3, 3);
+    std::cout << "\n\n";
+
+    
+    // rows, cols, data
+    std::cout << "row, col, data constructor: \n";
+
+    matrix<double> mrcd(3, 3, dat0);
+    std::cout << "\n\n";
+
+    
+    // copy constructor
+    std::cout << "copy constructor: \n";
+
+    matrix<double> mcpy(mrcd);
+    std::cout << "\n\n";
+    
+    // initializer list
+    std::cout << "initializer list constructor: \n";
+    matrix<double> mi({1, 2, 3, 4, 5, 6, 7, 8, 9});
+    std::cout << "\n\n";
+    
+    // size, initializer list
+    std::cout << "size, initializer list constructor: \n";
+
+    matrix<double> msi(9, {1, 2, 3, 4, 5, 6, 7, 8, 9});
+    std::cout << "\n\n";
+
+    
+    // rows, cols, initializer list
+    std::cout << "row, col, initializer list: \n";
+    
+    matrix<double> mrci(3, 3, {2, 4, 6, 8, 10, 12, 14, 16, 18});
+    std::cout << "\n\n";
+
+    
+    // copy assignment
+    std::cout << "copy assignment: \n";
+
+    matrix<double> mrcicpy = mrci;
+    
+    std::cout << "\n\n";
+
+    
+    // move constructor
+    std::cout << "move constructor: \n";
+
+    matrix<double> msimove(std::move(msi));
+    std::cout << "\n\n";
+
+    
+    
+}
+*/

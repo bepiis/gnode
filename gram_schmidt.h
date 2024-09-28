@@ -1,14 +1,12 @@
 //
 //  gram_schmidt.h
-//  mmnn
-//
 //  Created by Ben Westcott on 9/18/24.
 //
 
-#ifndef GRAM_SCHMIDT_H
-#define GRAM_SCHMIDT_H
+#pragma once
 
-#include "matrix.hpp"
+#include "matrix.h"
+#include "products.h"
 
 namespace transformation
 {
@@ -23,35 +21,36 @@ namespace GS
  * Only recommended for use in iterative methods due to less
  * numerical stability than householder, and jacobi/givens transformations
  */
-std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& V)
+std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& X)
 {
-    matrix<matrix<double>> cvecs = as_cvecs(V);
-    matrix<matrix<double>> Qc(cvecs);
+    matrix<double> V(X);
+    matrix<double> Qc(V.rows(), V.cols());
     
-    size_t M = cvecs.cols();
+    size_t M = V.cols();
     matrix<double> R(M, M);
 
     for(size_t j=0; j < M; j++)
     {
-        R(j, j) = matrix<double>::col_norm2(cvecs(0, j), 0);
-        Qc(0, j) = (1/R(j, j)) * cvecs(0, j);
+        R(j, j) = std::sqrt(col_norm2sq(V, j));
+        
+        matrix<double> curr_col = (1/R(j, j)) * V.col(j);
+        
+        Qc.set_col(curr_col, j);
         
         for(size_t k=j+1; k < M; k++)
         {
-            R(j, k) = inner_prod_1D(Qc(0, j), cvecs(0, k));
-            cvecs(0, k) -= R(j, k) * Qc(0, j);
+            R(j, k) = inner_prod_1D(curr_col, V.col(k));
+            //cvecs(0, k) -= R(j, k) * Qc(0, j);
+            matrix<double> sub = V.col(k);
+            sub -= R(j, k) * curr_col;
+            
+            V.set_col(sub, k);
         }
     }
     
-    matrix<double> Q = from_cvecs(Qc);
+    //matrix<double> Q = from_cvecs(Qc);
     
-    for(size_t j=0; j < M; j++)
-    {
-        delete Qc(0, j).base_ptr();
-        delete cvecs(0, j).base_ptr();
-    }
-    
-    return std::make_pair(Q, R);
+    return std::make_pair(Qc, R);
 }
 
 /*
@@ -61,17 +60,9 @@ std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& V)
 matrix<double> MGS(const matrix<double>& V)
 {
     std::pair<matrix<double>, matrix<double>> res_pair = QR(V);
-    delete res_pair.second.base_ptr();
-    
     return res_pair.first;
 }
 
 
 }
-
-
-
-
 }
-
-#endif /* GRAM_SCHMIDT_H */

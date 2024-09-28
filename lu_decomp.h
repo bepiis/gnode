@@ -1,12 +1,9 @@
 //
 //  lu_decomp.h
-//  mmnn
-//
 //  Created by Ben Westcott on 9/8/24.
 //
 
-#ifndef LU_DECOMP_H
-#define LU_DECOMP_H
+#pragma once
 
 #include "matrix.hpp"
 #include "pivot.h"
@@ -206,6 +203,4 @@ matrix<double> LU_solve(const matrix<double>& A, const matrix<double>& b)
     return x;
 }
 
-
-
-#endif /* LU_DECOMP_H */
+}

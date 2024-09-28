@@ -1,15 +1,12 @@
 //
 //  householder.h
-//  mmnn
-//
 //  Created by Ben Westcott on 9/12/24.
 //
 
-#ifndef HOUSEHOLDER_H
-#define HOUSEHOLDER_H
+#pragma once
 
-#include "matrix.hpp"
-#include <cmath>
+#include "matrix.h"
+#include "products.h"
 
 // refs:
 // [1] Matrix Computations 4th ed. Golub, Van Loan
@@ -22,6 +19,20 @@ namespace transformation
 
 namespace house
 {
+
+template<class T>
+void pprint_matrix(const matrix<T>& mat)
+{
+    for(int i=0; i < mat.rows(); i++)
+    {
+        for(int j=0; j < mat.cols(); j++)
+        {
+            std::cout << mat.get_value(i, j) << "\t";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n\n";
+}
 
 /*
  * Determines the vector v and constant beta from input x = cvec such that
@@ -42,7 +53,12 @@ std::pair<matrix<double>, double> house(const matrix<double>& cvec)
     double sig = inner_prod_1D(cvec, cvec, 1);
     double beta, mu;
     
+    //std::cout << "house(): \n";
+    
     matrix<double> hv(cvec);
+    //std::cout << "house, cvec: " << cvec.size() << "\n";
+    //pprint_matrix(cvec);
+    //std::cout << "\n\n";
     hv(0, 0) = 1.0;
     
     double c0 = cvec(0, 0);
@@ -71,7 +87,14 @@ std::pair<matrix<double>, double> house(const matrix<double>& cvec)
         h0 = hv(0, 0);
         beta = 2*(h0*h0)/(sig + h0*h0);
         hv = (1/h0) * hv;
+        
+        //std::cout << "\tmu = " << mu << "\n";
+
     }
+    
+    //std::cout << "\tsig = " << sig << "\n";
+    //std::cout << "\tbeta = " << beta << "\n\n\n";
+    
     
     // Cost: roughly 3m flops
     return std::make_pair(hv, beta);
@@ -92,13 +115,21 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
     
     std::pair<matrix<double>, double> phouse;
     matrix<double> Asub;
-    matrix<double> B(1, N - 1);
+    matrix<double> B(1, N);
     matrix<double> vhouse;
     
     for(size_t j=0; j < N; j++)
     {
         // 3m flops
+        //std::cout << "sub_col: " << j << "\n";
+        //pprint_matrix(A.sub_col(j, M-j, j));
+        //std::cout << "\n\n";
+        
         phouse = house(A.sub_col(j, M - j, j));
+        
+        //std::cout << "vhouse" << j << " = \n";
+        //vhouse.print();
+        //pprint_matrix(phouse.first);
         
         matrix<double> vhouse = phouse.first;
         double beta = phouse.second;
@@ -106,9 +137,26 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
         
         Asub = A.sub_matrix(j, M - j, j, N - j);
         
+        //std::cout << "Qsub" << j << " = \n";
+        //Qsub.print();
+        //pprint_matrix(Asub);
+        
+        //std::cout << "beta = " << beta << "\n\n";
+        
         // TODO: does tranpose to column vector here, which doesnt need to happen since inner product just takes directly from bptr anyways
+
+        //std::cout << "inner_left_prod " << j << "\n";
+        //pprint_matrix(inner_left_prod(vhouse, Asub));
+        
+        //std::cout << "outer_prod " << j << "\n";
+        //pprint_matrix(outer_prod_1D(vhouse, inner_left_prod(vhouse, Asub)));
+        
         // 2mn + 2n flops
-        Asub -= outer_prod_1D((beta * vhouse), inner_left_prod(vhouse, Asub));
+        Asub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Asub));
+        
+        //std::cout << "Qsubp" << j << " = \n";
+        //Qsub.print();
+        //pprint_matrix(Asub);
         
         A.set_sub_matrix(Asub, j, j);
         
@@ -121,18 +169,18 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
             }
         }
         
+        //std::cout << "A" << j << " = \n";
+        //Qsub.print();
+        //pprint_matrix(A);
+        
     }
-    
-    delete Asub.base_ptr();
-    delete phouse.first.base_ptr();
-    delete vhouse.base_ptr();
     
     return std::make_pair(std::reference_wrapper(A), B);
 }
 
 void colpiv_householder(matrix<double>& A)
 {
-    matrix<double> c = matrix<double>::cols_norm2sq(A);
+    matrix<double> c = cols_norm2sq(A);
     matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
     
     size_t r = 0;
@@ -143,7 +191,7 @@ void colpiv_householder(matrix<double>& A)
     
     std::pair<matrix<double>, double> phouse;
     matrix<double> Asub;
-    matrix<double> Im = matrix<double>::identity(M);
+    matrix<double> Im = matrix<double>::eye(M);
     
     while(tau > 0 && r < N)
     {
@@ -182,8 +230,7 @@ void colpiv_householder(matrix<double>& A)
             c(0, j) -= A(r, j) * A(r, j);
         }
         
-        tau = matrix<double>::max_element(c, r + 1);
-        r++;
+        tau = matrix<double>::max_element(c, ++r);
     }
     
 }
@@ -204,7 +251,7 @@ void colpiv_householder(matrix<double>& A)
  *
  * TODO: work with k optimization
  */
-matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, size_t k, size_t col_bias)
+matrix<double> Qaccumulate(const matrix<double>& R, /* TODO: */const matrix<double>& B, size_t k, size_t col_bias)
 {
     size_t M = R.rows();
     size_t N = R.cols();
@@ -213,50 +260,46 @@ matrix<double> Qaccumulate(const matrix<double>& R, const matrix<double>& B, siz
     
     //std::cout << "betalen = " << B.cols() << "\n";
     
-    matrix<double> Im = matrix<double>::identity(M);
-    matrix<double> Q = Im.sub_matrix(0, M, 0, k);
+    matrix<double> Im = matrix<double>::eye(M);
+    matrix<double> Q = Im.sub_matrix(0, M, 0, M);
     matrix<double> vhouse;
     
     matrix<double> Qsub;
     
-    for(int j = n - 2 - (int)col_bias; j >= 0; j--)
+    for(int j = n - 1 - (int)col_bias; j >= 0; j--)
     {
         vhouse = matrix<double>(M - j - col_bias, 1);
         vhouse(0, 0) = 1.0;
         
-        //matrix<double> Ajp1 = R.sub_col(j + 1, M - j - 1, j);
-        vhouse.set_sub_col(R.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j), 1, 0);
+        matrix<double> Ajp1 = R.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j);
+        
+        vhouse.set_sub_col(Ajp1, 1, 0);
         
         //std::cout << "vhouse" << j << " = \n";
         //vhouse.print();
+        //pprint_matrix(vhouse);
 
-        
-        Qsub = Q.sub_matrix(j + col_bias, Q.rows()-j - col_bias, j + col_bias , Q.cols()-j - col_bias);
+        Qsub = Q.sub_matrix(j + col_bias, Q.rows()-j - col_bias, j + col_bias , Q.rows()-j - col_bias);
         
         //std::cout << "Qsub" << j << " = \n";
         //Qsub.print();
+        //pprint_matrix(Qsub);
         
         //std::cout << "beta" << j << " = " << B(0, j) <<  "\n";
-        
-        
-        //double beta = 2/(1+matrix<double>::col_norm2sq_from(Ajp1, 0, 0));
+        double beta = 2/(1+col_norm2sq_from(Ajp1, 0, 0));
         // 2mn + 2n FLOPS
         //std::cout << "beta" << j << " = " << B(0, j) << "\n";
-        
+
         // Q <- (Im - beta*v*v^T)Q
-        Qsub -= B(0, j) * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
+        Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
         
         //std::cout << "Qsubp" << j << " = \n";
+        //pprint_matrix(Qsub);
         //Qsub.print();
-        
 
         Q.set_sub_matrix(Qsub, j + col_bias, j + col_bias);
         
     }
-    
-    delete Im.base_ptr();
-    delete vhouse.base_ptr();
-    delete Qsub.base_ptr();
     
     
     return Q;
@@ -342,66 +385,14 @@ std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& A)
     matrix<double> R(A);
     std::pair<matrix<double>&, matrix<double>> house_result = householder(R);
     
-    matrix<double> Q = Qaccumulate(house_result.first, house_result.second, house_result.first.cols(), 0);
+    matrix<double> Q = Qaccumulate(house_result.first, house_result.second, house_result.first.rows(), 0);
     
     // cleanup
-    R.zero_lower_triangle();
-    delete house_result.second.base_ptr();
+    R.fill_lower_triangle(0.0);
     
     return std::make_pair(Q, R);
 }
 
-
-//[[maybe_unused]]
-matrix<double> householder_vector(size_t k, const matrix<double>& Ak)
-{
-    //double apk = std::pow(Ak(k+1, k), k+1);
-    double apk = Ak(k+1, k);
-    
-    matrix<double> hv(Ak.rows(), 1);
-    hv.zero();
-    
-    double nsq = matrix<double>::col_norm2sq_from(Ak, k, k + 1);
-    
-    double bk = -1.0 * msgn(apk) * std::sqrt(nsq);
-    
-    double r = std::sqrt(0.5*(std::pow(bk, 2) - apk*bk));
-    
-    hv(k + 1, 0) = (apk - bk)/(2*r);
-    
-    for(size_t j=k+2; j < hv.rows(); j++)
-    {
-        hv(j, 0) = Ak(j, k)/(2*r);
-    }
-    
-    return hv;
-}
-
-matrix<double> householder_matrix(matrix<double>& hv)
-{
-    matrix<double> hm = matrix<double>::identity(hv.rows());
-    
-    matrix<double> hvT = hv.transpose();
-    matrix<double> ho = outer_prod_1D(hv, hvT);
-    
-    hm -= 2.0 * ho;
-    return hm;
-}
-
-matrix<double> householder_iteration(size_t k, const matrix<double>& A)
-{
-    matrix<double> hv = householder_vector(k, A);
-    matrix<double> hm = householder_matrix(hv);
-    
-    matrix<double> rprod = mat_mul_alg1(&A, &hm);
-    matrix<double> res = mat_mul_alg1(&hm, &rprod);
-    
-    return res;
 }
 
 }
-
-}
-
-
-#endif /* HOUSEHOLDER_H */
