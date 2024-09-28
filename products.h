@@ -118,7 +118,7 @@ double col_norm2sq(const matrix<T>& rhs, size_t c)
     {
         throw std::range_error("column index is out of range.");
     }
-
+    
     return col_norm2sq_from(rhs, c, 0);
 }
 
@@ -126,14 +126,13 @@ template<typename T>
 matrix<double> cols_norm2sq(const matrix<T>& rhs)
 {
     matrix<double> norms(1, rhs.cols());
-
+    
     for(size_t i=0; i < norms.cols(); i++)
     {
         norms.get_value(i) = col_norm2sq(rhs, i);
     }
     
     return norms;
-
 }
 
 template<class T>

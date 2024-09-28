@@ -20,6 +20,7 @@ namespace transformation
 namespace house
 {
 
+// TODO: Just overload ostream operator<< so I dont have to keep writing print fns all over the place.
 template<class T>
 void pprint_matrix(const matrix<T>& mat)
 {
@@ -47,7 +48,7 @@ void pprint_matrix(const matrix<T>& mat)
  * the lower triangle of upper triangular matrix R, where zeros have been introduced
  *
  */
-
+// TODO: get rid of all pair return types.. I think I hate them...
 std::pair<matrix<double>, double> house(const matrix<double>& cvec)
 {
     double sig = inner_prod_1D(cvec, cvec, 1);
@@ -108,14 +109,13 @@ std::pair<matrix<double>, double> house(const matrix<double>& cvec)
  * note that the lower triangle of R contains the essential house vectors
  * and thus the return type contains the factorized form of Q, i.e beta, v
  */
-std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
+matrix<double>& householder(matrix<double>& A)
 {
     size_t M = A.rows();
     size_t N = A.cols();
     
     std::pair<matrix<double>, double> phouse;
     matrix<double> Asub;
-    matrix<double> B(1, N);
     matrix<double> vhouse;
     
     for(size_t j=0; j < N; j++)
@@ -133,7 +133,6 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
         
         matrix<double> vhouse = phouse.first;
         double beta = phouse.second;
-        B(0, j) = beta;
         
         Asub = A.sub_matrix(j, M - j, j, N - j);
         
@@ -142,8 +141,7 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
         //pprint_matrix(Asub);
         
         //std::cout << "beta = " << beta << "\n\n";
-        
-        // TODO: does tranpose to column vector here, which doesnt need to happen since inner product just takes directly from bptr anyways
+    
 
         //std::cout << "inner_left_prod " << j << "\n";
         //pprint_matrix(inner_left_prod(vhouse, Asub));
@@ -175,7 +173,7 @@ std::pair<matrix<double>&, matrix<double>> householder(matrix<double>& A)
         
     }
     
-    return std::make_pair(std::reference_wrapper(A), B);
+    return A;
 }
 
 void colpiv_householder(matrix<double>& A)
@@ -184,7 +182,7 @@ void colpiv_householder(matrix<double>& A)
     matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
     
     size_t r = 0;
-    double tau = matrix<double>::max_element(c, 0);
+    double tau = matrix<double>::abs_max_element(c, 0);
     
     size_t M = A.rows();
     size_t N = A.cols();
@@ -230,7 +228,7 @@ void colpiv_householder(matrix<double>& A)
             c(0, j) -= A(r, j) * A(r, j);
         }
         
-        tau = matrix<double>::max_element(c, ++r);
+        tau = matrix<double>::abs_max_element(c, ++r);
     }
     
 }
@@ -251,7 +249,7 @@ void colpiv_householder(matrix<double>& A)
  *
  * TODO: work with k optimization
  */
-matrix<double> Qaccumulate(const matrix<double>& R, /* TODO: */const matrix<double>& B, size_t k, size_t col_bias)
+matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
 {
     size_t M = R.rows();
     size_t N = R.cols();
@@ -314,12 +312,11 @@ matrix<double> Qaccumulate(const matrix<double>& R, /* TODO: */const matrix<doub
  *
  * A <- QAQ^T, where Q is orthogonal, and A becomes upper hessenberg
  */
-std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must be square*/ )
+matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
 {
     size_t N = A.rows();
     std::pair<matrix<double>, double> phouse;
     matrix<double> vhouse, Ablk, Apar;
-    matrix<double> B(1, N - 2);
     
     for(size_t k=0; k < N - 2; k++)
     {
@@ -328,7 +325,6 @@ std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must 
         vhouse = phouse.first;
         double beta = phouse.second;
         //std::cout << "beta = " << beta << "\n";
-        B(0, k) = beta;
         
         Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
         
@@ -351,7 +347,7 @@ std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must 
         //Apar.print();
         
         // A <- A(Q^T)
-        Apar -= outer_prod_1D(inner_right_prod(Apar, vhouse), beta * vhouse.transpose());
+        Apar -= outer_prod_1D(inner_right_prod(Apar, vhouse), beta * /*TODO: */vhouse.transpose());
         
 
         
@@ -371,7 +367,7 @@ std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must 
         
     }
     
-    return std::make_pair(std::reference_wrapper(A), B);
+    return A;
 }
 
 /*
@@ -383,9 +379,9 @@ std::pair<matrix<double>&, matrix<double>> hessenberg(matrix<double> &A /* must 
 std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& A)
 {
     matrix<double> R(A);
-    std::pair<matrix<double>&, matrix<double>> house_result = householder(R);
+    matrix<double>& house_result = householder(R);
     
-    matrix<double> Q = Qaccumulate(house_result.first, house_result.second, house_result.first.rows(), 0);
+    matrix<double> Q = Qaccumulate(house_result, house_result.rows(), 0);
     
     // cleanup
     R.fill_lower_triangle(0.0);

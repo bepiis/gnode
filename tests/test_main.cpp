@@ -58,6 +58,7 @@ public:
 //CATCH_REGISTER_LISTENER(pyrunlistener)
 
 #include "test_mat.cpp"
+#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
 

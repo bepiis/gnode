@@ -5,6 +5,8 @@
 
 #include "../products.h"
 
+// TODO: write these tests... maybe just 
+
 TEST_CASE("outer product")
 {
 	std::cout << "test outer product:\n";

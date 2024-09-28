@@ -12,6 +12,7 @@
 #include <cmath>
 #include <utility>
 #include <format>
+#include <algorithm>
 
 using std::size_t;
 
@@ -46,6 +47,8 @@ public:
         swap(lhs.m_data, rhs.m_data);
     }
     
+    // TODO: not sure if i want to continue using copy-swap for copy/move assignment...
+    // considering matrices can be very large, then passing by value here becomes extremely inefficient...
     matrix<T>& operator=(matrix<T> rhs);
     matrix(matrix<T>&& rhs) noexcept;
     //matrix<T>& operator=(matrix<T>&& rhs);
@@ -66,7 +69,6 @@ public:
     T& operator[](size_t offs);
 	const T operator[](size_t offs) const;
 	
-    
     size_t row_offset(size_t m) const;
     size_t offset(size_t m, size_t n) const;
     
@@ -129,10 +131,16 @@ public:
     static matrix<T> eye(size_t rank);
 	static matrix<T> ones(size_t nrows, size_t ncols);
     static matrix<size_t> unit_permutation_matrix(size_t rank);
+    
+    // TODO: soon we will need to generate random matrix types i.e. symmetric, orthogonal, skew, pos. definite, etc. to test various algos
     static matrix<T> random_dense_matrix(size_t nrows, size_t ncols, float lowerbound, float upperbound);
-	
-	
-    static T max_element(const matrix<T>& rhs, size_t from_row);
+    
+    static matrix<T> abs(const matrix<T>& rhs);
+    static matrix<T> absdiff(const matrix<T>& rhs, const matrix<T>& lhs);
+    static T abs_max_err(const matrix<T>& result, const matrix<T>& expected);
+    static size_t abs_max_excess_err(const matrix<T>& result, const matrix<T>& expected, T tolerance);
+    
+    static T abs_max_element(const matrix<T>& rhs, size_t from_row);
 
 private:
     
@@ -231,6 +239,15 @@ matrix<T>::~matrix(void)
     //std::cout << "\tcalled destroy\n";
     //delete [] m_data;
 }
+
+/*
+ template<typename T>
+ matrix<T>& matrix<T>::operator=(matrix<T>&& rhs)
+ {
+    std::cout << "\tcalled move assignment\n";
+    swap(*this, rhs);
+    return *this;
+ }*/
 
 template<typename T>
 matrix<T>& matrix<T>::operator=(matrix<T> rhs)
@@ -823,29 +840,6 @@ matrix<size_t> matrix<size_t>::unit_permutation_matrix(size_t rank)
 }
 
 template<typename T>
-T matrix<T>::max_element(const matrix<T>& rhs, size_t from_row)
-{
-    T max = static_cast<T>(0.0);
-    size_t max_r = 0;
-    size_t max_c = 0;
-
-    for(size_t r=0; r < rhs.rows(); r++)
-    {
-        for(size_t c=0; c < rhs.cols(); c++)
-        {
-            if(rhs.get_value(r, c) > max)
-            {
-                max = rhs.get_value(r, c);
-                max_r = r;
-                max_c = c;
-            }
-        }
-    }
-
-    return max;
-}
-
-template<typename T>
 matrix<T> matrix<T>::random_dense_matrix(size_t nrows, size_t ncols, float lowerbound, float upperbound)
 {
     matrix<T> rmat(nrows, ncols);
@@ -862,8 +856,59 @@ matrix<T> matrix<T>::random_dense_matrix(size_t nrows, size_t ncols, float lower
     return rmat;
 }
 
+template<typename T>
+matrix<T> matrix<T>::abs(const matrix<T>& rhs)
+{
+    matrix<T> abs_result(rhs.rows(), rhs.cols());
+    
+    std::transform
+    (
+        rhs.data(),
+        rhs.data() + rhs.size(),
+        abs_result.data(),
+        [](T val) { return std::abs(val); }
+    );
+    
+    return abs_result;
+}
 
+template<typename T>
+inline matrix<T> matrix<T>::absdiff(const matrix<T>& rhs, const matrix<T>& lhs)
+{
+    return matrix<T>::abs(rhs - lhs);
+}
 
+template<typename T>
+inline T matrix<T>::abs_max_err(const matrix<T>& result, const matrix<T>& expected)
+{
+    matrix<T> ad = absdiff(result, expected);
+    
+    return *std::max_element(ad.data(), ad.data() + ad.size());
+}
+
+template<typename T>
+inline size_t matrix<T>::abs_max_excess_err(const matrix<T>& result, const matrix<T>& expected, T tolerance)
+{
+    matrix<T> ad = absdiff(result, expected);
+    return std::count_if
+    (
+        ad.data(),
+        ad.data() + ad.size(),
+        [tolerance](T val) { return val > tolerance; }
+    );
+    
+}
+
+template<typename T>
+T matrix<T>::abs_max_element(const matrix<T>& rhs, size_t from_row)
+{
+    return *std::max_element
+    (
+        rhs.data() + rhs.row_offset(from_row),
+        rhs.data() + rhs.size(),
+        [](T v1, T v2) { return std::abs(v1) < std::abs(v2); }
+     );
+}
 
 template<typename T>
 bool operator==(const matrix<T>& lhs, const matrix<T>& rhs)
@@ -889,79 +934,17 @@ template<typename T, typename R>
 matrix<T> operator+(const matrix<T>& lhs, const matrix<R>& rhs)
 {
     matrix<T> sum(lhs);
-    lhs += rhs;
+    sum += rhs;
     return sum;
 }
 
 template<typename T, typename R>
-matrix<T>& operator-(const matrix<T>& lhs, const matrix<R>& rhs)
+matrix<T> operator-(const matrix<T>& lhs, const matrix<R>& rhs)
 {
     matrix<T> sum(lhs);
-    lhs -= rhs;
+    sum -= rhs;
     return sum;
 }
-
-
-
-template<typename T>
-matrix<matrix<T>> as_rvecs(const matrix<T>& rhs)
-{
-    matrix<T>* rvecs = new matrix<T>[rhs.rows()]();
-    for(size_t r=0; r < rhs.rows(); r++)
-    {
-        rvecs[r] = rhs.row(r);
-    }
-
-    return matrix<matrix<T>>(rhs.rows(), 1, rvecs);
-}
-
-template<typename T>
-matrix<matrix<T>> as_cvecs(const matrix<T>& rhs)
-{
-    matrix<T>* cvecs = new matrix<T>[rhs.cols()];
-    for(size_t c=0; c < rhs.cols(); c++)
-    {
-        cvecs[c] = matrix<T>((rhs.col(c)));
-    }
-
-    return matrix<matrix<T>>(1, rhs.cols(), cvecs);
-}
-
-template<typename T>
-matrix<T> from_cvecs(const matrix<matrix<T>>& cvecs)
-{
-    matrix<T> collapsed(cvecs(0, 0).rows(), cvecs.cols());
-    for(size_t c=0; c < cvecs.cols(); c++)
-    {
-        collapsed.set_col(cvecs(0, c), c);
-    }
-
-    return collapsed;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-template<typename T>
-matrix<T>& matrix<T>::operator=(matrix<T>&& rhs)
-{
-    std::cout << "\tcalled move assignment\n";
-    swap(*this, rhs);
-    return *this;
-}*/
 
 
 
