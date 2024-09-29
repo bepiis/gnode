@@ -471,7 +471,6 @@ TEST_CASE("set value row col")
     }
 
     delete [] dat;
-
 }
 
 TEST_CASE("operator () row col")

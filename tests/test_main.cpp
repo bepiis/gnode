@@ -1,4 +1,5 @@
-#include <catch2/catch_test_macros.hpp>
+//#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_all.hpp>
 #include <cstdlib>
 #include <iostream>
 #include "../matrix.h"
@@ -33,29 +34,30 @@ int* generate_random_ints(size_t nbr, size_t modulus)
     return res;
 }
 
-/*
+
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
-class pyrunlistener : public Catch::EventListenerBase {
+class runlistener : public Catch::EventListenerBase {
 public:
     using Catch::EventListenerBase::EventListenerBase;
     
     
     void testRunStarting(const Catch::TestRunInfo &info) override
     {
-        Py_Initialize();
-        PyRun_SimpleString("from time import time,ctime\nprint('Today is', ctime(time()))\n");
+        std::cout << "started\n";
+        //Py_Initialize();
+        //PyRun_SimpleString("from time import time,ctime\nprint('Today is', ctime(time()))\n");
     }
     
     void testRunEnded(const Catch::TestRunStats &info) override
     {
-        Py_FinalizeEx();
+        //Py_FinalizeEx();
     }
 };
- */
+ 
 
-//CATCH_REGISTER_LISTENER(pyrunlistener)
+CATCH_REGISTER_LISTENER(runlistener);
 
 #include "test_mat.cpp"
 #include "test_householder.cpp"

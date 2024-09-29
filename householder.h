@@ -113,21 +113,31 @@ matrix<double>& householder(matrix<double>& A)
 {
     size_t M = A.rows();
     size_t N = A.cols();
+    size_t n = N;
     
     std::pair<matrix<double>, double> phouse;
     matrix<double> Asub;
     matrix<double> vhouse;
     
-    for(size_t j=0; j < N; j++)
+    if(M == N)
+    {
+        n--;
+    }
+    
+    for(size_t j=0; j < n; j++)
     {
         // 3m flops
+        //std::cout << "j=" << j << "========================================\n\n";
+        
         //std::cout << "sub_col: " << j << "\n";
         //pprint_matrix(A.sub_col(j, M-j, j));
-        //std::cout << "\n\n";
+        
+        //std::cout << "house(): \n";
         
         phouse = house(A.sub_col(j, M - j, j));
         
-        //std::cout << "vhouse" << j << " = \n";
+        
+        //std::cout << "vhouse = \n";
         //vhouse.print();
         //pprint_matrix(phouse.first);
         
@@ -136,27 +146,31 @@ matrix<double>& householder(matrix<double>& A)
         
         Asub = A.sub_matrix(j, M - j, j, N - j);
         
-        //std::cout << "Qsub" << j << " = \n";
+        //std::cout << "Qsub = \n";
         //Qsub.print();
         //pprint_matrix(Asub);
         
         //std::cout << "beta = " << beta << "\n\n";
     
 
-        //std::cout << "inner_left_prod " << j << "\n";
+        //std::cout << "inner_left_prod = \n";
         //pprint_matrix(inner_left_prod(vhouse, Asub));
         
-        //std::cout << "outer_prod " << j << "\n";
+        //std::cout << "outer_prod = \n";
         //pprint_matrix(outer_prod_1D(vhouse, inner_left_prod(vhouse, Asub)));
         
         // 2mn + 2n flops
-        Asub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Asub));
+        Asub -= outer_prod_1D((beta * vhouse), inner_left_prod(vhouse, Asub));
         
         //std::cout << "Qsubp" << j << " = \n";
         //Qsub.print();
         //pprint_matrix(Asub);
         
         A.set_sub_matrix(Asub, j, j);
+        
+        //std::cout << "A" << j << " = \n";
+        //A.print();
+        //pprint_matrix(A);
         
         if(j < M)
         {
@@ -167,10 +181,8 @@ matrix<double>& householder(matrix<double>& A)
             }
         }
         
-        //std::cout << "A" << j << " = \n";
-        //Qsub.print();
+        //std::cout << "Aw/v" << j << " = \n";
         //pprint_matrix(A);
-        
     }
     
     return A;
@@ -256,6 +268,12 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
     
     int n = (int)N;
     
+    if(M == N)
+    {
+        n--;
+    }
+    
+        
     //std::cout << "betalen = " << B.cols() << "\n";
     
     matrix<double> Im = matrix<double>::eye(M);
@@ -264,12 +282,16 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
     
     matrix<double> Qsub;
     
-    for(int j = n - 1 - (int)col_bias; j >= 0; j--)
+    for(int j = n - 1 + (int)col_bias; j >= 0; j--)
     {
         vhouse = matrix<double>(M - j - col_bias, 1);
         vhouse(0, 0) = 1.0;
         
         matrix<double> Ajp1 = R.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j);
+        
+        //std::cout << "ajp1" << j << " = \n";
+        //vhouse.print();
+        //pprint_matrix(Ajp1);
         
         vhouse.set_sub_col(Ajp1, 1, 0);
         
@@ -283,8 +305,9 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
         //Qsub.print();
         //pprint_matrix(Qsub);
         
-        //std::cout << "beta" << j << " = " << B(0, j) <<  "\n";
         double beta = 2/(1+col_norm2sq_from(Ajp1, 0, 0));
+        
+        //std::cout << "beta" << j << " = " << beta <<  "\n";
         // 2mn + 2n FLOPS
         //std::cout << "beta" << j << " = " << B(0, j) << "\n";
 
@@ -296,6 +319,9 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
         //Qsub.print();
 
         Q.set_sub_matrix(Qsub, j + col_bias, j + col_bias);
+        
+        //std::cout << "Q" << j << " = \n";
+        //pprint_matrix(Q);
         
     }
     
