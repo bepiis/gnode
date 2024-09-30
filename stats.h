@@ -48,6 +48,27 @@ std::ostream& operator<<(std::ostream& os, const stats& st)
 	return os;
 }
 
+// [1] (Texts in Applied Mathematics 55) Grégoire Allaire, Sidi Mahmoud Kaber (auth.)
+//     - Numerical Linear Algebra-Springer-Verlag New York (2008).pdf
+
+/*
+ * cond, norm and inorm in stats struct are approximations for triangularized matrices.
+ * The idea here (from [1]) which I will summarize is that since if A = BC is a factorization
+ * such that B and C are simple (triangular or orthongonal) then we can define an upper bound
+ * on the condition number of A, namely that:
+ *
+ * cond(A) <= cond(B)cond(C)
+ *
+ * If we have, for example, a A = QR factorization, then Q is orthogonal and thus cond(Q) = 1
+ * and we have:
+ *
+ * cond(A) <= cond(R)
+ *
+ * For all intents and purposes, I dont really care about the exact condition number of A, and
+ * an upper bound is good enough to determine the sensitivity of A in response to perturbed inputs. 
+ *
+ */
+
 // TODO: Condition number and norm estimates only work for lower triangular matrices so far, 
 // as can be seen by the forward sub alg embedded in the loop. upper triangular matrices can easily
 // be dealt with via an approximation by back substitution, and ig for now, we just have the fn
