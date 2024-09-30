@@ -233,3 +233,8 @@ TEST_CASE("Qaccumulate rand, randsize")
  -1.04618    -1.64197    -22.4779    -813.778
  */
 
+TEST_CASE("QR")
+{
+	
+}
+
