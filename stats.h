@@ -48,7 +48,12 @@ std::ostream& operator<<(std::ostream& os, const stats& st)
 	return os;
 }
 
-// TODO: Condition number and norm estimates only work for lower triangular matrices so far, as can be seen by the forward sub alg embedded in the loop. upper triangular matrices can easily be dealt with via an approximation by back substitution, and ig for now, we just have the fn caller specify whether the input matrix is upper or lower triangular if they want an estimate of cond(A). Note that I have already included variables backr and backc for this. The logic for choosing forward/back needs to be done, and the back sub computation needs to be put in.
+// TODO: Condition number and norm estimates only work for lower triangular matrices so far, 
+// as can be seen by the forward sub alg embedded in the loop. upper triangular matrices can easily
+// be dealt with via an approximation by back substitution, and ig for now, we just have the fn
+// caller specify whether the input matrix is upper or lower triangular if they want an estimate of
+// cond(A). Note that I have already included variables backr and backc for this. The logic for
+// choosing forward/back needs to be done, and the back sub computation needs to be put in.
 
 // TODO: At some point, I would like to be able to specify which stats I would like to compute in this loop:
 /*
@@ -124,7 +129,10 @@ stats eval_stats(const matrix<T> &in, size_t start_row, size_t break_row, size_t
 		
 		if(r > start_row)
 		{
-            // for cond, norm2, inorm2. Essentially, we estimate ||A||_2 by forward subbing on the off diagonals, and choosing ±1 for x which maximizes the modulus of y. In turn, since the ||x||_2 = sqrt(M), then ||A||_2 ~ ||y||_2/||x||_2 = ||y||_2/sqrt(M)
+            // for cond, norm2, inorm2. Essentially, we estimate ||A||_2 by 
+            // forward subbing on the off diagonals, and choosing ±1 for x which
+            // maximizes the modulus of y. In turn, since the ||x||_2 = sqrt(M),
+            // then ||A||_2 ~ ||y||_2/||x||_2 = ||y||_2/sqrt(M)
 			if(std::abs(curr_diag + s) > std::abs(curr_diag - s))
 			{
 				xc(r, 0) = 1.0;
