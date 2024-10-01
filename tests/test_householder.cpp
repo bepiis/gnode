@@ -44,7 +44,7 @@ TEST_CASE("test house")
     
     REQUIRE(absdiff < zero_tol);
 }
-// TODO: maybe one more non-square test, but householder + Qaccumulate will be tested rigorously to verify that the algorithm works
+
 TEST_CASE("householder basic")
 {
     size_t cnt_tol = 0;
@@ -114,15 +114,6 @@ TEST_CASE("Qaccumulate basic, square")
     //std::cout << "\n\n";
 }
 
-/*
- j = n - 2 passed
- 258.013    813.807    872.272    -832.68
- 797.269    955.722    819.563    -88.8255
- 844.486    -793.187    501.011    148.005
- 645.232    -659.314    959.932    66.0464
- 
- 
-*/
 TEST_CASE("Qaccumulate rand, randsize, square")
 {
     size_t cnt_tol = 0;
@@ -146,19 +137,7 @@ TEST_CASE("Qaccumulate rand, randsize, square")
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, randmcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, randmcpy);
-    
-    /*matrix<double> rabsd = matrix<double>::absdiff(rchk, randmcpy);
-    for(size_t r=0; r < rabsd.rows(); r++)
-    {
-        for(size_t c=0; c < rabsd.cols(); c++)
-        {
-            if(rabsd(r, c) < zero_tol)
-            {
-                rabsd(r, c) = 0.0;
-            }
-        }
-    }
-    print_matrix(&randmcpy);*/
+
     
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
@@ -205,18 +184,6 @@ TEST_CASE("Qaccumulate rand, randsize")
     errcnt = matrix<double>::abs_max_excess_err(rchk, tstcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, tstcpy);
     
-    /*matrix<double> rabsd = matrix<double>::absdiff(rchk, tstcpy);
-    for(size_t r=0; r < rabsd.rows(); r++)
-    {
-        for(size_t c=0; c < rabsd.cols(); c++)
-        {
-            if(rabsd(r, c) < zero_tol)
-            {
-                rabsd(r, c) = 0.0;
-            }
-        }
-    }
-    print_matrix(&tstcpy);*/
     
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
@@ -226,15 +193,96 @@ TEST_CASE("Qaccumulate rand, randsize")
     REQUIRE(errmax < zero_tol);
 }
 
-/*
- 1053.21    716.778    -262.262    -1265.85
- -0.666564    655.022    829.657    -86.4781
- 0.318846    0.678307    849.109    656.642
- -1.04618    -1.64197    -22.4779    -813.778
- */
-
 TEST_CASE("QR")
 {
-	
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    const size_t N = 100;
+    auto M = GENERATE(100, take(20, filter([](size_t i) { return i >= 100; }, random(100, 200))));
+    
+    std::cout << "test transformation::house::QR (rand, M = " << M << ", N = " << N << "): ";
+    
+    matrix<double> qrtst = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
+    
+    auto qrresult = QR(qrtst);
+    
+    matrix<double> rchk = mat_mul_alg1(&qrresult.first, &qrresult.second);
+    
+    errcnt = matrix<double>::abs_max_excess_err(rchk, qrtst, zero_tol);
+    errmax = matrix<double>::abs_max_err(rchk, qrtst);
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+    
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+}
+
+TEST_CASE("hessenberg")
+{
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    // TODO: fix 1x1 case
+    
+    size_t M = GENERATE(2, take(20, random(1, 100)));
+    
+    std::cout << "test transformation::house::hessenberg (rand, M = " << M << ", N = " << M<< "): ";
+    
+    matrix<double> htest = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
+    matrix<double> htestcpy(htest);
+    //std::cout << "\n\n";
+    //print_matrix(&htest);
+    
+    //std::cout << "\n\n";
+    
+    htest = hessenberg(htest);
+    
+    //print_matrix(&htest);
+    
+    matrix<double> Qh = Qaccumulate(htest, htest.rows(), 1);
+    
+    //std::cout << "\n\n";
+    
+    htest.fill_lower_hessenberg(0.0);
+    
+    //print_matrix(&htest);
+    
+    //std::cout << "\n\n";
+    
+    //print_matrix(&Qh);
+    
+    matrix<double> QhT = Qh.transpose();
+    matrix<double> hchk = mat_mul_alg1(&Qh, &htest);
+    matrix<double> hchk2 = mat_mul_alg1(&hchk, &QhT);
+    
+    //matrix<double> Ih = mat_mul_alg1(&QhT, &Qh);
+    //std::cout << "\n\n";
+    //print_matrix(&Ih);
+    
+    //std::cout << "\n\n";
+    //print_matrix(&hchk2);
+    
+    //std::cout <<"\n\n";
+    
+    errcnt = matrix<double>::abs_max_excess_err(hchk2, htestcpy, zero_tol);
+    errmax = matrix<double>::abs_max_err(hchk2, htestcpy);
+    
+    //matrix<double> adiff = matrix<double>::absdiff(hchk2, htestcpy);
+    
+    //std::cout << "\n\n";
+    //print_matrix(&adiff);
+    //std::cout << "\n\n";
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+
 }
 

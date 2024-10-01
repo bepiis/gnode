@@ -272,8 +272,6 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
     {
         n--;
     }
-    
-        
     //std::cout << "betalen = " << B.cols() << "\n";
     
     matrix<double> Im = matrix<double>::eye(M);
@@ -282,7 +280,7 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
     
     matrix<double> Qsub;
     
-    for(int j = n - 1 + (int)col_bias; j >= 0; j--)
+    for(int j = n - 1 - (int)col_bias; j >= 0; j--)
     {
         vhouse = matrix<double>(M - j - col_bias, 1);
         vhouse(0, 0) = 1.0;
@@ -306,6 +304,7 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
         //pprint_matrix(Qsub);
         
         double beta = 2/(1+col_norm2sq_from(Ajp1, 0, 0));
+        //double beta = 0.0;
         
         //std::cout << "beta" << j << " = " << beta <<  "\n";
         // 2mn + 2n FLOPS
@@ -357,7 +356,7 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
         //std::cout<< "Ablk = \n";
         //Ablk.print();
         // A <- QA
-        Ablk -= outer_prod_1D(beta * vhouse, inner_left_prod(vhouse, Ablk));
+        Ablk -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Ablk));
         
         A.set_sub_matrix(Ablk, k + 1, k);
         
@@ -373,7 +372,7 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
         //Apar.print();
         
         // A <- A(Q^T)
-        Apar -= outer_prod_1D(inner_right_prod(Apar, vhouse), beta * /*TODO: */vhouse.transpose());
+        Apar -= beta * outer_prod_1D(inner_right_prod(Apar, vhouse), /*TODO: */vhouse);
         
 
         
