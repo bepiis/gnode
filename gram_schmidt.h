@@ -7,6 +7,7 @@
 
 #include "matrix.h"
 #include "products.h"
+#include "result.h"
 
 namespace transformation
 {
@@ -21,7 +22,7 @@ namespace GS
  * Only recommended for use in iterative methods due to less
  * numerical stability than householder, and jacobi/givens transformations
  */
-std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& X)
+result::QR<double> QR(const matrix<double>& X)
 {
     matrix<double> V(X);
     matrix<double> Qc(V.rows(), V.cols());
@@ -50,7 +51,7 @@ std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& X)
     
     //matrix<double> Q = from_cvecs(Qc);
     
-    return std::make_pair(Qc, R);
+    return result::QR<double>(Qc, R);
 }
 
 /*
@@ -59,8 +60,8 @@ std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& X)
  */
 matrix<double> MGS(const matrix<double>& V)
 {
-    std::pair<matrix<double>, matrix<double>> res_pair = QR(V);
-    return res_pair.first;
+    result::QR res_pair = QR(V);
+    return res_pair.R;
 }
 
 

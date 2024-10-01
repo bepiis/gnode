@@ -7,6 +7,7 @@
 
 #include "matrix.h"
 #include "products.h"
+#include "result.h"
 
 // refs:
 // [1] Matrix Computations 4th ed. Golub, Van Loan
@@ -22,7 +23,7 @@ namespace house
 
 // TODO: Just overload ostream operator<< so I dont have to keep writing print fns all over the place.
 template<class T>
-void pprint_matrix(const matrix<T>& mat)
+void pprint_matrix(matrix<T> const& mat)
 {
     for(int i=0; i < mat.rows(); i++)
     {
@@ -34,6 +35,18 @@ void pprint_matrix(const matrix<T>& mat)
     }
     std::cout << "\n\n";
 }
+
+struct house
+{
+    matrix<double> vec;
+    double beta;
+    
+    house() = default;
+    
+    house(matrix<double> const& v, double b)
+    : vec(v), beta(b) {}
+};
+
 
 /*
  * Determines the vector v and constant beta from input x = cvec such that
@@ -48,8 +61,7 @@ void pprint_matrix(const matrix<T>& mat)
  * the lower triangle of upper triangular matrix R, where zeros have been introduced
  *
  */
-// TODO: get rid of all pair return types.. I think I hate them...
-std::pair<matrix<double>, double> house(const matrix<double>& cvec)
+house housevec(matrix<double> const& cvec)
 {
     double sig = inner_prod_1D(cvec, cvec, 1);
     double beta, mu;
@@ -98,7 +110,7 @@ std::pair<matrix<double>, double> house(const matrix<double>& cvec)
     
     
     // Cost: roughly 3m flops
-    return std::make_pair(hv, beta);
+    return house(hv, beta);
 }
 
 
@@ -115,9 +127,8 @@ matrix<double>& householder(matrix<double>& A)
     size_t N = A.cols();
     size_t n = N;
     
-    std::pair<matrix<double>, double> phouse;
+    house h;
     matrix<double> Asub;
-    matrix<double> vhouse;
     
     if(M == N)
     {
@@ -134,15 +145,15 @@ matrix<double>& householder(matrix<double>& A)
         
         //std::cout << "house(): \n";
         
-        phouse = house(A.sub_col(j, M - j, j));
+        h = housevec(A.sub_col(j, M - j, j));
         
         
         //std::cout << "vhouse = \n";
         //vhouse.print();
         //pprint_matrix(phouse.first);
         
-        matrix<double> vhouse = phouse.first;
-        double beta = phouse.second;
+        //matrix<double> vhouse = phouse.first;
+        //double beta = phouse.second;
         
         Asub = A.sub_matrix(j, M - j, j, N - j);
         
@@ -160,7 +171,7 @@ matrix<double>& householder(matrix<double>& A)
         //pprint_matrix(outer_prod_1D(vhouse, inner_left_prod(vhouse, Asub)));
         
         // 2mn + 2n flops
-        Asub -= outer_prod_1D((beta * vhouse), inner_left_prod(vhouse, Asub));
+        Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
         
         //std::cout << "Qsubp" << j << " = \n";
         //Qsub.print();
@@ -177,7 +188,7 @@ matrix<double>& householder(matrix<double>& A)
             size_t i=1;
             for(size_t k = j+1; k < M; k++, i++)
             {
-                A(k, j) = vhouse(i, 0);
+                A(k, j) = h.vec(i, 0);
             }
         }
         
@@ -188,62 +199,6 @@ matrix<double>& householder(matrix<double>& A)
     return A;
 }
 
-void colpiv_householder(matrix<double>& A)
-{
-    matrix<double> c = cols_norm2sq(A);
-    matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
-    
-    size_t r = 0;
-    double tau = matrix<double>::abs_max_element(c, 0);
-    
-    size_t M = A.rows();
-    size_t N = A.cols();
-    
-    std::pair<matrix<double>, double> phouse;
-    matrix<double> Asub;
-    matrix<double> Im = matrix<double>::eye(M);
-    
-    while(tau > 0 && r < N)
-    {
-        
-        // looking for first index k which satisfies c(k) = tau
-        size_t k = r;
-        for(; k < N; k++)
-        {
-            if(c(0, k) == tau)
-            {
-                break;
-            }
-        }
-        
-        piv(r, 0) = k;
-        
-        A.swap_cols(r, k);
-        c.swap_cols(r, k);
-                
-        phouse = house(A.sub_col(r, M - r, r));
-        double beta = phouse.second;
-        
-        Asub = A.sub_matrix(r, M-r, r, N-r);
-        
-        Asub -= beta * outer_prod_1D(phouse.first, inner_left_prod(phouse.first, Asub));
-        
-        size_t i = 1;
-        for(size_t j = r + 1; j < M; j++, i++)
-        {
-            A(j, r) = phouse.first(i, 0);
-        }
-        
-        // update norm vector c by subtrating out A(r, :)**2
-        for(size_t j = r + 1; j < N; j++)
-        {
-            c(0, j) -= A(r, j) * A(r, j);
-        }
-        
-        tau = matrix<double>::abs_max_element(c, ++r);
-    }
-    
-}
 
 /*
  * Accumulates the matrix Q = Q0 * Q1 * ... Qn
@@ -261,10 +216,10 @@ void colpiv_householder(matrix<double>& A)
  *
  * TODO: work with k optimization
  */
-matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
+matrix<double> Qaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
 {
-    size_t M = R.rows();
-    size_t N = R.cols();
+    size_t M = F.rows();
+    size_t N = F.cols();
     
     int n = (int)N;
     
@@ -285,13 +240,13 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
         vhouse = matrix<double>(M - j - col_bias, 1);
         vhouse(0, 0) = 1.0;
         
-        matrix<double> Ajp1 = R.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j);
+        matrix<double> Fjp1 = F.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j);
         
         //std::cout << "ajp1" << j << " = \n";
         //vhouse.print();
         //pprint_matrix(Ajp1);
         
-        vhouse.set_sub_col(Ajp1, 1, 0);
+        vhouse.set_sub_col(Fjp1, 1, 0);
         
         //std::cout << "vhouse" << j << " = \n";
         //vhouse.print();
@@ -303,7 +258,7 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
         //Qsub.print();
         //pprint_matrix(Qsub);
         
-        double beta = 2/(1+col_norm2sq_from(Ajp1, 0, 0));
+        double beta = 2/(1+col_norm2sq_from(Fjp1, 0, 0));
         //double beta = 0.0;
         
         //std::cout << "beta" << j << " = " << beta <<  "\n";
@@ -328,6 +283,25 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
     return Q;
 }
 
+/*
+ * Uses the above householder and Qaccumulate to obtain the traditional QR factorization.
+ * Note that explicitly forming Q is usually not needed, and thus
+ * using this fn instead of householder() is usually not needed, saving the
+ * extra computation required to un-factorize Q
+ */
+result::QR<double> QR(matrix<double> const& A)
+{
+    // TODO: add exception throw for M < N
+    matrix<double> R(A);
+    matrix<double>& house_result = householder(R);
+    
+    matrix<double> Q = Qaccumulate(house_result, house_result.rows(), 0);
+    
+    // cleanup
+    R.fill_lower_triangle(0.0);
+    
+    return result::QR<double>(Q, R);
+}
 
 /*
  * Computes an upper hessenberg reduction for a N x N square matrix A
@@ -340,15 +314,13 @@ matrix<double> Qaccumulate(const matrix<double>& R, size_t k, size_t col_bias)
 matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
 {
     size_t N = A.rows();
-    std::pair<matrix<double>, double> phouse;
-    matrix<double> vhouse, Ablk, Apar;
+    house h;
+    matrix<double> Ablk, Apar;
     
     for(size_t k=0; k < N - 2; k++)
     {
-        phouse = house(A.sub_col(k + 1, N - k - 1, k));
+        h = housevec(A.sub_col(k + 1, N - k - 1, k));
         
-        vhouse = phouse.first;
-        double beta = phouse.second;
         //std::cout << "beta = " << beta << "\n";
         
         Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
@@ -356,7 +328,7 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
         //std::cout<< "Ablk = \n";
         //Ablk.print();
         // A <- QA
-        Ablk -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Ablk));
+        Ablk -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Ablk));
         
         A.set_sub_matrix(Ablk, k + 1, k);
         
@@ -372,9 +344,9 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
         //Apar.print();
         
         // A <- A(Q^T)
-        Apar -= beta * outer_prod_1D(inner_right_prod(Apar, vhouse), /*TODO: */vhouse);
+        Apar -= h.beta * outer_prod_1D(inner_right_prod(Apar, h.vec), h.vec);
         
-
+        
         
         A.set_sub_matrix(Apar, 0, k + 1);
         
@@ -387,7 +359,7 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
         size_t i=1;
         for(size_t j = k + 2; j < N; j++, i++)
         {
-            A(j, k) = vhouse(i, 0);
+            A(j, k) = h.vec(i, 0);
         }
         
     }
@@ -395,24 +367,112 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
     return A;
 }
 
-/*
- * Uses the above householder and Qaccumulate to obtain the traditional QR factorization.
- * Note that explicitly forming Q is usually not needed, and thus
- * using this fn instead of householder() is usually not needed, saving the
- * extra computation required to un-factorize Q
- */
-std::pair<matrix<double>, matrix<double>> QR(const matrix<double>& A)
+result::QH<double> QLH(matrix<double> const& A)
 {
-    matrix<double> R(A);
-    matrix<double>& house_result = householder(R);
+    // A must be square.
+    matrix<double> H(A);
+    H = hessenberg(H);
     
-    matrix<double> Q = Qaccumulate(house_result, house_result.rows(), 0);
+    matrix<double> Q = Qaccumulate(H, H.rows(), 1);
     
-    // cleanup
-    R.fill_lower_triangle(0.0);
+    H.fill_lower_hessenberg(0.0);
     
-    return std::make_pair(Q, R);
+    return result::QH<double>(Q, H);
 }
+
+result::FP<double> colpiv_householder(matrix<double>& A)
+{
+    matrix<double> c = cols_norm2sq(A);
+    
+    std::cout << "c = \n";
+    pprint_matrix(c);
+    
+    matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
+    piv.zero();
+    
+    std::cout << "piv = \n";
+    pprint_matrix(piv);
+    
+    size_t r = 0;
+    double tau = matrix<double>::abs_max_element(c, 0);
+    
+    std::cout << "tau = " << tau << "\n\n";
+    
+    size_t M = A.rows();
+    size_t N = A.cols();
+    
+    house h;
+    matrix<double> Asub;
+    matrix<double> Im = matrix<double>::eye(M);
+    
+    while(tau > 0 && r < N)
+    {
+        
+        // looking for first index k which satisfies c(k) = tau
+        size_t k = r;
+        for(; k < N; k++)
+        {
+            if(c(0, k) == tau)
+            {
+                break;
+            }
+        }
+        
+        piv(r, 0) = k;
+        
+        std::cout << "A " << r << ": \n";
+        pprint_matrix(A);
+        
+        std::cout << "c " << r << ": \n";
+        pprint_matrix(c);
+        
+        A.swap_cols(r, k);
+        c.swap_cols(r, k);
+        
+        std::cout << "Aswapped " << r << ", " << k << ": \n";
+        pprint_matrix(A);
+        
+        std::cout << "cswapped " << r << ", " << k << ": \n";
+        pprint_matrix(c);
+        
+        h = housevec(A.sub_col(r, M - r, r));
+        
+        std::cout << "housevec: \n";
+        pprint_matrix(h.vec);
+        std::cout << "beta = " << h.beta << "\n";
+        
+        Asub = A.sub_matrix(r, M-r, r, N-r);
+        
+        std::cout << "Asub " << r << ": \n";
+        pprint_matrix(Asub);
+        
+        Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
+        
+        std::cout << "Asubp " << r << ": \n";
+        pprint_matrix(Asub);
+        
+        size_t i = 1;
+        for(size_t j = r + 1; j < M; j++, i++)
+        {
+            A(j, r) = h.vec(i, 0);
+        }
+        
+        // update norm vector c by subtrating out A(r, :)**2
+        for(size_t j = r + 1; j < N; j++)
+        {
+            c(0, j) -= A(r, j) * A(r, j);
+        }
+
+        
+        tau = matrix<double>::abs_max_element(c, ++r);
+        
+        std::cout << "exit: " << "\n\ttau > 0: " << (tau > 0) << " " << tau << "\n\tr < N: " << (r < N) << "\n\n";
+    }
+    
+    return result::FP<double>(A, piv);
+}
+
+
 
 }
 

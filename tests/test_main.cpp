@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include "../matrix.h"
+#include "../result.h"
 
 //#define PY_SSIZE_T_CLEAN
 //#include <Python.h>

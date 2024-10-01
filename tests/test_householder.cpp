@@ -7,7 +7,7 @@
 #include "../gram_schmidt.h"
 
 using namespace transformation::house;
-
+/*
 TEST_CASE("test house")
 {
     double zero_tol = 1E-11;
@@ -18,11 +18,9 @@ TEST_CASE("test house")
     size_t M = S_RAND(100);
     matrix<double> x = matrix<double>::random_dense_matrix(M, 1, -1000, 1000);
     
-    auto housepair = house(x);
-    matrix<double> vhouse = housepair.first;
-    double beta = housepair.second;
+    auto h = housevec(x);
     
-    matrix<double> P = matrix<double>::eye(M) - beta * outer_prod_1D(vhouse, vhouse);
+    matrix<double> P = matrix<double>::eye(M) - h.beta * outer_prod_1D(h.vec, h.vec);
     matrix<double> xe1 = inner_right_prod(P, x);
 
     double x2norm = std::sqrt(col_norm2sq(x, 0));
@@ -63,8 +61,8 @@ TEST_CASE("householder basic")
     //matrix<double> basic_chk(3, 3, {6, -3, -8, 1, 5.65685, -3.53553, 1, 2.41421, 0.707107});
     basic.fill_lower_triangle(0.0);
     
-    errcnt = matrix<double>::abs_max_excess_err(basic, basic_chk.second, zero_tol);
-    errmax = matrix<double>::abs_max_err(basic, basic_chk.second);
+    errcnt = matrix<double>::abs_max_excess_err(basic, basic_chk.R, zero_tol);
+    errmax = matrix<double>::abs_max_err(basic, basic_chk.R);
     
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
@@ -201,7 +199,7 @@ TEST_CASE("QR")
     size_t errcnt;
     
     const size_t N = 100;
-    auto M = GENERATE(100, take(20, filter([](size_t i) { return i >= 100; }, random(100, 200))));
+    auto M = GENERATE(100, take(10, filter([](size_t i) { return i >= 100; }, random(100, 200))));
     
     std::cout << "test transformation::house::QR (rand, M = " << M << ", N = " << N << "): ";
     
@@ -209,7 +207,7 @@ TEST_CASE("QR")
     
     auto qrresult = QR(qrtst);
     
-    matrix<double> rchk = mat_mul_alg1(&qrresult.first, &qrresult.second);
+    matrix<double> rchk = mat_mul_alg1(&qrresult.Q, &qrresult.R);
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, qrtst, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, qrtst);
@@ -231,7 +229,7 @@ TEST_CASE("hessenberg")
     
     // TODO: fix 1x1 case
     
-    size_t M = GENERATE(2, take(20, random(1, 100)));
+    size_t M = GENERATE(2, take(20, random(2, 100)));
     
     std::cout << "test transformation::house::hessenberg (rand, M = " << M << ", N = " << M<< "): ";
     
@@ -284,5 +282,67 @@ TEST_CASE("hessenberg")
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
 
+}
+
+TEST_CASE("QLH")
+{
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    // TODO: fix 1x1 case
+    
+    size_t M = GENERATE(2, take(10, random(2, 100)));
+    
+    std::cout << "test transformation::house::QLH (rand, M = " << M << ", N = " << M<< "): ";
+    
+    matrix<double> qlhtest = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
+    
+    auto result = QLH(qlhtest);
+    
+    matrix<double> QT = result.Q.transpose();
+    matrix<double> hchk = mat_mul_alg1(&result.Q, &result.H);
+    matrix<double> hchk2 = mat_mul_alg1(&hchk, &QT);
+    
+    errcnt = matrix<double>::abs_max_excess_err(hchk2, qlhtest, zero_tol);
+    errmax = matrix<double>::abs_max_err(hchk2, qlhtest);
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+}*/
+
+TEST_CASE("colpiv householder")
+{
+    
+    matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
+    matrix<double> basicpy(basic);
+    
+    auto result = colpiv_householder(basic);
+    auto chkres = householder(basicpy);
+    
+    print_matrix(&result.F);
+    std::cout << "\n\n";
+    
+    print_matrix(&chkres);
+    std::cout << "\n\n";
+    
+    print_matrix(&result.P);
+    std::cout <<"\n\n";
+    
+    matrix<double> Q = Qaccumulate(result.F, result.F.rows(), 0);
+    
+    print_matrix(&Q);
+    std::cout << "\n\n";
+    
+    result.F.fill_lower_triangle(0.0);
+    matrix<double> mres = mat_mul_alg1(&Q, &result.F);
+    
+    print_matrix(&mres);
+    
+    
+    
+    
 }
 

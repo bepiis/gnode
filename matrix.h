@@ -902,12 +902,22 @@ inline size_t matrix<T>::abs_max_excess_err(const matrix<T>& result, const matri
 template<typename T>
 T matrix<T>::abs_max_element(const matrix<T>& rhs, size_t from_row)
 {
+    T max_elem = static_cast<T>(0.0);
+    for(size_t c=from_row; c < rhs.cols(); c++)
+    {
+        if(std::abs(rhs(0, c)) > max_elem)
+        {
+            max_elem = std::abs(rhs(0, c));
+        }
+    }
+    /*
     return *std::max_element
     (
         rhs.data() + rhs.row_offset(from_row),
         rhs.data() + rhs.size(),
         [](T v1, T v2) { return std::abs(v1) < std::abs(v2); }
-     );
+    );*/
+    return max_elem;
 }
 
 template<typename T>
