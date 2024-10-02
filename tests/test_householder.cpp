@@ -341,6 +341,22 @@ TEST_CASE("colpiv householder")
     
     print_matrix(&mres);
     
+    matrix<double> randt = matrix<double>::random_dense_matrix(8, 3, -1000, 1000);
+    matrix<double> randcpy(randt);
+    
+    auto randres = colpiv_householder(randt);
+    
+    matrix<double> Qrand = Qaccumulate(randres.F, randres.F.rows(), 0);
+    
+    randres.F.fill_lower_triangle(0.0);
+    
+    matrix<double> randchk = mat_mul_alg1(&Qrand, &randres.F);
+    
+    print_matrix(&randcpy);
+    std::cout << "\n\n";
+    
+    print_matrix(&randchk);
+    
     
     
     

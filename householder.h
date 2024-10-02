@@ -384,20 +384,20 @@ result::FP<double> colpiv_householder(matrix<double>& A)
 {
     matrix<double> c = cols_norm2sq(A);
     
-    std::cout << "c = \n";
-    pprint_matrix(c);
+    //std::cout << "c = \n";
+    //pprint_matrix(c);
     
     matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
     piv.zero();
     
-    std::cout << "piv = \n";
-    pprint_matrix(piv);
+    //std::cout << "piv = \n";
+    //pprint_matrix(piv);
     
     size_t r = 0;
     double tau = matrix<double>::abs_max_element(c, 0);
     
-    std::cout << "tau = " << tau << "\n\n";
-    
+    //std::cout << "tau = " << tau << "\n\n";
+   
     size_t M = A.rows();
     size_t N = A.cols();
     
@@ -420,42 +420,51 @@ result::FP<double> colpiv_householder(matrix<double>& A)
         
         piv(r, 0) = k;
         
-        std::cout << "A " << r << ": \n";
-        pprint_matrix(A);
+        //std::cout << "piv " << r << ": \n";
+        //pprint_matrix(piv);
         
-        std::cout << "c " << r << ": \n";
-        pprint_matrix(c);
+        //std::cout << "A " << r << ": \n";
+        //pprint_matrix(A);
+        
+        //std::cout << "c " << r << ": \n";
+        //pprint_matrix(c);
         
         A.swap_cols(r, k);
         c.swap_cols(r, k);
         
-        std::cout << "Aswapped " << r << ", " << k << ": \n";
-        pprint_matrix(A);
+        //std::cout << "Aswapped " << r << ", " << k << ": \n";
+        //pprint_matrix(A);
         
-        std::cout << "cswapped " << r << ", " << k << ": \n";
-        pprint_matrix(c);
+        //std::cout << "cswapped " << r << ", " << k << ": \n";
+        //pprint_matrix(c);
         
         h = housevec(A.sub_col(r, M - r, r));
         
-        std::cout << "housevec: \n";
-        pprint_matrix(h.vec);
-        std::cout << "beta = " << h.beta << "\n";
+        //std::cout << "housevec: \n";
+        //pprint_matrix(h.vec);
+        //std::cout << "beta = " << h.beta << "\n";
         
         Asub = A.sub_matrix(r, M-r, r, N-r);
         
-        std::cout << "Asub " << r << ": \n";
-        pprint_matrix(Asub);
+        //std::cout << "Asub " << r << ": \n";
+        //pprint_matrix(Asub);
         
         Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
         
-        std::cout << "Asubp " << r << ": \n";
-        pprint_matrix(Asub);
+        //std::cout << "Asubp " << r << ": \n";
+        //pprint_matrix(Asub);
         
-        size_t i = 1;
-        for(size_t j = r + 1; j < M; j++, i++)
+        A.set_sub_matrix(Asub, r, r);
+        
+        if(r < M)
         {
-            A(j, r) = h.vec(i, 0);
+            size_t i = 1;
+            for(size_t j = r + 1; j < M; j++, i++)
+            {
+                A(j, r) = h.vec(i, 0);
+            }
         }
+
         
         // update norm vector c by subtrating out A(r, :)**2
         for(size_t j = r + 1; j < N; j++)
@@ -466,7 +475,7 @@ result::FP<double> colpiv_householder(matrix<double>& A)
         
         tau = matrix<double>::abs_max_element(c, ++r);
         
-        std::cout << "exit: " << "\n\ttau > 0: " << (tau > 0) << " " << tau << "\n\tr < N: " << (r < N) << "\n\n";
+        //std::cout << "exit: " << "\n\ttau > 0: " << (tau > 0) << " " << tau << "\n\tr < N: " << (r < N) << "\n\n";
     }
     
     return result::FP<double>(A, piv);
