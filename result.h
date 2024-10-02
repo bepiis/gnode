@@ -50,6 +50,21 @@ struct FP
     : F(f), P(p) {}
 };
 
+// used to return a rank-revealing factorization where:
+// F is arbitrary
+// P is a column permutation
+// r is the rank
+template<typename T>
+struct FPr
+{
+    matrix<T>& F;
+    matrix<size_t> P;
+    size_t rank;
+    
+    FPr(matrix<T> & f, matrix<size_t> const& p, size_t rnk)
+    : F(f), P(p), rank(rnk) {}
+};
+
 // used to return a factorization where:
 // P is a row permutation
 // F is arbitrary

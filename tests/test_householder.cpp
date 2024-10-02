@@ -7,7 +7,7 @@
 #include "../gram_schmidt.h"
 
 using namespace transformation::house;
-/*
+
 TEST_CASE("test house")
 {
     double zero_tol = 1E-11;
@@ -281,6 +281,9 @@ TEST_CASE("hessenberg")
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
+ 
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
 
 }
 
@@ -311,8 +314,91 @@ TEST_CASE("QLH")
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
-}*/
+ 
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+}
 
+TEST_CASE("colpiv householder basic")
+{
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    std::cout << "test transformation::house::colpiv_householder (basic): ";
+    
+    matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
+    matrix<double> basiccpy(basic);
+    
+    auto result = colpiv_householder(basic);
+    
+    matrix<double> Q = Qaccumulate(result.F, result.F.rows(), 0);
+    
+    result.F.fill_lower_triangle(0.0);
+    matrix<double> bchk = mat_mul_alg1(&Q, &result.F);
+    
+    bchk.permute_cols(result.P);
+    
+    errcnt = matrix<double>::abs_max_excess_err(bchk, basiccpy, zero_tol);
+    errmax = matrix<double>::abs_max_err(bchk, basiccpy);
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+    
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+}
+
+TEST_CASE("colpiv householder square")
+{
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    size_t M = GENERATE(2, take(10, random(2, 100)));
+    //size_t M = 10;
+    
+    std::cout << "test transformation::house::colpiv_householder (rand, M = " << M << ", N = " << M<< "): ";
+    
+    matrix<double> mrand = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
+    matrix<double> mrandcpy(mrand);
+    
+    //std::cout << "\n\n";
+    //print_matrix(&mrandcpy);
+    //std::cout << "\n\n";
+    
+    auto result = colpiv_householder(mrand);
+    
+    matrix<double> Q = Qaccumulate(result.F, result.F.rows(), 0);
+    
+    result.F.fill_lower_triangle(0.0);
+    matrix<double> bchk = mat_mul_alg1(&Q, &result.F);
+
+    
+    bchk.permute_cols(result.P);
+    
+    
+    //print_matrix(&bchk);
+    //std::cout << "\n\n";
+    
+    //print_matrix(&result.P);
+    //std::cout << "\n\n";
+    
+    errcnt = matrix<double>::abs_max_excess_err(bchk, mrandcpy, zero_tol);
+    errmax = matrix<double>::abs_max_err(bchk, mrandcpy);
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+    
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+}
+
+/*
 TEST_CASE("colpiv householder")
 {
     
@@ -340,6 +426,8 @@ TEST_CASE("colpiv householder")
     matrix<double> mres = mat_mul_alg1(&Q, &result.F);
     
     print_matrix(&mres);
+    std::cout << "\n\n";
+
     
     matrix<double> randt = matrix<double>::random_dense_matrix(8, 3, -1000, 1000);
     matrix<double> randcpy(randt);
@@ -355,10 +443,11 @@ TEST_CASE("colpiv householder")
     print_matrix(&randcpy);
     std::cout << "\n\n";
     
+    randchk.permute_cols(randres.P);
     print_matrix(&randchk);
     
+    std::cout << "\n\n";
     
-    
-    
-}
+    print_matrix(&randres.P);
+}*/
 

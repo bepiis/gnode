@@ -6,13 +6,14 @@
 #pragma once
 
 #include <iostream>
-#include <cstring>
-#include <format>
 #include <random>
-#include <cmath>
-#include <utility>
-#include <format>
 #include <algorithm>
+
+/*
+ * TODO: expand matrix template so that we can
+ * define whether matrix is square, rowvector, column vector, sparse, ...
+ * at compile time
+ */
 
 using std::size_t;
 
@@ -21,13 +22,13 @@ class matrix
 {
 public:
     matrix(size_t size = 0);
-    matrix(size_t size, const T* dat);
+    matrix(size_t size, T const* dat);
         
     matrix<T>& reshape(size_t new_r, size_t new_c);
     matrix(size_t r, size_t c);
-    matrix(size_t r, size_t c, const T* dat);
+    matrix(size_t r, size_t c, T const* dat);
     
-    matrix(const matrix<T>& rhs);
+    matrix(matrix<T> const& rhs);
     
     matrix(std::initializer_list<T> dat);
     matrix(size_t size, std::initializer_list<T> dat);
@@ -91,20 +92,22 @@ public:
     
     void set_identity(void);
     
-    bool content_equals(const matrix<T>& rhs) const;
-    bool equals(const matrix<T>& rhs) const;
+    bool content_equals(matrix<T> const& rhs) const;
+    bool equals(matrix<T> const& rhs) const;
     bool is_symmetric(void) const;
 
     matrix<T> row(size_t r) const;
-    matrix<T>& set_row(const matrix<T>& rvec, size_t r);
+    matrix<T>& set_row(matrix<T> const& rvec, size_t r);
 
     matrix<T> col(size_t c) const;
-    matrix<T>& set_col(const matrix<T>& cvec, size_t c);
+    matrix<T>& set_col(matrix<T> const& cvec, size_t c);
 
     matrix<T>& swap_rows(size_t r1, size_t r2);
     matrix<T>& swap_cols(size_t c1, size_t c2);
     matrix<T>& sub_rows(size_t r1, size_t r2, T factor);
-    matrix<T>& permute_rows(const matrix<size_t>& rpermute);
+    
+    matrix<T>& permute_rows(matrix<size_t> const& rpermute);
+    matrix<T>& permute_cols(matrix<size_t> const& cpermute);
 
     matrix<T> transpose(void) const;
     matrix<T> diag(void) const;
@@ -114,16 +117,16 @@ public:
 
     matrix<T> sub_matrix(size_t start_row, size_t nrows, size_t start_col, size_t ncols) const;
     matrix<T> sub_matrix(size_t start_row, size_t start_col) const;
-    matrix<T>& set_sub_matrix(const matrix<T>& sub, size_t start_row, size_t start_col);
+    matrix<T>& set_sub_matrix(matrix<T> const& sub, size_t start_row, size_t start_col);
 
     matrix<T> sub_col(size_t start_row, size_t nrows, size_t c) const;
-    matrix<T>& set_sub_col(const matrix<T>& sub, size_t start_row, size_t c);
+    matrix<T>& set_sub_col(matrix<T> const& sub, size_t start_row, size_t c);
 
     template<typename R> 
-    matrix<T>& operator+=(const matrix<R>& rhs);
+    matrix<T>& operator+=(matrix<R> const& rhs);
 
     template<typename R> 
-    matrix<T>& operator-=(const matrix<R>& rhs);
+    matrix<T>& operator-=(matrix<R> const& rhs);
     
     template<typename R>
     matrix<T>& operator*=(R scalar);
@@ -135,12 +138,12 @@ public:
     // TODO: soon we will need to generate random matrix types i.e. symmetric, orthogonal, skew, pos. definite, etc. to test various algos
     static matrix<T> random_dense_matrix(size_t nrows, size_t ncols, float lowerbound, float upperbound);
     
-    static matrix<T> abs(const matrix<T>& rhs);
-    static matrix<T> absdiff(const matrix<T>& rhs, const matrix<T>& lhs);
-    static T abs_max_err(const matrix<T>& result, const matrix<T>& expected);
-    static size_t abs_max_excess_err(const matrix<T>& result, const matrix<T>& expected, T tolerance);
+    static matrix<T> abs(matrix<T> const& rhs);
+    static matrix<T> absdiff(matrix<T> const& rhs, matrix<T> const& lhs);
+    static T abs_max_err(matrix<T> const& result, matrix<T> const& expected);
+    static size_t abs_max_excess_err(matrix<T> const& result, matrix<T> const& expected, T tolerance);
     
-    static T abs_max_element(const matrix<T>& rhs, size_t from_row);
+    static T abs_max_element(matrix<T> const& rhs, size_t from_row);
 
 private:
     
@@ -160,7 +163,7 @@ matrix<T>::matrix(size_t size)
 }
 
 template<typename T>
-matrix<T>::matrix(size_t size, const T* dat)
+matrix<T>::matrix(size_t size, T const* dat)
 : matrix<T>(size)
 {
     //std::cout << "\tcalled size, data constructor\n";
@@ -193,7 +196,7 @@ matrix<T>::matrix(size_t r, size_t c)
 
 
 template<typename T>
-matrix<T>::matrix(size_t r, size_t c, const T* dat)
+matrix<T>::matrix(size_t r, size_t c, T const* dat)
 : matrix<T>((r * c), dat)
 {
     //std::cout << "\tcalled row, col, data constructor\n";
@@ -201,7 +204,7 @@ matrix<T>::matrix(size_t r, size_t c, const T* dat)
 }
 
 template<typename T>
-matrix<T>::matrix(const matrix<T>& rhs)
+matrix<T>::matrix(matrix<T> const& rhs)
 : matrix<T>(rhs.rows(), rhs.cols())
 {
     //std::cout << "\tcalled copy constructor\n\n";
@@ -428,7 +431,7 @@ void matrix<T>::set_identity(void)
 
 // TODO: conditional exit function, maybe when iterators are worked out.
 template<typename T>
-bool matrix<T>::content_equals(const matrix<T>& rhs) const
+bool matrix<T>::content_equals(matrix<T> const& rhs) const
 {
     if(m_size != rhs.size())
     {
@@ -446,7 +449,7 @@ bool matrix<T>::content_equals(const matrix<T>& rhs) const
 }
 
 template<typename T>
-bool matrix<T>::equals(const matrix<T>& rhs) const
+bool matrix<T>::equals(matrix<T> const& rhs) const
 {
     return (m_rows != rhs.rows() || m_cols != rhs.cols()) ? false : content_equals(rhs);
 }
@@ -484,7 +487,7 @@ matrix<T> matrix<T>::row(size_t r) const
 }
 
 template<typename T>
-matrix<T>& matrix<T>::set_row(const matrix<T>& rvec, size_t r)
+matrix<T>& matrix<T>::set_row(matrix<T> const& rvec, size_t r)
 {
     if(r >= m_rows)
     {
@@ -513,7 +516,7 @@ matrix<T> matrix<T>::col(size_t c) const
 }
 
 template<typename T>
-matrix<T>& matrix<T>::set_col(const matrix<T>& cvec, size_t c)
+matrix<T>& matrix<T>::set_col(matrix<T> const& cvec, size_t c)
 {
     if(c >= m_cols)
     {
@@ -596,8 +599,9 @@ matrix<T>& matrix<T>::sub_rows(size_t r1, size_t r2, T factor)
     return *this;
 }
 
+// TODO: once realloc is implemented, we can be more space efficient by rellocing an extra row/column for permute rows/cols instead of creating an entirely new matrix
 template<typename T>
-matrix<T>& matrix<T>::permute_rows(const matrix<size_t>& rpermute)
+matrix<T>& matrix<T>::permute_rows(matrix<size_t> const& rpermute)
 {
     if(rpermute.rows() != m_rows)
     {
@@ -611,6 +615,24 @@ matrix<T>& matrix<T>::permute_rows(const matrix<size_t>& rpermute)
     }
 
     // TODO: hmmm
+    *this = std::move(to);
+    return *this;
+}
+
+template<typename T>
+matrix<T>& matrix<T>::permute_cols(matrix<size_t> const& cpermute)
+{
+    if(cpermute.rows() != m_cols)
+    {
+        throw std::range_error("permute_cols: incorrect column dimensions.");
+    }
+    
+    matrix<T> to(*this);
+    for(size_t c = 0; c < m_cols; c++)
+    {
+        to.set_col(col(c), cpermute.get_value(c, 0));
+    }
+    
     *this = std::move(to);
     return *this;
 }
@@ -734,7 +756,7 @@ matrix<T> matrix<T>::sub_matrix(size_t start_row, size_t nrows, size_t start_col
 
 // TODO: subview object
 template<typename T>
-matrix<T>& matrix<T>::set_sub_matrix(const matrix<T>& sub, size_t start_row, size_t start_col) 
+matrix<T>& matrix<T>::set_sub_matrix(matrix<T> const& sub, size_t start_row, size_t start_col)
 {
     if(start_row + sub.rows() > m_rows || start_col + sub.cols() > m_cols)
     {
@@ -759,7 +781,7 @@ matrix<T> matrix<T>::sub_col(size_t start_row, size_t nrows, size_t c) const
 }
 
 template<typename T>
-matrix<T>& matrix<T>::set_sub_col(const matrix<T>& sub, size_t start_row, size_t c)
+matrix<T>& matrix<T>::set_sub_col(matrix<T> const& sub, size_t start_row, size_t c)
 {
     return set_sub_matrix(sub, start_row, c);
 }
@@ -857,7 +879,7 @@ matrix<T> matrix<T>::random_dense_matrix(size_t nrows, size_t ncols, float lower
 }
 
 template<typename T>
-matrix<T> matrix<T>::abs(const matrix<T>& rhs)
+matrix<T> matrix<T>::abs(matrix<T> const& rhs)
 {
     matrix<T> abs_result(rhs.rows(), rhs.cols());
     
@@ -873,13 +895,13 @@ matrix<T> matrix<T>::abs(const matrix<T>& rhs)
 }
 
 template<typename T>
-inline matrix<T> matrix<T>::absdiff(const matrix<T>& rhs, const matrix<T>& lhs)
+inline matrix<T> matrix<T>::absdiff(matrix<T> const& rhs, matrix<T> const& lhs)
 {
     return matrix<T>::abs(rhs - lhs);
 }
 
 template<typename T>
-inline T matrix<T>::abs_max_err(const matrix<T>& result, const matrix<T>& expected)
+inline T matrix<T>::abs_max_err(matrix<T> const& result, matrix<T> const& expected)
 {
     matrix<T> ad = absdiff(result, expected);
     
@@ -887,7 +909,7 @@ inline T matrix<T>::abs_max_err(const matrix<T>& result, const matrix<T>& expect
 }
 
 template<typename T>
-inline size_t matrix<T>::abs_max_excess_err(const matrix<T>& result, const matrix<T>& expected, T tolerance)
+inline size_t matrix<T>::abs_max_excess_err(matrix<T> const& result, matrix<T> const& expected, T tolerance)
 {
     matrix<T> ad = absdiff(result, expected);
     return std::count_if
@@ -900,7 +922,7 @@ inline size_t matrix<T>::abs_max_excess_err(const matrix<T>& result, const matri
 }
 
 template<typename T>
-T matrix<T>::abs_max_element(const matrix<T>& rhs, size_t from_row)
+T matrix<T>::abs_max_element(matrix<T> const& rhs, size_t from_row)
 {
     T max_elem = static_cast<T>(0.0);
     for(size_t c=from_row; c < rhs.cols(); c++)
@@ -921,19 +943,19 @@ T matrix<T>::abs_max_element(const matrix<T>& rhs, size_t from_row)
 }
 
 template<typename T>
-bool operator==(const matrix<T>& lhs, const matrix<T>& rhs)
+bool operator==(matrix<T> const& lhs, matrix<T> const& rhs)
 {
     return lhs.equals(rhs);
 }
 
 template<typename T>
-bool operator!=(const matrix<T>& lhs, const matrix<T>& rhs)
+bool operator!=(matrix<T> const& lhs, matrix<T> const& rhs)
 {
     return !lhs.equals(rhs);
 }
 
 template<typename T, typename R>
-matrix<T> operator*(R scalar, const matrix<T>& rhs)
+matrix<T> operator*(R scalar, matrix<T> const& rhs)
 {
     matrix<T> res(rhs);
     res *= scalar;
@@ -941,7 +963,7 @@ matrix<T> operator*(R scalar, const matrix<T>& rhs)
 }
 
 template<typename T, typename R>
-matrix<T> operator+(const matrix<T>& lhs, const matrix<R>& rhs)
+matrix<T> operator+(matrix<T> const& lhs, matrix<R> const& rhs)
 {
     matrix<T> sum(lhs);
     sum += rhs;
@@ -949,7 +971,7 @@ matrix<T> operator+(const matrix<T>& lhs, const matrix<R>& rhs)
 }
 
 template<typename T, typename R>
-matrix<T> operator-(const matrix<T>& lhs, const matrix<R>& rhs)
+matrix<T> operator-(matrix<T> const& lhs, matrix<R> const& rhs)
 {
     matrix<T> sum(lhs);
     sum -= rhs;

@@ -380,15 +380,24 @@ result::QH<double> QLH(matrix<double> const& A)
     return result::QH<double>(Q, H);
 }
 
-result::FP<double> colpiv_householder(matrix<double>& A)
+result::FPr<double> colpiv_householder(matrix<double>& A)
 {
+    size_t M = A.rows();
+    size_t N = A.cols();
+    size_t n = N;
+    
+    if(N == M)
+    {
+        n--;
+    }
+    
     matrix<double> c = cols_norm2sq(A);
     
     //std::cout << "c = \n";
     //pprint_matrix(c);
     
     matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
-    piv.zero();
+    //piv.zero();
     
     //std::cout << "piv = \n";
     //pprint_matrix(piv);
@@ -397,15 +406,11 @@ result::FP<double> colpiv_householder(matrix<double>& A)
     double tau = matrix<double>::abs_max_element(c, 0);
     
     //std::cout << "tau = " << tau << "\n\n";
-   
-    size_t M = A.rows();
-    size_t N = A.cols();
     
     house h;
     matrix<double> Asub;
-    matrix<double> Im = matrix<double>::eye(M);
     
-    while(tau > 0 && r < N)
+    while(tau > 0 && r < n)
     {
         
         // looking for first index k which satisfies c(k) = tau
@@ -418,7 +423,8 @@ result::FP<double> colpiv_householder(matrix<double>& A)
             }
         }
         
-        piv(r, 0) = k;
+        //piv(r, 0) = k;
+        piv.swap_rows(r, k);
         
         //std::cout << "piv " << r << ": \n";
         //pprint_matrix(piv);
@@ -478,7 +484,7 @@ result::FP<double> colpiv_householder(matrix<double>& A)
         //std::cout << "exit: " << "\n\ttau > 0: " << (tau > 0) << " " << tau << "\n\tr < N: " << (r < N) << "\n\n";
     }
     
-    return result::FP<double>(A, piv);
+    return result::FPr<double>(A, piv, r);
 }
 
 
