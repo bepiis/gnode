@@ -6,6 +6,7 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 #include <random>
 #include <algorithm>
 
@@ -121,6 +122,9 @@ public:
 
     matrix<T> sub_col(size_t start_row, size_t nrows, size_t c) const;
     matrix<T>& set_sub_col(matrix<T> const& sub, size_t start_row, size_t c);
+    
+    matrix<T> sub_row(size_t r, size_t start_col, size_t ncols) const;
+    matrix<T>& set_sub_row(matrix<T> const& sub, size_t r, size_t start_col);
 
     template<typename R> 
     matrix<T>& operator+=(matrix<R> const& rhs);
@@ -787,6 +791,18 @@ matrix<T>& matrix<T>::set_sub_col(matrix<T> const& sub, size_t start_row, size_t
 }
 
 template<typename T>
+matrix<T> matrix<T>::sub_row(size_t r, size_t start_col, size_t ncols) const
+{
+    return sub_matrix(r, 1, start_col, ncols);
+}
+
+template<typename T>
+matrix<T>& matrix<T>::set_sub_row(matrix<T> const& sub, size_t r, size_t start_col)
+{
+    return set_sub_matrix(sub, r, start_col);
+}
+
+template<typename T>
 template<typename R>
 matrix<T>& matrix<T>::operator+=(const matrix<R>& rhs)
 {
@@ -977,6 +993,21 @@ matrix<T> operator-(matrix<T> const& lhs, matrix<R> const& rhs)
     sum -= rhs;
     return sum;
 }
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, matrix<T> const& mat)
+{
+    for(size_t r=0; r < mat.rows(); r++)
+    {
+        for(size_t c=0; c < mat.cols(); c++)
+        {
+            std::cout << std::setprecision(2) << std::scientific << mat(r, c) << "\t";
+        }
+        std::cout << "\n";
+    }
+}
+
+
 
 
 

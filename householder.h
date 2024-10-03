@@ -21,21 +21,6 @@ namespace transformation
 namespace house
 {
 
-// TODO: Just overload ostream operator<< so I dont have to keep writing print fns all over the place.
-template<class T>
-void pprint_matrix(matrix<T> const& mat)
-{
-    for(int i=0; i < mat.rows(); i++)
-    {
-        for(int j=0; j < mat.cols(); j++)
-        {
-            std::cout << mat.get_value(i, j) << "\t";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n\n";
-}
-
 struct house
 {
     matrix<double> vec;
@@ -65,17 +50,12 @@ house housevec(matrix<double> const& cvec)
 {
     double sig = inner_prod_1D(cvec, cvec, 1);
     double beta, mu;
-    
-    //std::cout << "house(): \n";
-    
+        
     matrix<double> hv(cvec);
-    //std::cout << "house, cvec: " << cvec.size() << "\n";
-    //pprint_matrix(cvec);
-    //std::cout << "\n\n";
-    hv(0, 0) = 1.0;
-    
-    double c0 = cvec(0, 0);
-    double h0 = hv(0, 0);
+    hv[0] = 1.0;
+
+    double c0 = cvec[0];
+    double h0 = hv[0];
     
     if(sig == 0 && c0 >= 0)
     {
@@ -90,29 +70,47 @@ house housevec(matrix<double> const& cvec)
         mu = std::sqrt(c0 * c0 + sig);
         if(c0 <= 0)
         {
-            hv(0, 0) = c0 - mu;
+            hv[0] = c0 - mu;
         }
         else
         {
-            hv(0, 0) = -sig/(c0 + mu);
+            hv[0] = -sig/(c0 + mu);
         }
         
-        h0 = hv(0, 0);
+        h0 = hv[0];
         beta = 2*(h0*h0)/(sig + h0*h0);
         hv = (1/h0) * hv;
-        
-        //std::cout << "\tmu = " << mu << "\n";
-
     }
-    
-    //std::cout << "\tsig = " << sig << "\n";
-    //std::cout << "\tbeta = " << beta << "\n\n\n";
-    
     
     // Cost: roughly 3m flops
     return house(hv, beta);
 }
 
+house houseinit(matrix<double>& A, size_t& M, size_t& N, size_t& n)
+{
+    M = A.rows();
+    N = A.cols();
+    n = N;
+    
+    if(N == M)
+    {
+        n--;
+    }
+    
+    return house();
+}
+
+matrix<double>& housestep(matrix<double>& A, house& h, size_t j)
+{
+    h = housevec(A.sub_col(j, A.rows() - j, j));
+    
+    matrix<double> Asub = A.sub_matrix(j, A.rows() - j, j, A.cols() - j);
+    Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
+    
+    A.set_sub_matrix(Asub, j, j);
+    
+    return A;
+}
 
 /*
  * Computes the QR factorization of input matrix A
@@ -123,66 +121,13 @@ house housevec(matrix<double> const& cvec)
  */
 matrix<double>& householder(matrix<double>& A)
 {
-    size_t M = A.rows();
-    size_t N = A.cols();
-    size_t n = N;
-    
-    house h;
-    matrix<double> Asub;
-    
-    if(M == N)
-    {
-        n--;
-    }
+    size_t M, N, n;
+    house h = houseinit(A, M, N, n);
     
     for(size_t j=0; j < n; j++)
     {
-        // 3m flops
-        //std::cout << "j=" << j << "========================================\n\n";
-        
-        //std::cout << "sub_col: " << j << "\n";
-        //pprint_matrix(A.sub_col(j, M-j, j));
-        
-        //std::cout << "house(): \n";
-        
-        h = housevec(A.sub_col(j, M - j, j));
-        
-        
-        //std::cout << "vhouse = \n";
-        //vhouse.print();
-        //pprint_matrix(phouse.first);
-        
-        //matrix<double> vhouse = phouse.first;
-        //double beta = phouse.second;
-        
-        Asub = A.sub_matrix(j, M - j, j, N - j);
-        
-        //std::cout << "Qsub = \n";
-        //Qsub.print();
-        //pprint_matrix(Asub);
-        
-        //std::cout << "beta = " << beta << "\n\n";
-    
+        A = housestep(A, h, j);
 
-        //std::cout << "inner_left_prod = \n";
-        //pprint_matrix(inner_left_prod(vhouse, Asub));
-        
-        //std::cout << "outer_prod = \n";
-        //pprint_matrix(outer_prod_1D(vhouse, inner_left_prod(vhouse, Asub)));
-        
-        // 2mn + 2n flops
-        Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
-        
-        //std::cout << "Qsubp" << j << " = \n";
-        //Qsub.print();
-        //pprint_matrix(Asub);
-        
-        A.set_sub_matrix(Asub, j, j);
-        
-        //std::cout << "A" << j << " = \n";
-        //A.print();
-        //pprint_matrix(A);
-        
         if(j < M)
         {
             size_t i=1;
@@ -191,14 +136,10 @@ matrix<double>& householder(matrix<double>& A)
                 A(k, j) = h.vec(i, 0);
             }
         }
-        
-        //std::cout << "Aw/v" << j << " = \n";
-        //pprint_matrix(A);
     }
     
     return A;
 }
-
 
 /*
  * Accumulates the matrix Q = Q0 * Q1 * ... Qn
@@ -242,44 +183,18 @@ matrix<double> Qaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
         
         matrix<double> Fjp1 = F.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j);
         
-        //std::cout << "ajp1" << j << " = \n";
-        //vhouse.print();
-        //pprint_matrix(Ajp1);
-        
         vhouse.set_sub_col(Fjp1, 1, 0);
-        
-        //std::cout << "vhouse" << j << " = \n";
-        //vhouse.print();
-        //pprint_matrix(vhouse);
 
         Qsub = Q.sub_matrix(j + col_bias, Q.rows()-j - col_bias, j + col_bias , Q.rows()-j - col_bias);
         
-        //std::cout << "Qsub" << j << " = \n";
-        //Qsub.print();
-        //pprint_matrix(Qsub);
-        
         double beta = 2/(1+col_norm2sq_from(Fjp1, 0, 0));
-        //double beta = 0.0;
-        
-        //std::cout << "beta" << j << " = " << beta <<  "\n";
-        // 2mn + 2n FLOPS
-        //std::cout << "beta" << j << " = " << B(0, j) << "\n";
 
         // Q <- (Im - beta*v*v^T)Q
         Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
         
-        //std::cout << "Qsubp" << j << " = \n";
-        //pprint_matrix(Qsub);
-        //Qsub.print();
-
         Q.set_sub_matrix(Qsub, j + col_bias, j + col_bias);
-        
-        //std::cout << "Q" << j << " = \n";
-        //pprint_matrix(Q);
-        
+
     }
-    
-    
     return Q;
 }
 
@@ -359,37 +274,17 @@ result::QH<double> QLH(matrix<double> const& A)
 
 result::FPr<double> colpiv_householder(matrix<double>& A)
 {
-    size_t M = A.rows();
-    size_t N = A.cols();
-    size_t n = N;
-    
-    if(N == M)
-    {
-        n--;
-    }
+    size_t M, N, n;
+    house h = houseinit(A, M, N, n);
     
     matrix<double> c = cols_norm2sq(A);
-    
-    //std::cout << "c = \n";
-    //pprint_matrix(c);
-    
     matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
-    //piv.zero();
-    
-    //std::cout << "piv = \n";
-    //pprint_matrix(piv);
     
     size_t r = 0;
     double tau = matrix<double>::abs_max_element(c, 0);
     
-    //std::cout << "tau = " << tau << "\n\n";
-    
-    house h;
-    matrix<double> Asub;
-    
     while(tau > 0 && r < n)
     {
-        
         // looking for first index k which satisfies c(k) = tau
         size_t k = r;
         for(; k < N; k++)
@@ -402,42 +297,10 @@ result::FPr<double> colpiv_householder(matrix<double>& A)
         
         //piv(r, 0) = k;
         piv.swap_rows(r, k);
-        
-        //std::cout << "piv " << r << ": \n";
-        //pprint_matrix(piv);
-        
-        //std::cout << "A " << r << ": \n";
-        //pprint_matrix(A);
-        
-        //std::cout << "c " << r << ": \n";
-        //pprint_matrix(c);
-        
         A.swap_cols(r, k);
         c.swap_cols(r, k);
         
-        //std::cout << "Aswapped " << r << ", " << k << ": \n";
-        //pprint_matrix(A);
-        
-        //std::cout << "cswapped " << r << ", " << k << ": \n";
-        //pprint_matrix(c);
-        
-        h = housevec(A.sub_col(r, M - r, r));
-        
-        //std::cout << "housevec: \n";
-        //pprint_matrix(h.vec);
-        //std::cout << "beta = " << h.beta << "\n";
-        
-        Asub = A.sub_matrix(r, M-r, r, N-r);
-        
-        //std::cout << "Asub " << r << ": \n";
-        //pprint_matrix(Asub);
-        
-        Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
-        
-        //std::cout << "Asubp " << r << ": \n";
-        //pprint_matrix(Asub);
-        
-        A.set_sub_matrix(Asub, r, r);
+        A = housestep(A, h, r);
         
         if(r < M)
         {
@@ -447,22 +310,59 @@ result::FPr<double> colpiv_householder(matrix<double>& A)
                 A(j, r) = h.vec(i, 0);
             }
         }
-
         
         // update norm vector c by subtrating out A(r, :)**2
         for(size_t j = r + 1; j < N; j++)
         {
             c(0, j) -= A(r, j) * A(r, j);
         }
-
         
         tau = matrix<double>::abs_max_element(c, ++r);
-        
-        //std::cout << "exit: " << "\n\ttau > 0: " << (tau > 0) << " " << tau << "\n\tr < N: " << (r < N) << "\n\n";
     }
     
     return result::FPr<double>(A, piv, r);
 }
+
+/*
+void bidiagonalize(matrix<double>& A)
+{
+    size_t M, N, n;
+    house h = houseinit(A, M, N, n);
+    
+    matrix<double> Asub;
+    
+    for(size_t j=0; j < n; j++)
+    {
+        A = housestep(A, h, j);
+        
+        size_t i=1;
+        for(size_t k = j + 1; j < M; j++, i++)
+        {
+            A(j, r) = h.vec(i, 0);
+        }
+        
+        if(j < n - 1)
+        {
+            h = house(A.sub_row(j, j + 1, N - j - 1));
+            
+            Asub = A.sub_matrix(j, M - j, j + 1, N - j - 1);
+            
+            Asub -= h.beta * outer_prod_1D(inner_right_prod(Asub, h.vec), h.vec);
+            
+            Asub.set_sub_matrix(Asub, j, j + 1);
+            
+            
+
+        }
+        
+        
+    }
+    
+    
+    
+}*/
+
+
 
 }
 

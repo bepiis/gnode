@@ -69,13 +69,7 @@ struct FPr
 // P is a row permutation
 // F is arbitrary
 template<typename T>
-struct PF
-{
-    matrix<size_t> P;
-    matrix<T>& F;
-    
-    PF(matrix<size_t> const& p, matrix<T> & f)
-    : P(p), F(f) {}
-};
+using PFr = FPr<T>;
+
 
 }

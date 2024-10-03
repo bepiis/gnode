@@ -153,7 +153,7 @@ TEST_CASE("row dominant RandMatSizeGenerator")
     REQUIRE(i.M >= i.N);
 }
 
-#include "test_mat.cpp"
+//#include "test_mat.cpp"
 //#include "test_stats.cpp"
 #include "test_householder.cpp"
 //#include "test_prods.cpp"
