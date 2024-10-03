@@ -11,13 +11,11 @@
 #include <iostream>
 
 template<typename T>
-matrix<T> outer_prod_1D(const matrix<T>& cvec, const matrix<T>& rvec)
+matrix<T> outer_prod_1D(matrix<T> const& cvec, matrix<T> const& rvec)
 {
-    //std::cout << "rvec dims = " << rvec.rows() << "\t" << rvec.cols() << "\n";
-    //std::cout << "cvec dims = " << cvec.rows() << "\t" << cvec.cols() << "\n\n";
     if(!cvec.is_vector() || !rvec.is_vector())
     {
-        throw std::range_error("incorrect dimensions for outer product.");
+        throw std::out_of_range("incorrect dimensions for outer product.");
     }
 
     size_t M = cvec.size();
@@ -31,7 +29,6 @@ matrix<T> outer_prod_1D(const matrix<T>& cvec, const matrix<T>& rvec)
             oprod(i, j) = cvec[i] * rvec[j];
         }
     }
-
     return oprod;
 }
 

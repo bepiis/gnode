@@ -320,50 +320,27 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
     for(size_t k=0; k < N - 2; k++)
     {
         h = housevec(A.sub_col(k + 1, N - k - 1, k));
-        
-        //std::cout << "beta = " << beta << "\n";
-        
+                
         Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
         
-        //std::cout<< "Ablk = \n";
-        //Ablk.print();
         // A <- QA
         Ablk -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Ablk));
         
         A.set_sub_matrix(Ablk, k + 1, k);
         
-        //std::cout << "vhouse = \n";
-        //vhouse.print();
-        
-        //std::cout<< "A = \n";
-        //A.print();
-        
         Apar = A.sub_matrix(0, N, k + 1, N - k - 1);
-        
-        //std::cout<< "Apar = \n";
-        //Apar.print();
         
         // A <- A(Q^T)
         Apar -= h.beta * outer_prod_1D(inner_right_prod(Apar, h.vec), h.vec);
         
-        
-        
         A.set_sub_matrix(Apar, 0, k + 1);
-        
-        //std::cout << "Ap = \n";
-        //A.print();
-        
-        // as usual, store essential house vectors where zeros
-        // have been introduced
         
         size_t i=1;
         for(size_t j = k + 2; j < N; j++, i++)
         {
             A(j, k) = h.vec(i, 0);
         }
-        
     }
-    
     return A;
 }
 
@@ -486,8 +463,6 @@ result::FPr<double> colpiv_householder(matrix<double>& A)
     
     return result::FPr<double>(A, piv, r);
 }
-
-
 
 }
 

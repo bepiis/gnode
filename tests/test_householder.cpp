@@ -155,8 +155,11 @@ TEST_CASE("Qaccumulate rand, randsize")
     double errmax;
     size_t errcnt;
     
-    const size_t M = 100;
-    auto N = GENERATE(1, 100, take(20, filter([](size_t i) { return i <= 100; }, random(1, 100))));
+    //const size_t M = 100;
+    //auto N = GENERATE(1, 100, take(20, filter([](size_t i) { return i <= 100; }, random(1, 100))));
+    auto S = GENERATE(take(1, rd_randmatsize(1, 100)));
+    size_t M = S.M;
+    size_t N = S.N;
     
     std::cout << "test transformation::house::Qaccumulate (rand, M = " << M << ", N = " << N << "): ";
     
@@ -198,8 +201,12 @@ TEST_CASE("QR")
     double errmax;
     size_t errcnt;
     
-    const size_t N = 100;
-    auto M = GENERATE(100, take(10, filter([](size_t i) { return i >= 100; }, random(100, 200))));
+    //const size_t N = 100;
+    //auto M = GENERATE(100, take(10, filter([](size_t i) { return i >= 100; }, random(100, 200))));
+    auto S = GENERATE(take(10, rd_randmatsize(1, 100)));
+    size_t M = S.M;
+    size_t N = S.N;
+    
     
     std::cout << "test transformation::house::QR (rand, M = " << M << ", N = " << N << "): ";
     
@@ -398,56 +405,41 @@ TEST_CASE("colpiv householder square")
     REQUIRE(errmax < zero_tol);
 }
 
-/*
-TEST_CASE("colpiv householder")
+TEST_CASE("colpiv householder maybe square")
 {
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
     
-    matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
-    matrix<double> basicpy(basic);
+    auto S = GENERATE(take(10, rd_randmatsize(1, 100)));
+    size_t M = S.M;
+    size_t N = S.N;
     
-    auto result = colpiv_householder(basic);
-    auto chkres = householder(basicpy);
+    std::cout << "test transformation::house::colpiv_householder (rand, M = " << M << ", N = " << N << "): ";
     
-    print_matrix(&result.F);
-    std::cout << "\n\n";
+    matrix<double> mrand = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
+    matrix<double> mrandcpy(mrand);
     
-    print_matrix(&chkres);
-    std::cout << "\n\n";
-    
-    print_matrix(&result.P);
-    std::cout <<"\n\n";
+    auto result = colpiv_householder(mrand);
     
     matrix<double> Q = Qaccumulate(result.F, result.F.rows(), 0);
     
-    print_matrix(&Q);
-    std::cout << "\n\n";
-    
     result.F.fill_lower_triangle(0.0);
-    matrix<double> mres = mat_mul_alg1(&Q, &result.F);
+    matrix<double> rchk = mat_mul_alg1(&Q, &result.F);
     
-    print_matrix(&mres);
-    std::cout << "\n\n";
+    rchk.permute_cols(result.P);
+    
+    errcnt = matrix<double>::abs_max_excess_err(rchk, mrandcpy, zero_tol);
+    errmax = matrix<double>::abs_max_err(rchk, mrandcpy);
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+    
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+    
+}
 
-    
-    matrix<double> randt = matrix<double>::random_dense_matrix(8, 3, -1000, 1000);
-    matrix<double> randcpy(randt);
-    
-    auto randres = colpiv_householder(randt);
-    
-    matrix<double> Qrand = Qaccumulate(randres.F, randres.F.rows(), 0);
-    
-    randres.F.fill_lower_triangle(0.0);
-    
-    matrix<double> randchk = mat_mul_alg1(&Qrand, &randres.F);
-    
-    print_matrix(&randcpy);
-    std::cout << "\n\n";
-    
-    randchk.permute_cols(randres.P);
-    print_matrix(&randchk);
-    
-    std::cout << "\n\n";
-    
-    print_matrix(&randres.P);
-}*/
 
