@@ -1001,10 +1001,10 @@ std::ostream& operator<<(std::ostream& os, matrix<T> const& mat)
     {
         for(size_t c=0; c < mat.cols(); c++)
         {
-            std::cout << std::setprecision(2) << std::scientific << mat(r, c) << "\t";
+            os << std::setprecision(2) << std::scientific << mat(r, c) << "\t";
         }
-        std::cout << "\n";
     }
+    return os;
 }
 
 
