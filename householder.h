@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include "matrix.h"
 #include "products.h"
 #include "result.h"
@@ -46,16 +47,25 @@ struct house
  * the lower triangle of upper triangular matrix R, where zeros have been introduced
  *
  */
-house housevec(matrix<double> const& cvec)
+house housevec(matrix<double> const& cvec, size_t a)
 {
-    double sig = inner_prod_1D(cvec, cvec, 1);
+    //double sig = inner_prod_1D(cvec, cvec, 1);
+    double sig = 0.0;
+    for(size_t j=0; j < cvec.size(); j++)
+    {
+        if(j == a)
+        {
+            continue;
+        }
+        sig += (cvec[j] * cvec[j]);
+    }
     double beta, mu;
         
     matrix<double> hv(cvec);
-    hv[0] = 1.0;
+    hv[a] = 1.0;
 
-    double c0 = cvec[0];
-    double h0 = hv[0];
+    double c0 = cvec[a];
+    double h0 = hv[a];
     
     if(sig == 0 && c0 >= 0)
     {
@@ -70,14 +80,14 @@ house housevec(matrix<double> const& cvec)
         mu = std::sqrt(c0 * c0 + sig);
         if(c0 <= 0)
         {
-            hv[0] = c0 - mu;
+            hv[a] = c0 - mu;
         }
         else
         {
-            hv[0] = -sig/(c0 + mu);
+            hv[a] = -sig/(c0 + mu);
         }
         
-        h0 = hv[0];
+        h0 = hv[a];
         beta = 2*(h0*h0)/(sig + h0*h0);
         hv = (1/h0) * hv;
     }
@@ -102,7 +112,7 @@ house houseinit(matrix<double>& A, size_t& M, size_t& N, size_t& n)
 
 matrix<double>& housestep(matrix<double>& A, house& h, size_t j)
 {
-    h = housevec(A.sub_col(j, A.rows() - j, j));
+    h = housevec(A.sub_col(j, A.rows() - j, j), 0);
     
     matrix<double> Asub = A.sub_matrix(j, A.rows() - j, j, A.cols() - j);
     Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
@@ -112,6 +122,22 @@ matrix<double>& housestep(matrix<double>& A, house& h, size_t j)
     return A;
 }
 
+matrix<double>& colstep(matrix<double>& A, house& h, size_t i, size_t k, size_t hc, size_t s)
+{
+    h = housevec(A.sub_col(k, A.rows() - i, hc), s);
+    
+    matrix<double> Asub = A.sub_matrix(k, A.rows() - i, k, A.cols() - i);
+    Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
+    
+    A.set_sub_matrix(Asub, k, k);
+    return A;
+}
+
+matrix<double>& QRstep(matrix<double>& A, house& h, size_t i)
+{
+    return colstep(A, h, i, i, i, 0);
+}
+
 /*
  * Computes the QR factorization of input matrix A
  * and returns upper triangular matrix R and beta coefficients
@@ -119,14 +145,14 @@ matrix<double>& housestep(matrix<double>& A, house& h, size_t j)
  * note that the lower triangle of R contains the essential house vectors
  * and thus the return type contains the factorized form of Q, i.e beta, v
  */
-matrix<double>& householder(matrix<double>& A)
+matrix<double>& QRfast(matrix<double>& A)
 {
     size_t M, N, n;
     house h = houseinit(A, M, N, n);
     
     for(size_t j=0; j < n; j++)
     {
-        A = housestep(A, h, j);
+        A = QRstep(A, h, j);
 
         if(j < M)
         {
@@ -139,6 +165,90 @@ matrix<double>& householder(matrix<double>& A)
     }
     
     return A;
+}
+
+/*
+ 1.00e+00    -5.55e-01    -4.29e-01
+ 2.75e+00    1.00e+00    -1.14e+00
+ -2.92e+00    6.48e+00    1.00e+00
+ -4.89e+00    2.22e-01    9.00e+00
+ */
+
+matrix<double>& QLstep(matrix<double>& A, house& h, size_t i)
+{
+    return colstep(A, h, i, 0, A.cols() - i - 1, A.cols() - i);
+}
+
+matrix<double>& QLfast(matrix<double>& A)
+{
+    size_t M, N, n;
+    house h = houseinit(A, M, N, n);
+    
+    for(size_t j=0; j < n; j++)
+    {
+        A = QLstep(A, h, j);
+                
+        if(j < M)
+        {
+            for(size_t k=0; k < M - j - 1; k++)
+            {
+                A(k, N - j - 1) = h.vec(k, 0);
+            }
+        }
+    }
+    
+    return A;
+}
+
+matrix<double> QLaccumulate(matrix<double> const& F)
+{
+    size_t M = F.rows();
+    size_t N = F.cols();
+    
+    int64_t n = (int64_t)N;
+    int64_t end_cond = 0;
+    int64_t nhrows = M;
+    
+    if(M == N)
+    {
+        end_cond++;
+    }
+    
+    matrix<double> Q = matrix<double>::eye(M);
+    matrix<double> vhouse;
+    matrix<double> Qsub;
+    
+    for(int64_t j = n - 1; j >= end_cond; j--)
+    {
+        vhouse = matrix<double>(nhrows, 1);
+        vhouse(nhrows - 1, 0) = 1.0;
+        
+        //std::cout << "nhcols: " << nhcols << "\n";
+        matrix<double> hj = F.sub_col(0, nhrows - 1, j);
+        
+        
+        vhouse.set_sub_col(hj, 0, 0);
+        //std::cout << vhouse << "\n";
+        
+        Qsub = Q.sub_matrix(0, nhrows, 0, nhrows);
+        
+        std::cout << Qsub << "\n";
+        std::cout << vhouse << "\n";
+                
+        double beta = 2/(1 + col_norm2sq_from(hj, 0, 0));
+        
+        //Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
+        Qsub -= outer_prod_1D(inner_right_prod(Qsub, vhouse), beta * vhouse);
+        
+        Q.set_sub_matrix(Qsub, 0, 0);
+        
+        std::cout << "Q" << j << "\n";
+        std::cout << Q << "\n";
+        
+        nhrows--;
+    }
+    
+    return Q;
 }
 
 /*
@@ -162,7 +272,7 @@ matrix<double> Qaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
     size_t M = F.rows();
     size_t N = F.cols();
     
-    int n = (int)N;
+    int64_t n = (int64_t)N;
     
     if(M == N)
     {
@@ -176,7 +286,7 @@ matrix<double> Qaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
     
     matrix<double> Qsub;
     
-    for(int j = n - 1 - (int)col_bias; j >= 0; j--)
+    for(int64_t j = n - 1 - (int64_t)col_bias; j >= 0; j--)
     {
         vhouse = matrix<double>(M - j - col_bias, 1);
         vhouse(0, 0) = 1.0;
@@ -208,7 +318,7 @@ result::QR<double> QR(matrix<double> const& A)
 {
     // TODO: add exception throw for M < N
     matrix<double> R(A);
-    matrix<double>& house_result = householder(R);
+    matrix<double>& house_result = QRfast(R);
     
     matrix<double> Q = Qaccumulate(house_result, house_result.rows(), 0);
     
@@ -234,7 +344,7 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
     
     for(size_t k=0; k < N - 2; k++)
     {
-        h = housevec(A.sub_col(k + 1, N - k - 1, k));
+        h = housevec(A.sub_col(k + 1, N - k - 1, k), 0);
                 
         Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
         
@@ -272,7 +382,7 @@ result::QH<double> QLH(matrix<double> const& A)
     return result::QH<double>(Q, H);
 }
 
-result::FPr<double> colpiv_householder(matrix<double>& A)
+result::FPr<double> colpiv_QRfast(matrix<double>& A)
 {
     size_t M, N, n;
     house h = houseinit(A, M, N, n);
@@ -300,7 +410,7 @@ result::FPr<double> colpiv_householder(matrix<double>& A)
         A.swap_cols(r, k);
         c.swap_cols(r, k);
         
-        A = housestep(A, h, r);
+        A = QRstep(A, h, r);
         
         if(r < M)
         {

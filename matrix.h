@@ -1003,6 +1003,7 @@ std::ostream& operator<<(std::ostream& os, matrix<T> const& mat)
         {
             os << std::setprecision(2) << std::scientific << mat(r, c) << "\t";
         }
+        os << "\n";
     }
     return os;
 }
