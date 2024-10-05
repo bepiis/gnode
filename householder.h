@@ -127,6 +127,7 @@ matrix<double>& colstep(matrix<double>& A, house& h, size_t i, size_t k, size_t 
     h = housevec(A.sub_col(k, A.rows() - i, hc), s);
     
     matrix<double> Asub = A.sub_matrix(k, A.rows() - i, k, A.cols() - i);
+    
     Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
     
     A.set_sub_matrix(Asub, k, k);
@@ -176,7 +177,7 @@ matrix<double>& QRfast(matrix<double>& A)
 
 matrix<double>& QLstep(matrix<double>& A, house& h, size_t i)
 {
-    return colstep(A, h, i, 0, A.cols() - i - 1, A.cols() - i);
+    return colstep(A, h, i, 0, A.cols() - i - 1, A.rows() - i - 1);
 }
 
 matrix<double>& QLfast(matrix<double>& A)
@@ -187,6 +188,11 @@ matrix<double>& QLfast(matrix<double>& A)
     for(size_t j=0; j < n; j++)
     {
         A = QLstep(A, h, j);
+        
+        std::cout << A << "\n";
+        
+        std::cout << "vhouse" << j << "\n";
+        std::cout << h.vec << "\n";
                 
         if(j < M)
         {
@@ -230,7 +236,7 @@ matrix<double> QLaccumulate(matrix<double> const& F)
         vhouse.set_sub_col(hj, 0, 0);
         //std::cout << vhouse << "\n";
         
-        Qsub = Q.sub_matrix(0, nhrows, 0, nhrows);
+        Qsub = Q.sub_matrix(0, M, 0, nhrows);
         
         std::cout << Qsub << "\n";
         std::cout << vhouse << "\n";

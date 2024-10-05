@@ -444,7 +444,7 @@ TEST_CASE("colpiv householder maybe square")
 
 TEST_CASE("test")
 {
-    matrix<double> b(4, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8, 2, -1, 2});
+    matrix<double> b(5, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8, 2, -1, 2, 6, 3, -4});
     
     matrix<double> bcpy(b);
     
