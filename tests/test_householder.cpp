@@ -73,14 +73,14 @@ TEST_CASE("QRfast basic")
     REQUIRE(errmax < zero_tol);
 }
 
-TEST_CASE("Qaccumulate basic, square")
+TEST_CASE("QRaccumulate basic, square")
 {
     size_t cnt_tol = 0;
     double zero_tol = 1E-14;
     double errmax;
     size_t errcnt;
     
-    std::cout << "test transformation::house::Qaccumulate (basic, square):";
+    std::cout << "test transformation::house::QRaccumulate (basic, square):";
     
     matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
     matrix<double> basic_cpy(basic);
@@ -90,7 +90,7 @@ TEST_CASE("Qaccumulate basic, square")
     //print_matrix(&basic);
     //std::cout << "\n\n";
     
-    matrix<double> Qb = Qaccumulate(basic, basic.rows(), 0);
+    matrix<double> Qb = QRaccumulate(basic, basic.rows(), 0);
     
     //print_matrix(&Qb);
     //std::cout << "\n\n";
@@ -112,7 +112,7 @@ TEST_CASE("Qaccumulate basic, square")
     //std::cout << "\n\n";
 }
 
-TEST_CASE("Qaccumulate rand, randsize, square")
+TEST_CASE("QRaccumulate rand, randsize, square")
 {
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
@@ -121,14 +121,14 @@ TEST_CASE("Qaccumulate rand, randsize, square")
     
     size_t M = GENERATE(take(20, random(1, 100)));
     
-    std::cout << "test transformation::house::Qaccumulate (rand, M = " << M << ", N = " << M << ", square): ";
+    std::cout << "test transformation::house::QRaccumulate (rand, M = " << M << ", N = " << M << ", square): ";
     
     matrix<double> randm = matrix<double>::random_dense_matrix(20, 20, -1000, 1000);
     matrix<double> randmcpy(randm);
     
     randm = QRfast(randm);
     
-    matrix<double> Qrand = Qaccumulate(randm, randm.rows(), 0);
+    matrix<double> Qrand = QRaccumulate(randm, randm.rows(), 0);
 
     randm.fill_lower_triangle(0.0);
     matrix<double> rchk = mat_mul_alg1(&Qrand, &randm);
@@ -147,7 +147,7 @@ TEST_CASE("Qaccumulate rand, randsize, square")
     
 }
 
-TEST_CASE("Qaccumulate rand, randsize")
+TEST_CASE("QRaccumulate rand, randsize")
 {
     
     size_t cnt_tol = 0;
@@ -161,14 +161,14 @@ TEST_CASE("Qaccumulate rand, randsize")
     size_t M = S.M;
     size_t N = S.N;
     
-    std::cout << "test transformation::house::Qaccumulate (rand, M = " << M << ", N = " << N << "): ";
+    std::cout << "test transformation::house::QRaccumulate (rand, M = " << M << ", N = " << N << "): ";
     
     matrix<double> tst = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     
     matrix<double> tstcpy(tst);
     tst = QRfast(tst);
     
-    matrix<double> Qrand = Qaccumulate(tst, tst.rows(), 0);
+    matrix<double> Qrand = QRaccumulate(tst, tst.rows(), 0);
     
     tst.fill_lower_triangle(0.0);
     matrix<double> rchk = mat_mul_alg1(&Qrand, &tst);
@@ -251,7 +251,7 @@ TEST_CASE("hessenberg")
     
     //print_matrix(&htest);
     
-    matrix<double> Qh = Qaccumulate(htest, htest.rows(), 1);
+    matrix<double> Qh = QRaccumulate(htest, htest.rows(), 1);
     
     //std::cout << "\n\n";
     
@@ -294,7 +294,7 @@ TEST_CASE("hessenberg")
 
 }
 
-TEST_CASE("QLH")
+TEST_CASE("QRH")
 {
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
@@ -305,18 +305,18 @@ TEST_CASE("QLH")
     
     size_t M = GENERATE(2, take(10, random(2, 100)));
     
-    std::cout << "test transformation::house::QLH (rand, M = " << M << ", N = " << M<< "): ";
+    std::cout << "test transformation::house::QRH (rand, M = " << M << ", N = " << M<< "): ";
     
-    matrix<double> qlhtest = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
+    matrix<double> qrhtest = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
     
-    auto result = QLH(qlhtest);
+    auto result = QRH(qrhtest);
     
     matrix<double> QT = result.Q.transpose();
     matrix<double> hchk = mat_mul_alg1(&result.Q, &result.H);
     matrix<double> hchk2 = mat_mul_alg1(&hchk, &QT);
     
-    errcnt = matrix<double>::abs_max_excess_err(hchk2, qlhtest, zero_tol);
-    errmax = matrix<double>::abs_max_err(hchk2, qlhtest);
+    errcnt = matrix<double>::abs_max_excess_err(hchk2, qrhtest, zero_tol);
+    errmax = matrix<double>::abs_max_err(hchk2, qrhtest);
     
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
@@ -340,7 +340,7 @@ TEST_CASE("colpiv QRfast basic")
     
     auto result = colpiv_QRfast(basic);
     
-    matrix<double> Q = Qaccumulate(result.F, result.F.rows(), 0);
+    matrix<double> Q = QRaccumulate(result.F, result.F.rows(), 0);
     
     result.F.fill_lower_triangle(0.0);
     matrix<double> bchk = mat_mul_alg1(&Q, &result.F);
@@ -379,7 +379,7 @@ TEST_CASE("colpiv householder square")
     
     auto result = colpiv_QRfast(mrand);
     
-    matrix<double> Q = Qaccumulate(result.F, result.F.rows(), 0);
+    matrix<double> Q = QRaccumulate(result.F, result.F.rows(), 0);
     
     result.F.fill_lower_triangle(0.0);
     matrix<double> bchk = mat_mul_alg1(&Q, &result.F);
@@ -423,7 +423,7 @@ TEST_CASE("colpiv householder maybe square")
     
     auto result = colpiv_QRfast(mrand);
     
-    matrix<double> Q = Qaccumulate(result.F, result.F.rows(), 0);
+    matrix<double> Q = QRaccumulate(result.F, result.F.rows(), 0);
     
     result.F.fill_lower_triangle(0.0);
     matrix<double> rchk = mat_mul_alg1(&Q, &result.F);
@@ -439,9 +439,70 @@ TEST_CASE("colpiv householder maybe square")
     
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
-    
 }
 
+TEST_CASE("QL householder square")
+{
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    auto M = GENERATE(2, 100, take(10, random(2, 100)));
+    auto N = M;
+    
+    std::cout << "test transformation::house::QL (rand, M = " << M << ", N = " << N << "): ";
+    
+    matrix<double> b = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
+    matrix<double> bcpy(b);
+    
+    auto result = QL(b);
+    
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.L);
+    
+    errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
+    errmax = matrix<double>::abs_max_err(chk, bcpy);
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+    
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+}
+
+TEST_CASE("QL householder maybe square")
+{
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    auto S = GENERATE(take(10, rd_randmatsize(1, 100)));
+    size_t M = S.M;
+    size_t N = S.N;
+    
+    std::cout << "test transformation::house::QL (rand, M = " << M << ", N = " << N << "): ";
+    
+    matrix<double> b = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
+    matrix<double> bcpy(b);
+    
+    auto result = QL(b);
+    
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.L);
+    
+    errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
+    errmax = matrix<double>::abs_max_err(chk, bcpy);
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+    
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+}
+
+/*
 TEST_CASE("test")
 {
     matrix<double> b(5, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8, 2, -1, 2, 6, 3, -4});
@@ -456,13 +517,14 @@ TEST_CASE("test")
     
     matrix<double> Q = QLaccumulate(b);
     
-    for(size_t r=0; r < b.rows(); r++)
+    for(int64_t c = (int64_t)b.cols() - 1; c >= 0; c--)
     {
-        for(size_t c=r; c < b.cols(); c++)
+        for(int64_t r = c + 1; r >= 0; r--)
         {
             b(r, c) = 0.0;
         }
     }
+    
     std::cout << b << "\n";
     
     std::cout << Q << "\n";
@@ -476,9 +538,67 @@ TEST_CASE("test")
     
     std::cout << othchk << "\n";
     
+    matrix<double> c(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
+    matrix<double> ccpy(c);
+    
+    c = QLfast(c);
+    
+    matrix<double> Qc = QLaccumulate(c);
+    
+    c.fill_upper_triangle(0.0);
+    
+    std::cout << Qc << "\n";
+    
+    std::cout << c << "\n";
+    
+    matrix<double> cchk = mat_mul_alg1(&Qc, &c);
+    
+    std::cout << cchk << "\n";
+    
+    matrix<double> d
+    (
+     10, 4,
+     {
+         2, -1, -2, 3,
+         -4, 6, 3, 6,
+         -4, -2, 8, 9,
+         2, -1, -2, 2,
+         -4, 6, 3, 5,
+         -4, -2, 8, 1,
+         2, -1, -2, 9,
+         -4, 6, 3, 8,
+         -4, -2, 8, 3,
+         2, -1, -2, 7
+     });
+    
+    d = QLfast(d);
+    
+    matrix<double> Qd = QLaccumulate(d);
+    
+    int64_t exrows = 2;
+    for(int64_t c = d.cols() - 1; c >= 0; c--)
+    {
+        for(int64_t r = d.rows() - exrows; r >= 0; r--)
+        {
+            d(r, c) = 0.0;
+        }
+        exrows++;
+    }
+    
+    std::cout << d << "\n";
+    
+    matrix<double> dchk = mat_mul_alg1(&Qd, &d);
+    
+    std::cout << dchk << "\n";
+    
+    
+    
+
+    
+    
     //bcpy = QRfast(bcpy);
     
     //std::cout << bcpy << "\n";
-}
+}*/
 
 

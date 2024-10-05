@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstdlib>
+#include <cstdint>
 #include <iostream>
 #include "../matrix.h"
 #include "../result.h"

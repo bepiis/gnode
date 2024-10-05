@@ -59,6 +59,7 @@ house housevec(matrix<double> const& cvec, size_t a)
         }
         sig += (cvec[j] * cvec[j]);
     }
+    
     double beta, mu;
         
     matrix<double> hv(cvec);
@@ -169,101 +170,12 @@ matrix<double>& QRfast(matrix<double>& A)
 }
 
 /*
- 1.00e+00    -5.55e-01    -4.29e-01
- 2.75e+00    1.00e+00    -1.14e+00
- -2.92e+00    6.48e+00    1.00e+00
- -4.89e+00    2.22e-01    9.00e+00
- */
-
-matrix<double>& QLstep(matrix<double>& A, house& h, size_t i)
-{
-    return colstep(A, h, i, 0, A.cols() - i - 1, A.rows() - i - 1);
-}
-
-matrix<double>& QLfast(matrix<double>& A)
-{
-    size_t M, N, n;
-    house h = houseinit(A, M, N, n);
-    
-    for(size_t j=0; j < n; j++)
-    {
-        A = QLstep(A, h, j);
-        
-        std::cout << A << "\n";
-        
-        std::cout << "vhouse" << j << "\n";
-        std::cout << h.vec << "\n";
-                
-        if(j < M)
-        {
-            for(size_t k=0; k < M - j - 1; k++)
-            {
-                A(k, N - j - 1) = h.vec(k, 0);
-            }
-        }
-    }
-    
-    return A;
-}
-
-matrix<double> QLaccumulate(matrix<double> const& F)
-{
-    size_t M = F.rows();
-    size_t N = F.cols();
-    
-    int64_t n = (int64_t)N;
-    int64_t end_cond = 0;
-    int64_t nhrows = M;
-    
-    if(M == N)
-    {
-        end_cond++;
-    }
-    
-    matrix<double> Q = matrix<double>::eye(M);
-    matrix<double> vhouse;
-    matrix<double> Qsub;
-    
-    for(int64_t j = n - 1; j >= end_cond; j--)
-    {
-        vhouse = matrix<double>(nhrows, 1);
-        vhouse(nhrows - 1, 0) = 1.0;
-        
-        //std::cout << "nhcols: " << nhcols << "\n";
-        matrix<double> hj = F.sub_col(0, nhrows - 1, j);
-        
-        
-        vhouse.set_sub_col(hj, 0, 0);
-        //std::cout << vhouse << "\n";
-        
-        Qsub = Q.sub_matrix(0, M, 0, nhrows);
-        
-        std::cout << Qsub << "\n";
-        std::cout << vhouse << "\n";
-                
-        double beta = 2/(1 + col_norm2sq_from(hj, 0, 0));
-        
-        //Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
-        Qsub -= outer_prod_1D(inner_right_prod(Qsub, vhouse), beta * vhouse);
-        
-        Q.set_sub_matrix(Qsub, 0, 0);
-        
-        std::cout << "Q" << j << "\n";
-        std::cout << Q << "\n";
-        
-        nhrows--;
-    }
-    
-    return Q;
-}
-
-/*
  * Accumulates the matrix Q = Q0 * Q1 * ... Qn
  * from its factorized form, being the lower triangle of R, and B
  * where the LT of R contains essential house vectors, and B is a vector
  * of corresponding beta coeffs
  *
- * Works with QR and QH (hessenberg) reductions.
+ * Works with QR and QHR (hessenberg) reductions.
  *      For QR reductions, col_bias = 0
  *      For QH reductions, col_bias = 1
  *          In hessenburg reduction, the jth house vector gets stored in col j - 1
@@ -273,7 +185,7 @@ matrix<double> QLaccumulate(matrix<double> const& F)
  *
  * TODO: work with k optimization
  */
-matrix<double> Qaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
+matrix<double> QRaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
 {
     size_t M = F.rows();
     size_t N = F.cols();
@@ -323,15 +235,17 @@ matrix<double> Qaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
 result::QR<double> QR(matrix<double> const& A)
 {
     // TODO: add exception throw for M < N
-    matrix<double> R(A);
-    matrix<double>& house_result = QRfast(R);
+    result::QR<double> res;
     
-    matrix<double> Q = Qaccumulate(house_result, house_result.rows(), 0);
+    res.R = matrix<double>(A);
+    res.R = QRfast(res.R);
+    
+    res.Q = QRaccumulate(res.R, res.R.rows(), 0);
     
     // cleanup
-    R.fill_lower_triangle(0.0);
+    res.R.fill_lower_triangle(0.0);
     
-    return result::QR<double>(Q, R);
+    return res;
 }
 
 /*
@@ -375,17 +289,19 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
     return A;
 }
 
-result::QH<double> QLH(matrix<double> const& A)
+result::QH<double> QRH(matrix<double> const& A)
 {
     // A must be square.
-    matrix<double> H(A);
-    H = hessenberg(H);
+    result::QH<double> res;
     
-    matrix<double> Q = Qaccumulate(H, H.rows(), 1);
+    res.H = matrix<double>(A);
+    res.H = hessenberg(res.H);
     
-    H.fill_lower_hessenberg(0.0);
+    res.Q = QRaccumulate(res.H, res.H.rows(), 1);
     
-    return result::QH<double>(Q, H);
+    res.H.fill_lower_hessenberg(0.0);
+    
+    return res;
 }
 
 result::FPr<double> colpiv_QRfast(matrix<double>& A)
@@ -439,6 +355,112 @@ result::FPr<double> colpiv_QRfast(matrix<double>& A)
     return result::FPr<double>(A, piv, r);
 }
 
+matrix<double>& QLstep(matrix<double>& A, house& h, size_t i)
+{
+    return colstep(A, h, i, 0, A.cols() - i - 1, A.rows() - i - 1);
+}
+
+matrix<double>& QLfast(matrix<double>& A)
+{
+    size_t M, N, n;
+    house h = houseinit(A, M, N, n);
+    
+    for(size_t j=0; j < n; j++)
+    {
+        A = QLstep(A, h, j);
+        
+        //std::cout << A << "\n";
+        
+        //std::cout << "vhouse" << j << "\n";
+        //std::cout << h.vec << "\n";
+        
+        if(j < M)
+        {
+            for(size_t k=0; k < M - j - 1; k++)
+            {
+                A(k, N - j - 1) = h.vec(k, 0);
+            }
+        }
+    }
+    
+    return A;
+}
+
+matrix<double> QLaccumulate(matrix<double> const& F)
+{
+    size_t M = F.rows();
+    size_t N = F.cols();
+    
+    int64_t n = (int64_t)N;
+    int64_t end_cond = 0;
+    int64_t nhrows = M;
+    
+    if(M == N)
+    {
+        end_cond++;
+    }
+    
+    matrix<double> Q = matrix<double>::eye(M);
+    matrix<double> vhouse;
+    matrix<double> Qsub;
+    
+    for(int64_t j = n - 1; j >= end_cond; j--)
+    {
+        vhouse = matrix<double>(nhrows, 1);
+        vhouse(nhrows - 1, 0) = 1.0;
+        
+        //std::cout << "nhcols: " << nhcols << "\n";
+        matrix<double> hj = F.sub_col(0, nhrows - 1, j);
+        
+        
+        vhouse.set_sub_col(hj, 0, 0);
+        //std::cout << vhouse << "\n";
+        
+        Qsub = Q.sub_matrix(0, M, 0, nhrows);
+        
+        //std::cout << Qsub << "\n";
+        //std::cout << vhouse << "\n";
+        
+        double beta = 2/(1 + col_norm2sq_from(hj, 0, 0));
+        
+        //Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
+        Qsub -= outer_prod_1D(inner_right_prod(Qsub, vhouse), beta * vhouse);
+        
+        Q.set_sub_matrix(Qsub, 0, 0);
+        
+        //std::cout << "Q" << j << "\n";
+        //std::cout << Q << "\n";
+        
+        nhrows--;
+    }
+    
+    return Q;
+}
+
+result::QL<double> QL(matrix<double> const& A)
+{
+    result::QL<double> res;
+    
+    res.L = matrix<double>(A);
+    res.L = QLfast(res.L);
+    
+    res.Q = QLaccumulate(res.L);
+    
+    int64_t exrows = 2;
+    for(int64_t c = res.L.cols() - 1; c >= 0; c--)
+    {
+        for(int64_t r = res.L.rows() - exrows; r >= 0; r--)
+        {
+            res.L(r, c) = 0.0;
+        }
+        exrows++;
+    }
+    
+    return res;
+}
+
+
+
 /*
 void bidiagonalize(matrix<double>& A)
 {
@@ -466,16 +488,8 @@ void bidiagonalize(matrix<double>& A)
             Asub -= h.beta * outer_prod_1D(inner_right_prod(Asub, h.vec), h.vec);
             
             Asub.set_sub_matrix(Asub, j, j + 1);
-            
-            
-
         }
-        
-        
     }
-    
-    
-    
 }*/
 
 

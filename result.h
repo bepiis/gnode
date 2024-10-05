@@ -19,9 +19,27 @@ struct QR
     matrix<T> Q;
     matrix<T> R;
     
+    QR(void) = default;
+    
     QR(matrix<T> const& q, matrix<T> const& r)
     : Q(q), R(r) {}
 };
+
+// used to return a factorization where:
+// Q is orthogonal
+// R is upper triangular
+template<typename T>
+struct QL
+{
+    matrix<T> Q;
+    matrix<T> L;
+    
+    QL(void) = default;
+    
+    QL(matrix<T> const& q, matrix<T> const& l)
+    : Q(q), L(l) {}
+};
+
 
 // used to return a factorization where:
 // Q is orthogonal
@@ -31,6 +49,8 @@ struct QH
 {
     matrix<T> Q;
     matrix<T> H;
+    
+    QH(void) = default;
     
     QH(matrix<T> const& q, matrix<T> const& h)
     : Q(q), H(h) {}
@@ -46,6 +66,8 @@ struct FP
     matrix<T>& F;
     matrix<size_t> P;
     
+    FP(void) = default;
+    
     FP(matrix<T> & f, matrix<size_t> const& p)
     : F(f), P(p) {}
 };
@@ -60,6 +82,8 @@ struct FPr
     matrix<T>& F;
     matrix<size_t> P;
     size_t rank;
+    
+    FPr(void) = default;
     
     FPr(matrix<T> & f, matrix<size_t> const& p, size_t rnk)
     : F(f), P(p), rank(rnk) {}

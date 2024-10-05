@@ -19,7 +19,7 @@ TEST_CASE("default constructor")
 TEST_CASE("size constructor")
 {
     std::cout << "\n\ntest size constructor:\n";
-
+    
     matrix<int> mat(9);
     
     REQUIRE(mat.size() == 9);
@@ -41,7 +41,6 @@ TEST_CASE("size, data constructor")
     {
         REQUIRE(*data_ptr == dat[r]);
     }
-    
 }
 
 TEST_CASE("reshape")
@@ -554,18 +553,22 @@ TEST_CASE("ones")
 
 TEST_CASE("rfill")
 {
-    /*
+    
     std::cout << "\n\ntest rfill:\n";
     
-    size_t M = S_RAND(100);
-    size_t N = S_RAND(100);
+    matrix<int> randmat;
     
-    size_t col_bias = S_RAND(100);
-    while(col_bias >= N) col_bias = S_RAND(100);
+    for(size_t r=0; r < 12; r++)
+    {
+        randmat = matrix<int>::random_dense_matrix(12, 10, -1000, 1000);
+        
+        randmat.rfill(0, r);
+        
+        std::cout << randmat << "\n\n";
+    }
+
     
-    double val = S_RAND(100);
-    */
-    // TODO: idk
+    
 
 }
 
@@ -586,6 +589,17 @@ TEST_CASE("fill upper hessenberg")
 TEST_CASE("cfill")
 {
     std::cout << "\n\ntest cfill:\n";
+    /*
+    matrix<int> randmat;
+    
+    for(size_t r=0; r < 10; r++)
+    {
+        randmat = matrix<int>::random_dense_matrix(10, 10, -1000, 1000);
+        
+        randmat.cfill(0, r);
+        
+        std::cout << randmat << "\n\n";
+    }*/
 
 }
 
