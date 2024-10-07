@@ -268,12 +268,18 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
                 
         Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
         
+        std::cout << "Ablk:\n";
+        std::cout << Ablk << "\n";
+        
         // A <- QA
         Ablk -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Ablk));
         
         A.set_sub_matrix(Ablk, k + 1, k);
         
         Apar = A.sub_matrix(0, N, k + 1, N - k - 1);
+        
+        std::cout << "Apar:\n";
+        std::cout << Apar << "\n";
         
         // A <- A(Q^T)
         Apar -= h.beta * outer_prod_1D(inner_right_prod(Apar, h.vec), h.vec);
@@ -386,7 +392,7 @@ matrix<double>& QLfast(matrix<double>& A)
     return A;
 }
 
-matrix<double> QLaccumulate(matrix<double> const& F)
+matrix<double> QLaccumulate(matrix<double> const& F, size_t col_bias)
 {
     size_t M = F.rows();
     size_t N = F.cols();
@@ -394,6 +400,7 @@ matrix<double> QLaccumulate(matrix<double> const& F)
     int64_t n = (int64_t)N;
     int64_t end_cond = 0;
     int64_t nhrows = M;
+    int64_t cb = (int64_t)col_bias;
     
     if(M == N)
     {
@@ -404,19 +411,19 @@ matrix<double> QLaccumulate(matrix<double> const& F)
     matrix<double> vhouse;
     matrix<double> Qsub;
     
-    for(int64_t j = n - 1; j >= end_cond; j--)
+    for(int64_t j = n - 1 - cb; j >= end_cond; j--)
     {
-        vhouse = matrix<double>(nhrows, 1);
-        vhouse(nhrows - 1, 0) = 1.0;
+        vhouse = matrix<double>(nhrows - cb, 1);
+        vhouse(nhrows - 1 - cb, 0) = 1.0;
         
         //std::cout << "nhcols: " << nhcols << "\n";
-        matrix<double> hj = F.sub_col(0, nhrows - 1, j);
+        matrix<double> hj = F.sub_col(0, nhrows - 1 - cb, j);
         
         
         vhouse.set_sub_col(hj, 0, 0);
         //std::cout << vhouse << "\n";
         
-        Qsub = Q.sub_matrix(0, M, 0, nhrows);
+        Qsub = Q.sub_matrix(0, M - cb, 0, nhrows - cb);
         
         //std::cout << Qsub << "\n";
         //std::cout << vhouse << "\n";
@@ -444,7 +451,7 @@ result::QL<double> QL(matrix<double> const& A)
     res.L = matrix<double>(A);
     res.L = QLfast(res.L);
     
-    res.Q = QLaccumulate(res.L);
+    res.Q = QLaccumulate(res.L, 0);
     
     int64_t exrows = 2;
     for(int64_t c = res.L.cols() - 1; c >= 0; c--)
@@ -457,6 +464,41 @@ result::QL<double> QL(matrix<double> const& A)
     }
     
     return res;
+}
+
+matrix<double>& QLHfast(matrix<double>& A)
+{
+    size_t N = A.rows();
+    house h;
+    matrix<double> Ablk, Apar;
+    
+    for(size_t j=0; j < N - 2; j++)
+    {
+        h = housevec(A.sub_col(0, N - j - 1, N - j - 1), N - j - 2);
+        
+        Ablk = A.sub_matrix(0, N - j - 1, 0, N - j);
+        Ablk -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Ablk));
+        
+        A.set_sub_matrix(Ablk, 0, 0);
+        
+        Apar = A.sub_matrix(0, N, j, N - j - 1);
+        Apar -= h.beta * outer_prod_1D(inner_right_prod(Apar, h.vec), h.vec);
+        
+        A.set_sub_matrix(Apar, 0, j);
+        
+        for(size_t k = 0; k < N - j - 2; k++)
+        {
+            A(k, N - j - 1) = h.vec(k, 0);
+        }
+        
+        std::cout << h.vec << "\n";
+        
+        
+        std::cout << A << "\n";
+        
+    }
+    
+    return A;
 }
 
 

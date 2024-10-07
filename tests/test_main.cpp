@@ -154,9 +154,62 @@ TEST_CASE("row dominant RandMatSizeGenerator")
     REQUIRE(i.M >= i.N);
 }
 
+#include <experimental/simd>
+
+TEST_CASE("test")
+{
+    
+    
+    
+    
+}
+
+
+/*
+#include "../householder.h"
+
+TEST_CASE("test")
+{
+    matrix<double> b(4, 4,
+    {
+        2, -1, -2, 2,
+        -4, 6, 3, 4,
+        -4, -2, 8, 6,
+        -3, -4, 5, -4
+    });
+    
+    std::cout << b << "\n";
+    
+    b = transformation::house::QLHfast(b);
+    
+    matrix<double> Q = transformation::house::QLaccumulate(b, 1);
+    
+    int64_t exrows = 3;
+    for(int64_t c = b.cols() - 1; c >= 0; c--)
+    {
+        for(int64_t r = b.rows() - exrows; r >= 0; r--)
+        {
+            b(r, c) = 0.0;
+        }
+        exrows++;
+    }
+    std::cout << b << "\n";
+    matrix<double> QT = Q.transpose();
+
+    matrix<double> chk = mat_mul_alg1(&Q, &b);
+    matrix<double> rchk = mat_mul_alg1(&chk, &QT);
+    
+    std::cout << rchk << "\n";
+    
+    matrix<double> Qchk = mat_mul_alg1(&Q, &QT);
+    
+    std::cout << Qchk << "\n";
+    
+}*/
+
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-#include "test_householder.cpp"
+//#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
 
