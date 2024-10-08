@@ -12,38 +12,30 @@ namespace result
 
 // used to return a factorization where:
 // Q is orthogonal
-// R is upper triangular
+// Y is triangular
 template<typename T>
-struct QR
+struct QY
 {
     matrix<T> Q;
-    matrix<T> R;
+    matrix<T> Y;
     
-    QR(void) = default;
+    QY(void) = default;
     
-    QR(matrix<T> const& q, matrix<T> const& r)
-    : Q(q), R(r) {}
-};
-
-// used to return a factorization where:
-// Q is orthogonal
-// R is upper triangular
-template<typename T>
-struct QL
-{
-    matrix<T> Q;
-    matrix<T> L;
+    QY(matrix<T> const& q, matrix<T> const& y)
+    : Q(q), Y(y) {}
     
-    QL(void) = default;
-    
-    QL(matrix<T> const& q, matrix<T> const& l)
-    : Q(q), L(l) {}
 };
 
 
+template<typename T>
+using QR = QY<T>;
+
+template<typename T>
+using QL = QY<T>;
+
 // used to return a factorization where:
 // Q is orthogonal
-// H is (upper or lower) hessenberg
+// H is hessenberg
 template<typename T>
 struct QH
 {
@@ -55,6 +47,14 @@ struct QH
     QH(matrix<T> const& q, matrix<T> const& h)
     : Q(q), H(h) {}
 };
+
+// For upper hessenberg factorization
+template<typename T>
+using QRH = QH<T>;
+
+// For lower hessenberg factorization
+template<typename T>
+using QLH = QH<T>;
 
 
 // used to return a factorization where:

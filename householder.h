@@ -237,13 +237,13 @@ result::QR<double> QR(matrix<double> const& A)
     // TODO: add exception throw for M < N
     result::QR<double> res;
     
-    res.R = matrix<double>(A);
-    res.R = QRfast(res.R);
+    res.Y = matrix<double>(A);
+    res.Y = QRfast(res.Y);
     
-    res.Q = QRaccumulate(res.R, res.R.rows(), 0);
+    res.Q = QRaccumulate(res.Y, res.Y.rows(), 0);
     
     // cleanup
-    res.R.fill_lower_triangle(0.0);
+    res.Y.fill_lower_triangle(0.0);
     
     return res;
 }
@@ -256,7 +256,7 @@ result::QR<double> QR(matrix<double> const& A)
  *
  * A <- QAQ^T, where Q is orthogonal, and A becomes upper hessenberg
  */
-matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
+matrix<double>& QRHfast(matrix<double> &A /* must be square*/ )
 {
     size_t N = A.rows();
     house h;
@@ -268,8 +268,8 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
                 
         Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
         
-        std::cout << "Ablk:\n";
-        std::cout << Ablk << "\n";
+        //std::cout << "Ablk:\n";
+        //std::cout << Ablk << "\n";
         
         // A <- QA
         Ablk -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Ablk));
@@ -278,8 +278,8 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
         
         Apar = A.sub_matrix(0, N, k + 1, N - k - 1);
         
-        std::cout << "Apar:\n";
-        std::cout << Apar << "\n";
+        //std::cout << "Apar:\n";
+        //std::cout << Apar << "\n";
         
         // A <- A(Q^T)
         Apar -= h.beta * outer_prod_1D(inner_right_prod(Apar, h.vec), h.vec);
@@ -295,13 +295,13 @@ matrix<double>& hessenberg(matrix<double> &A /* must be square*/ )
     return A;
 }
 
-result::QH<double> QRH(matrix<double> const& A)
+result::QRH<double> QRH(matrix<double> const& A)
 {
     // A must be square.
-    result::QH<double> res;
+    result::QRH<double> res;
     
     res.H = matrix<double>(A);
-    res.H = hessenberg(res.H);
+    res.H = QRHfast(res.H);
     
     res.Q = QRaccumulate(res.H, res.H.rows(), 1);
     
@@ -411,20 +411,24 @@ matrix<double> QLaccumulate(matrix<double> const& F, size_t col_bias)
     matrix<double> vhouse;
     matrix<double> Qsub;
     
+    //std::cout << "F = \n";
+    //std::cout << F << "\n";
+    
     for(int64_t j = n - 1 - cb; j >= end_cond; j--)
     {
         vhouse = matrix<double>(nhrows - cb, 1);
         vhouse(nhrows - 1 - cb, 0) = 1.0;
         
         //std::cout << "nhcols: " << nhcols << "\n";
-        matrix<double> hj = F.sub_col(0, nhrows - 1 - cb, j);
-        
+        matrix<double> hj = F.sub_col(0, nhrows - 1 - cb, j + cb);
         
         vhouse.set_sub_col(hj, 0, 0);
+        //std::cout << "vhouse: \n";
         //std::cout << vhouse << "\n";
         
         Qsub = Q.sub_matrix(0, M - cb, 0, nhrows - cb);
         
+        //std::cout << "Qsub: \n";
         //std::cout << Qsub << "\n";
         //std::cout << vhouse << "\n";
         
@@ -433,7 +437,13 @@ matrix<double> QLaccumulate(matrix<double> const& F, size_t col_bias)
         //Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
         Qsub -= outer_prod_1D(inner_right_prod(Qsub, vhouse), beta * vhouse);
         
+        //std::cout << "Qsubp: \n";
+        //std::cout << Qsub << "\n";
+        
         Q.set_sub_matrix(Qsub, 0, 0);
+        
+        //std::cout << "Q: \n";
+        //std::cout << Q << "\n";
         
         //std::cout << "Q" << j << "\n";
         //std::cout << Q << "\n";
@@ -448,17 +458,17 @@ result::QL<double> QL(matrix<double> const& A)
 {
     result::QL<double> res;
     
-    res.L = matrix<double>(A);
-    res.L = QLfast(res.L);
+    res.Y = matrix<double>(A);
+    res.Y = QLfast(res.Y);
     
-    res.Q = QLaccumulate(res.L, 0);
+    res.Q = QLaccumulate(res.Y, 0);
     
     int64_t exrows = 2;
-    for(int64_t c = res.L.cols() - 1; c >= 0; c--)
+    for(int64_t c = res.Y.cols() - 1; c >= 0; c--)
     {
-        for(int64_t r = res.L.rows() - exrows; r >= 0; r--)
+        for(int64_t r = res.Y.rows() - exrows; r >= 0; r--)
         {
-            res.L(r, c) = 0.0;
+            res.Y(r, c) = 0.0;
         }
         exrows++;
     }
@@ -468,37 +478,58 @@ result::QL<double> QL(matrix<double> const& A)
 
 matrix<double>& QLHfast(matrix<double>& A)
 {
-    size_t N = A.rows();
+    size_t M = A.rows();
     house h;
     matrix<double> Ablk, Apar;
     
-    for(size_t j=0; j < N - 2; j++)
+    for(size_t j=0; j < M - 2; j++)
     {
-        h = housevec(A.sub_col(0, N - j - 1, N - j - 1), N - j - 2);
+        h = housevec(A.sub_col(0, M - j - 1, M - j - 1), M - j - 2);
         
-        Ablk = A.sub_matrix(0, N - j - 1, 0, N - j);
+        Ablk = A.sub_matrix(0, M - j - 1, 0, M - j);
+        
+        //std::cout << "Ablk:\n";
+        //std::cout << Ablk << "\n";
         Ablk -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Ablk));
         
         A.set_sub_matrix(Ablk, 0, 0);
         
-        Apar = A.sub_matrix(0, N, j, N - j - 1);
+        Apar = A.sub_matrix(0, M, 0, M - j - 1);
+        
+        //std::cout << "Apar:\n";
+        //std::cout << Apar << "\n";
         Apar -= h.beta * outer_prod_1D(inner_right_prod(Apar, h.vec), h.vec);
         
-        A.set_sub_matrix(Apar, 0, j);
+        A.set_sub_matrix(Apar, 0, 0);
         
-        for(size_t k = 0; k < N - j - 2; k++)
+        for(size_t k = 0; k < M - j - 2; k++)
         {
-            A(k, N - j - 1) = h.vec(k, 0);
+            A(k, M - j - 1) = h.vec(k, 0);
         }
-        
-        std::cout << h.vec << "\n";
-        
-        
-        std::cout << A << "\n";
-        
     }
     
     return A;
+}
+
+result::QLH<double> QLH(matrix<double> const& A)
+{
+    result::QLH<double> res;
+    res.H = matrix<double>(A);
+    res.H = QLHfast(res.H);
+    
+    res.Q = QLaccumulate(res.H, 1);
+    
+    int64_t exrows = 3;
+    for(int64_t c = res.H.cols() - 1; c >= 0; c--)
+    {
+        for(int64_t r = res.H.rows() - exrows; r >= 0; r--)
+        {
+            res.H(r, c) = 0.0;
+        }
+        exrows++;
+    }
+    
+    return res;
 }
 
 

@@ -60,8 +60,8 @@ result::QR<double> QR(const matrix<double>& X)
  */
 matrix<double> MGS(const matrix<double>& V)
 {
-    result::QR res_pair = QR(V);
-    return res_pair.R;
+    result::QR<double> res_pair = QR(V);
+    return res_pair.Y;
 }
 
 

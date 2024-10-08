@@ -61,8 +61,8 @@ TEST_CASE("QRfast basic")
     //matrix<double> basic_chk(3, 3, {6, -3, -8, 1, 5.65685, -3.53553, 1, 2.41421, 0.707107});
     basic.fill_lower_triangle(0.0);
     
-    errcnt = matrix<double>::abs_max_excess_err(basic, basic_chk.R, zero_tol);
-    errmax = matrix<double>::abs_max_err(basic, basic_chk.R);
+    errcnt = matrix<double>::abs_max_excess_err(basic, basic_chk.Y, zero_tol);
+    errmax = matrix<double>::abs_max_err(basic, basic_chk.Y);
     
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
@@ -214,7 +214,7 @@ TEST_CASE("QR")
     
     auto qrresult = QR(qrtst);
     
-    matrix<double> rchk = mat_mul_alg1(&qrresult.Q, &qrresult.R);
+    matrix<double> rchk = mat_mul_alg1(&qrresult.Q, &qrresult.Y);
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, qrtst, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, qrtst);
@@ -227,7 +227,7 @@ TEST_CASE("QR")
     REQUIRE(errmax < zero_tol);
 }
 
-TEST_CASE("hessenberg")
+TEST_CASE("QRHfast")
 {
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
@@ -238,7 +238,7 @@ TEST_CASE("hessenberg")
     
     size_t M = GENERATE(2, take(20, random(2, 100)));
     
-    std::cout << "test transformation::house::hessenberg (rand, M = " << M << ", N = " << M<< "): ";
+    std::cout << "test transformation::house::QRHfast (rand, M = " << M << ", N = " << M<< "): ";
     
     matrix<double> htest = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
     matrix<double> htestcpy(htest);
@@ -247,7 +247,7 @@ TEST_CASE("hessenberg")
     
     //std::cout << "\n\n";
     
-    htest = hessenberg(htest);
+    htest = QRHfast(htest);
     
     //print_matrix(&htest);
     
@@ -458,7 +458,7 @@ TEST_CASE("QL householder square")
     
     auto result = QL(b);
     
-    matrix<double> chk = mat_mul_alg1(&result.Q, &result.L);
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y);
     
     errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, bcpy);
@@ -489,10 +489,43 @@ TEST_CASE("QL householder maybe square")
     
     auto result = QL(b);
     
-    matrix<double> chk = mat_mul_alg1(&result.Q, &result.L);
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y);
     
     errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, bcpy);
+    
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+    
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+}
+
+TEST_CASE("QLH householder")
+{
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    auto S = GENERATE(2, take(10, random(2, 100)));
+    size_t M = S;
+    size_t N = S;
+    
+    std::cout << "test transformation::house::QLH (rand, M = " << M << ", N = " << N << "): ";
+    
+    matrix<double> b = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
+    
+    auto result = QLH(b);
+    
+    matrix<double> QT = result.Q.transpose();
+    
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.H);
+    matrix<double> rchk = mat_mul_alg1(&chk, &QT);
+    
+    errcnt = matrix<double>::abs_max_excess_err(rchk, b, zero_tol);
+    errmax = matrix<double>::abs_max_err(rchk, b);
     
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;

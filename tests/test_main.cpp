@@ -155,17 +155,63 @@ TEST_CASE("row dominant RandMatSizeGenerator")
 }
 
 #include <experimental/simd>
-
+#include <chrono>
+#include "../householder.h"
+/*
 TEST_CASE("test")
 {
     
+    using namespace transformation::house;
     
+    matrix<double> A(4, 4,
+                     {
+        2, -1, -2, 2,
+        -4, 6, 3, 4,
+        -4, -2, 8, 6,
+        -3, -4, 5, -4
+    });
     
+    size_t N = A.rows();
+    house h;
+    matrix<double> Ablk, Apar;
     
-}
-
+    for(size_t k=0; k < N - 2; k++)
+    {
+        h = housevec(A.sub_col(k + 1, N - k - 1, k), 0);
+        
+        Ablk = A.sub_matrix(k + 1, N - k - 1, k, N - k);
+        
+        std::cout << "Ablk:\n";
+        std::cout << Ablk << "\n";
+        
+        // A <- QA
+        //A.set_sub_matrix(Ablk, k + 1, k);
+        
+        Apar = A.sub_matrix(0, N, k + 1, N - k - 1);
+        
+        std::cout << "Apar:\n";
+        std::cout << Apar << "\n";
+        
+        // A <- A(Q^T)
+        //Apar -= h.beta * outer_prod_1D(inner_right_prod(Apar, h.vec), h.vec);
+        
+        //A.set_sub_matrix(Apar, 0, k + 1);
+        
+        size_t i=1;
+        for(size_t j = k + 2; j < N; j++, i++)
+        {
+            A(j, k) = h.vec(i, 0);
+        }
+    }
+    
+    std::cout << "\n\n\n";
+    
+    A = QLHfast(A);
+    
+}*/
 
 /*
+
 #include "../householder.h"
 
 TEST_CASE("test")
@@ -180,9 +226,19 @@ TEST_CASE("test")
     
     std::cout << b << "\n";
     
+    auto res = transformation::house::QRH(b);
+    
+    std::cout << "Q = \n";
+    std::cout << res.Q << "\n\n";
+    
+    std::cout << "R = \n";
+    std::cout << res.H << "\n\n";
+    
     b = transformation::house::QLHfast(b);
     
     matrix<double> Q = transformation::house::QLaccumulate(b, 1);
+    
+    std::cout << "\n\n\n\n\n";
     
     int64_t exrows = 3;
     for(int64_t c = b.cols() - 1; c >= 0; c--)
@@ -209,7 +265,7 @@ TEST_CASE("test")
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-//#include "test_householder.cpp"
+#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
 
