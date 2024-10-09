@@ -265,7 +265,8 @@ TEST_CASE("test")
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-#include "test_householder.cpp"
+#include "test_givens.cpp"
+//#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
 

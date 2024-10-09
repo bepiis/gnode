@@ -33,7 +33,6 @@ struct house
     : vec(v), beta(b) {}
 };
 
-
 /*
  * Determines the vector v and constant beta from input x = cvec such that
  * for matrix P = I(m) - beta*v*(v^T), Px = norm2(x)I(:, 1) = norm2(x)e1
@@ -531,6 +530,11 @@ result::QLH<double> QLH(matrix<double> const& A)
     
     return res;
 }
+
+
+
+
+
 
 
 

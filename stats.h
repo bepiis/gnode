@@ -113,14 +113,14 @@ stats eval_stats(const matrix<T> &in, size_t start_row, size_t break_row, size_t
 	yc(0, 0) = elem;
 	iyc(0, 0) = 1/elem;
 	
-	int backr = break_row - 1;
+	int64_t backr = (int64_t)break_row - 1;
 
 	for(size_t r=start_row; r < break_row; r++, backr--)
 	{
 		double s = 0.0;
 		double is = 0.0;
 		double curr_diag = static_cast<double>(in(r, r));
-		int backc = break_col - 1;
+		int64_t backc = (int64_t)break_col - 1;
 		
 		for(size_t c=start_col; c < break_col; c++, backc--)
 		{
