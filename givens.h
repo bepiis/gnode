@@ -8,13 +8,10 @@
 #include "matrix.h"
 #include "result.h"
 
-
 inline double signum(double a)
 {
     return (a == 0) ? 0.0 : (a > 0) ? 1.0 : -1.0;
 }
-
-
 
 namespace transformation
 {
@@ -28,10 +25,12 @@ struct givens
     
     givens(void) = default;
     givens(double a, double b);
+    givens(double a, double b, double& r);
     givens(double rho);
     
     double flat(void);
 };
+
 
 givens::givens(double a, double b)
 {
@@ -54,6 +53,46 @@ givens::givens(double a, double b)
             tau = -b/a;
             c = 1/std::sqrt(1 + tau*tau);
             s = c * tau;
+        }
+    }
+}
+
+givens::givens(double a, double b, double& r)
+{
+    if(b == 0)
+    {
+        c = signum(a);
+        if(c == 0)
+        {
+            c = 1.0;
+        }
+        s = 0.0;
+        r = std::abs(a);
+    }
+    else if(a == 0)
+    {
+        c = 0;
+        s = -signum(b);
+        r = std::abs(b);
+    }
+    else
+    {
+        double t, u;
+        if(std::abs(a) > std::abs(b))
+        {
+            t = b/a;
+            u = signum(a) * std::sqrt(1 + t*t);
+            c = 1/u;
+            s = -c * t;
+            r = a * u;
+        }
+        else
+        {
+            t = a/b;
+            u = signum(b) * std::sqrt(1 + t*t);
+            s = -1/u;
+            c = t/u;
+            r = b * u;
         }
     }
 }
@@ -96,52 +135,6 @@ double givens::flat(void)
     return rho;
 }
 
-givens alt(double a, double b, double& r)
-{
-    double s, c;
-    if(b == 0)
-    {
-        c = signum(a);
-        if(c == 0)
-        {
-            c = 1.0;
-        }
-        s = 0.0;
-        r = std::abs(a);
-    }
-    else if(a == 0)
-    {
-        c = 0;
-        s = -signum(b);
-        r = std::abs(b);
-    }
-    else
-    {
-        double t, u;
-        if(std::abs(a) > std::abs(b))
-        {
-            t = b/a;
-            u = signum(a) * std::sqrt(1 + t*t);
-            c = 1/u;
-            s = -c * t;
-            r = a * u;
-        }
-        else
-        {
-            t = a/b;
-            u = signum(b) * std::sqrt(1 + t*t);
-            s = -1/u;
-            c = t/u;
-            r = b * u;
-        }
-    }
-    
-    givens ret;
-    ret.s = s;
-    ret.c = c;
-    return ret;
-}
-
 matrix<double>& rotate(matrix<double>& A, givens g, size_t r1, size_t c1, size_t r2, size_t c2)
 {
     double tau1 = A(r1, c1);
@@ -153,7 +146,7 @@ matrix<double>& rotate(matrix<double>& A, givens g, size_t r1, size_t c1, size_t
     return A;
 }
 
-matrix<double>& row_update(matrix<double>& A, givens g, size_t i, size_t k, size_t scol)
+matrix<double>& row_step(matrix<double>& A, givens g, size_t i, size_t k, size_t scol)
 {
     for(size_t j=scol; j < A.cols(); j++)
     {
@@ -162,7 +155,7 @@ matrix<double>& row_update(matrix<double>& A, givens g, size_t i, size_t k, size
     return A;
 }
 
-matrix<double>& col_update(matrix<double>& A, givens g, size_t i, size_t k, size_t srow)
+matrix<double>& col_step(matrix<double>& A, givens g, size_t i, size_t k, size_t srow)
 {
     double tau1, tau2;
     for(size_t j=srow; j < A.rows(); j++)
@@ -183,20 +176,21 @@ matrix<double>& QRfast(matrix<double>& A)
     {
         for(size_t i = M - 1; i >= j + 1; i--)
         {
+            
             g = givens(A(i-1, j), A(i, j));
             
             std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
             std::cout << "i = " << i << "\tj = " << j << "\n";
             
-            double r;
-            givens ga = alt(A(i - 1, j), A(i, j), r);
-            std::cout << "sa = " << ga.s << "\tca = " << ga.c << "\tra = " << r << "\tflat = " << ga.flat() << "\n";
+            //double r;
+            //givens ga = alt(A(i - 1, j), A(i, j), r);
+            //std::cout << "sa = " << ga.s << "\tca = " << ga.c << "\tra = " << r << "\tflat = " << ga.flat() << "\n";
 
             
-            A = row_update(A, g, i - 1, i, j);
+            A = row_step(A, g, i - 1, i, j);
             //A = row_update(A, ga, i -1, i, j);
             
-            A(i, j) = ga.flat();
+            A(i, j) = g.flat();
             
             std::cout << "rho = " << A(i, j) << "\n";
             
@@ -226,8 +220,7 @@ matrix<double> QRaccumulate(matrix<double> const& A)
             std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
             std::cout << "i = " << i << "\tj = " << j << "\n";
 
-            
-            Q = col_update(Q, g, i-1, i, 0);
+            Q = col_step(Q, g, i-1, i, 0);
             
             std::cout << "Q = \n";
             std::cout << Q << "\n";

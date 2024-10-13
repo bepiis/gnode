@@ -154,9 +154,55 @@ TEST_CASE("row dominant RandMatSizeGenerator")
     REQUIRE(i.M >= i.N);
 }
 
+TEST_CASE("test")
+{
+    matrix<double> b = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}};
+    
+    std::cout << b << "\n";
+}
+/*
 #include <experimental/simd>
 #include <chrono>
 #include "../householder.h"
+
+#include <cstdint>
+#include <mdspan>
+
+TEST_CASE("mdspan")
+{
+    
+    matrix<double> A(4, 4,
+                     {
+        2, -1, -2, 2,
+        -4, 6, 3, 4,
+        -4, -2, 8, 6,
+        -3, -4, 5, -4
+    });
+    
+    using ext_t = std::extents<uint32_t, 4, 4>;
+    
+    auto ms = std::mdspan<double, ext_t, std::layout_right>(A.data());
+    auto cs = std::mdspan<double, ext_t, std::layout_left>(A.data());
+    
+    for(uint32_t i=0; i < ms.extent(0); i++)
+    {
+        for(uint32_t j=0; j < ms.extent(1); j++)
+        {
+            std::cout << ms[i, j] << "\t";
+        }
+        std::cout << "\n";
+    }
+    
+    for(uint32_t i=0; i < cs.extent(0); i++)
+    {
+        for(uint32_t j=0; j < cs.extent(1); j++)
+        {
+            std::cout << cs[i, j] << "\t";
+        }
+        std::cout << "\n";
+    }
+    
+}*/
 /*
 TEST_CASE("test")
 {
@@ -265,7 +311,7 @@ TEST_CASE("test")
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-#include "test_givens.cpp"
+//#include "test_givens.cpp"
 //#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"

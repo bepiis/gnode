@@ -10,7 +10,7 @@ using namespace transformation::givens;
 
 TEST_CASE("test")
 {
-    matrix<double> basic(5, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8, 2, -1, -2, -4, 6, 3});
+    matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8 /*2, -1, -2, -4, 6, 3*/});
     matrix<double> bcpy(basic);
     
     basic = QRfast(basic);

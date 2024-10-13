@@ -32,6 +32,7 @@ public:
     matrix(matrix<T> const& rhs);
     
     matrix(std::initializer_list<T> dat);
+    matrix(std::initializer_list<std::initializer_list<T>> dat);
     matrix(size_t size, std::initializer_list<T> dat);
     matrix(size_t r, size_t c, std::initializer_list<T> dat);
 
@@ -223,6 +224,17 @@ matrix<T>::matrix(std::initializer_list<T> dat)
     std::move(dat.begin(), dat.end(), data());
 }
 
+template<typename T>
+matrix<T>::matrix(std::initializer_list<std::initializer_list<T>> dat)
+: matrix<T>(dat.size(), dat.begin()->size())
+{
+    size_t coffs = 0;
+    for(auto x : dat)
+    {
+        std::move(x.begin(), x.end(), data() + coffs);
+        coffs += m_cols;
+    }
+}
 
 template<typename T>
 matrix<T>::matrix(size_t size, std::initializer_list<T> dat)
