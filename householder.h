@@ -125,6 +125,7 @@ matrix<double>& housestep(matrix<double>& A, house& h, size_t j)
 matrix<double>& colstep(matrix<double>& A, house& h, size_t i, size_t k, size_t hc, size_t s)
 {
     h = housevec(A.sub_col(k, A.rows() - i, hc), s);
+    //std::cout << A.sub_col(k, A.rows() - i, hc) << "\n";
     
     matrix<double> Asub = A.sub_matrix(k, A.rows() - i, k, A.cols() - i);
     
@@ -529,6 +530,28 @@ result::QLH<double> QLH(matrix<double> const& A)
     }
     
     return res;
+}
+
+matrix<double>& RQfast(matrix<double>& A)
+{
+    size_t M, N;
+    house h;
+    
+    M = A.rows();
+    N = A.cols();
+    
+    std::cout << A<< "\n";
+    
+    for(size_t i=0; i < M; i++)
+    {
+        std::cout << "i= " << i << "\n";
+        std::cout << A.sub_row(i, i, N - i) << "\n\n";
+
+        h = housevec(A.sub_row(i, A.cols() - i, i), 0);
+        
+    }
+    
+    return A;
 }
 
 

@@ -8,9 +8,18 @@
 
 using namespace transformation::givens;
 
-TEST_CASE("test")
+TEST_CASE("bruh")
 {
-    matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8 /*2, -1, -2, -4, 6, 3*/});
+    
+    //matrix<double> basic(5, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8, 2, -1, -2, -4, 6, 3});
+    //matrix<double> basic = {{2, -1, 2, 2}, {-4, 6, 3, 3}, {-4, -2, 8, 8}, {1, 2, 3, 4}};
+    //matrix<double> basic = {{2, -1, 2}, {5, 6, 3}, {5, -1, 8}};
+    //matrix<double> basic = {{2, 5, 2}, {-1, 5, 3}, {6, -1, 8}};
+    
+    matrix<double> basic = {{2, -1, 2, 2}, {-4, 6, 3, 3}, {-4, -2, 8, 8}, {-4, 2, 3, 4}};
+    //matrix<double> basic = matrix<double>::random_dense_matrix(3, 3, -1000, 1000);
+    std::cout << basic << "\n";
+    //matrix<double> basic = {{-2, -1}, {-4, 6}};
     matrix<double> bcpy(basic);
     
     basic = QRfast(basic);

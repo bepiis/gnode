@@ -256,10 +256,22 @@ TEST_CASE("test")
     
 }*/
 
-/*
 
+/*
 #include "../householder.h"
 
+TEST_CASE("RQ TEST")
+{
+    matrix<double> basic = {{2, -1, 2}, {-4, 6, 3}, {-4, -1, 8}};
+    
+    std::cout << basic << "\n";
+    
+    transformation::house::QRfast(basic);
+    
+    transformation::house::RQfast(basic);
+    
+}*/
+/*
 TEST_CASE("test")
 {
     matrix<double> b(4, 4,
@@ -311,7 +323,7 @@ TEST_CASE("test")
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-//#include "test_givens.cpp"
+#include "test_givens.cpp"
 //#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"

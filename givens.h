@@ -7,6 +7,11 @@
 
 #include "matrix.h"
 #include "result.h"
+#include <cmath>
+
+// refs:
+// [1] Matrix Computations 4th ed. Golub, Van Loan
+// [2]
 
 inline double signum(double a)
 {
@@ -30,6 +35,52 @@ struct givens
     
     double flat(void);
 };
+
+inline void two_mult_fma(double x, double y, double& p, double& psq)
+{
+    p = x * y;
+    psq = std::fma(x, y, -p);
+}
+
+givens comp_givens(double a, double b, double& r)
+{
+    r = std::hypot(a, b);
+    double c = a/r;
+    double s = b/r;
+    
+    double c1, c2, s1, s2;
+    double p, psq;
+    double ep_norm, ep_orth;
+    double del_c, del_s;
+    
+    two_mult_fma(c, c, c1, c2);
+    two_mult_fma(s, s, s1, s2);
+    
+    if(std::abs(c) >= std::abs(s))
+    {
+        ep_norm = (1 - c1 - s1 - c2 - s2)/2;
+    }
+    else
+    {
+        ep_norm = (1 - s1 - c1 - s2 - c2)/2;
+    }
+    
+    two_mult_fma(c, b, p, psq);
+    
+    ep_orth = (std::fma(-s, a, p) + psq)/r;
+    
+    del_c = c * ep_norm - s * ep_orth;
+    del_s = s * ep_norm + c * ep_orth;
+    
+    c += del_c;
+    s += del_s;
+    
+    givens res;
+    res.c = c;
+    res.s = s;
+    
+    return res;
+}
 
 
 givens::givens(double a, double b)
@@ -121,15 +172,21 @@ double givens::flat(void)
     double rho;
     if(c == 0)
     {
+        // c = 0 -> s = 1
         rho = 1;
     }
+    // if was c != 0 
     else if(std::abs(s) < std::abs(c))
     {
+        //std::cout << "less" << "\n";
         rho = ((c > 0) ? 1 : -1) * s/2;
+        //std::cout << "copysign = " << std::copysign(s, c)/2 << "\n";
+        //rho = std::copysign(s/2, c);
     }
     else
     {
         rho = ((s > 0) ? 1 : -1) * 2/c;
+        //std::cout << "copysign = " << 2/std::copysign(c, s) << "\n";
     }
     
     return rho;
@@ -165,6 +222,8 @@ matrix<double>& col_step(matrix<double>& A, givens g, size_t i, size_t k, size_t
     return A;
 }
 
+
+
 matrix<double>& QRfast(matrix<double>& A)
 {
     size_t N = A.cols();
@@ -172,18 +231,25 @@ matrix<double>& QRfast(matrix<double>& A)
     
     givens g;
     
+    if(A(M-2, 0) == A(M-1, 0))
+    {
+        double push = std::nextafter(A(M-2, 0), A(M-2, 0) + 1.0);
+        A(M-2, 0) += std::abs(A(M-2, 0)) - std::abs(push);
+    }
+    
     for(size_t j = 0; j < N; j++)
     {
         for(size_t i = M - 1; i >= j + 1; i--)
         {
-            
+            double r;
             g = givens(A(i-1, j), A(i, j));
             
             std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
             std::cout << "i = " << i << "\tj = " << j << "\n";
+            std::cout << "A(i, j) = " << A(i, j) << "\tA(i-1, j) = " << A(i-1, j) << "\n";
             
             //double r;
-            //givens ga = alt(A(i - 1, j), A(i, j), r);
+            //givens ga = comp_givens(A(i - 1, j), A(i, j), r);
             //std::cout << "sa = " << ga.s << "\tca = " << ga.c << "\tra = " << r << "\tflat = " << ga.flat() << "\n";
 
             
@@ -219,8 +285,9 @@ matrix<double> QRaccumulate(matrix<double> const& A)
             std::cout << "A(i, j) = " << A(i, j) << "\n";
             std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
             std::cout << "i = " << i << "\tj = " << j << "\n";
+            std::cout << "rho= " << A(i, j) << "\n";
 
-            Q = col_step(Q, g, i-1, i, 0);
+            Q = col_step(Q, g, i - 1, i, 0);
             
             std::cout << "Q = \n";
             std::cout << Q << "\n";
