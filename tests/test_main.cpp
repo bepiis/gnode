@@ -257,7 +257,7 @@ TEST_CASE("test")
 }*/
 
 
-/*
+
 #include "../householder.h"
 
 TEST_CASE("RQ TEST")
@@ -266,11 +266,33 @@ TEST_CASE("RQ TEST")
     
     std::cout << basic << "\n";
     
-    transformation::house::QRfast(basic);
+    //transformation::house::QRfast(basic);
     
-    transformation::house::RQfast(basic);
+    basic = transformation::house::LQfast(basic);
     
-}*/
+    matrix<double> Qa = transformation::house::LQaccumulate(basic);
+    
+    matrix<double> out = mat_mul_alg1(&basic, &Qa);
+    
+    std::cout << "out = \n";
+    std::cout << out << "\n";
+    
+    std::cout << "\n====================================\n";
+    
+    matrix<double> b2 = {{2, -1, 2, 3, 5}, {-4, 6, 3, 6, 7}, {-4, -1, 8, 1, 2}};
+    
+    b2 = transformation::house::LQfast(b2);
+    
+    matrix<double> Qb = transformation::house::LQaccumulate(b2);
+    
+    matrix<double> outb = mat_mul_alg1(&b2, &Qb);
+    
+    std::cout << "out = \n";
+    std::cout << outb << "\n";
+
+    
+    
+}
 /*
 TEST_CASE("test")
 {
@@ -323,7 +345,7 @@ TEST_CASE("test")
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-#include "test_givens.cpp"
+//#include "test_givens.cpp"
 //#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"

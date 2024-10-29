@@ -222,8 +222,6 @@ matrix<double>& col_step(matrix<double>& A, givens g, size_t i, size_t k, size_t
     return A;
 }
 
-
-
 matrix<double>& QRfast(matrix<double>& A)
 {
     size_t N = A.cols();
@@ -295,6 +293,19 @@ matrix<double> QRaccumulate(matrix<double> const& A)
     }
     
     return Q;
+}
+
+result::QR<double> QR(matrix<double> const& A)
+{
+    result::QR<double> res;
+    
+    res.Y = matrix<double>(A);
+    res.Y = QRfast(res.Y);
+    
+    res.Q = QRaccumulate(res.Y);
+    
+    res.Y.fill_lower_triangle(0.0);
+    return res;
 }
 
 

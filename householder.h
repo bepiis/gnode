@@ -531,7 +531,7 @@ result::QLH<double> QLH(matrix<double> const& A)
     
     return res;
 }
-
+/*
 matrix<double>& RQfast(matrix<double>& A)
 {
     size_t M, N;
@@ -540,20 +540,99 @@ matrix<double>& RQfast(matrix<double>& A)
     M = A.rows();
     N = A.cols();
     
+    matrix<double> Asub;
+}*/
+
+matrix<double>& LQfast(matrix<double>& A)
+{
+    size_t M, m, N;
+    house h;
+    
+    M = m = A.rows();
+    N = A.cols();
+    
+    if(M == N)
+    {
+        m--;
+    }
+    
+    matrix<double> Asub;
+    
     std::cout << A<< "\n";
     
-    for(size_t i=0; i < M; i++)
+    for(size_t i=0; i < m; i++)
     {
         std::cout << "i= " << i << "\n";
         std::cout << A.sub_row(i, i, N - i) << "\n\n";
 
-        h = housevec(A.sub_row(i, A.cols() - i, i), 0);
+        h = housevec(A.sub_row(i, i, N - i), 0);
         
+        Asub = A.sub_matrix(i, M - i, i, N - i);
+        
+        Asub -= h.beta * outer_prod_1D(inner_right_prod(Asub, h.vec), h.vec);
+        
+        A.set_sub_matrix(Asub, i, i);
+        
+        std::cout << "hvec = \n";
+        std::cout << h.vec << "\n";
+        
+        if(i < N)
+        {
+            size_t k=1;
+            for(size_t j=i+1; j < N; j++, k++)
+            {
+                A(i, j) = h.vec(0, k);
+            }
+        }
     }
+    
+    std::cout << A << "\n";
     
     return A;
 }
 
+matrix<double> LQaccumulate(matrix<double> const& F)
+{
+    size_t M = F.rows();
+    size_t N = F.cols();
+    
+    int64_t m = (int64_t)M;
+    
+    if(M == N)
+    {
+        m--;
+    }
+    
+    matrix<double> Q = matrix<double>::eye(N);
+    matrix<double> vhouse, Qsub, Fh;
+    
+    for(int64_t i = m - 1; i >= 0; i--)
+    {
+        vhouse = matrix<double>(1, N - i);
+        vhouse[0] = 1.0;
+        
+        Fh = F.sub_row(i, i + 1, N - i - 1);
+        
+        vhouse.set_sub_row(Fh, 0, 1);
+        
+        Qsub = Q.sub_matrix(i, N - i, i, N - i);
+        
+        double beta = 2/(1 + col_norm2sq_from(Fh, 0, 0));
+        
+        Qsub -= beta * outer_prod_1D(inner_right_prod(Qsub, vhouse), vhouse);
+        //Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
+        
+        std::cout << "Qsub = \n";
+        std::cout << Qsub << "\n";
+        
+        std::cout << "vhouse = \n";
+        std::cout << vhouse << "\n";
+        
+        Q.set_sub_matrix(Qsub, i, i);
+    }
+    
+    return Q.transpose();
+}
 
 
 
