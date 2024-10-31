@@ -28,10 +28,35 @@ struct house
     double beta;
     
     house() = default;
-    
     house(matrix<double> const& v, double b)
     : vec(v), beta(b) {}
+
+    house(matrix<double> const& vessential, size_t normi);
+
+    //house(matrix<double> const& x, size_t norm_indx);
 };
+
+house::house(matrix<double> const& vessential, size_t normi)
+{
+    vec = matrix<double>(vessential.size() + 1, 1);
+    vec[normi] = 1.0;
+    
+    double norm2 = 0.0;
+    size_t ve, a;
+
+    ve = a = 0;
+    for(; a < vec.size(); a++)
+    {
+        if(a == normi)
+        {
+            continue;
+        }
+        vec[a] = vessential[ve++];
+        norm2 += vec[a] * vec[a];
+    }
+
+    beta = 2/(1 + norm2);
+}
 
 /*
  * Determines the vector v and constant beta from input x = cvec such that
@@ -44,7 +69,6 @@ struct house
  *
  * lastly, v is normalized, i.e. v(0) = 1 so that v can be conviently stored in
  * the lower triangle of upper triangular matrix R, where zeros have been introduced
- *
  */
 house housevec(matrix<double> const& cvec, size_t a)
 {
@@ -96,20 +120,6 @@ house housevec(matrix<double> const& cvec, size_t a)
     return house(hv, beta);
 }
 
-house houseinit(matrix<double>& A, size_t& M, size_t& N, size_t& n)
-{
-    M = A.rows();
-    N = A.cols();
-    n = N;
-    
-    if(N == M)
-    {
-        n--;
-    }
-    
-    return house();
-}
-
 matrix<double>& housestep(matrix<double>& A, house& h, size_t j)
 {
     h = housevec(A.sub_col(j, A.rows() - j, j), 0);
@@ -150,7 +160,16 @@ matrix<double>& QRstep(matrix<double>& A, house& h, size_t i)
 matrix<double>& QRfast(matrix<double>& A)
 {
     size_t M, N, n;
-    house h = houseinit(A, M, N, n);
+    house h;
+    //house h = houseinit(A, M, N, n);
+
+    M = A.rows();
+    N = n = A.cols();
+
+    if(M == N)
+    {
+        n--;
+    }
     
     for(size_t j=0; j < n; j++)
     {
@@ -185,12 +204,15 @@ matrix<double>& QRfast(matrix<double>& A)
  *
  * TODO: work with k optimization
  */
-matrix<double> QRaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
+matrix<double> QRaccumulate(matrix<double> const& F, size_t k, size_t cb)
 {
     size_t M = F.rows();
     size_t N = F.cols();
     
     int64_t n = (int64_t)N;
+
+    house h;
+    size_t normi = 0;
     
     if(M == N)
     {
@@ -204,23 +226,25 @@ matrix<double> QRaccumulate(matrix<double> const& F, size_t k, size_t col_bias)
     
     matrix<double> Qsub;
     
-    for(int64_t j = n - 1 - (int64_t)col_bias; j >= 0; j--)
+    for(int64_t j = n - 1 - (int64_t)cb; j >= 0; j--)
     {
-        vhouse = matrix<double>(M - j - col_bias, 1);
-        vhouse(0, 0) = 1.0;
+        //vhouse = matrix<double>(M - j - col_bias, 1);
+        //vhouse(0, 0) = 1.0;
         
-        matrix<double> Fjp1 = F.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j);
+        //matrix<double> Fjp1 = F.sub_col(j + 1 + col_bias, M - j - 1 - col_bias, j);
         
-        vhouse.set_sub_col(Fjp1, 1, 0);
+        //vhouse.set_sub_col(Fjp1, 1, 0);
 
-        Qsub = Q.sub_matrix(j + col_bias, Q.rows()-j - col_bias, j + col_bias , Q.rows()-j - col_bias);
+        h = house(F.sub_col(j + cb + 1, M - j - cb - 1, j), normi);
+
+        Qsub = Q.sub_matrix(j + cb, Q.rows()-j - cb, j + cb , Q.rows()-j - cb);
         
-        double beta = 2/(1+col_norm2sq_from(Fjp1, 0, 0));
+        //double beta = 2/(1+col_norm2sq_from(Fjp1, 0, 0));
 
         // Q <- (Im - beta*v*v^T)Q
-        Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
+        Qsub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Qsub));
         
-        Q.set_sub_matrix(Qsub, j + col_bias, j + col_bias);
+        Q.set_sub_matrix(Qsub, j + cb, j + cb);
 
     }
     return Q;
@@ -300,12 +324,12 @@ result::QRH<double> QRH(matrix<double> const& A)
     // A must be square.
     result::QRH<double> res;
     
-    res.H = matrix<double>(A);
-    res.H = QRHfast(res.H);
+    res.Y = matrix<double>(A);
+    res.Y = QRHfast(res.Y);
     
-    res.Q = QRaccumulate(res.H, res.H.rows(), 1);
+    res.Q = QRaccumulate(res.Y, res.Y.rows(), 1);
     
-    res.H.fill_lower_hessenberg(0.0);
+    res.Y.fill_lower_hessenberg(0.0);
     
     return res;
 }
@@ -313,7 +337,16 @@ result::QRH<double> QRH(matrix<double> const& A)
 result::FPr<double> colpiv_QRfast(matrix<double>& A)
 {
     size_t M, N, n;
-    house h = houseinit(A, M, N, n);
+    house h;
+    //house h = houseinit(A, M, N, n);
+
+    M = A.rows();
+    N = n = A.cols();
+
+    if(M == N)
+    {
+        n--;
+    }
     
     matrix<double> c = cols_norm2sq(A);
     matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
@@ -369,7 +402,16 @@ matrix<double>& QLstep(matrix<double>& A, house& h, size_t i)
 matrix<double>& QLfast(matrix<double>& A)
 {
     size_t M, N, n;
-    house h = houseinit(A, M, N, n);
+    house h;
+    //house h = houseinit(A, M, N, n);
+
+    M = A.rows();
+    N = n = A.cols();
+
+    if(M == N)
+    {
+        n--;
+    }
     
     for(size_t j=0; j < n; j++)
     {
@@ -402,27 +444,31 @@ matrix<double> QLaccumulate(matrix<double> const& F, size_t col_bias)
     int64_t nhrows = M;
     int64_t cb = (int64_t)col_bias;
     
+    house h;
+    size_t normi = nhrows - cb - 1;
+    
     if(M == N)
     {
         end_cond++;
     }
     
     matrix<double> Q = matrix<double>::eye(M);
-    matrix<double> vhouse;
-    matrix<double> Qsub;
+    matrix<double> vhouse, Qsub;
     
     //std::cout << "F = \n";
     //std::cout << F << "\n";
     
     for(int64_t j = n - 1 - cb; j >= end_cond; j--)
     {
-        vhouse = matrix<double>(nhrows - cb, 1);
-        vhouse(nhrows - 1 - cb, 0) = 1.0;
+        //vhouse = matrix<double>(nhrows - cb, 1);
+        //vhouse(nhrows - 1 - cb, 0) = 1.0;
         
         //std::cout << "nhcols: " << nhcols << "\n";
-        matrix<double> hj = F.sub_col(0, nhrows - 1 - cb, j + cb);
-        
-        vhouse.set_sub_col(hj, 0, 0);
+        //matrix<double> hj = F.sub_col(0, nhrows - 1 - cb, j + cb);
+
+        h = house(F.sub_col(0, nhrows - 1 - cb, j + cb), normi);
+
+        //vhouse.set_sub_col(hj, 0, 0);
         //std::cout << "vhouse: \n";
         //std::cout << vhouse << "\n";
         
@@ -432,10 +478,10 @@ matrix<double> QLaccumulate(matrix<double> const& F, size_t col_bias)
         //std::cout << Qsub << "\n";
         //std::cout << vhouse << "\n";
         
-        double beta = 2/(1 + col_norm2sq_from(hj, 0, 0));
+        //double beta = 2/(1 + col_norm2sq_from(hj, 0, 0));
         
         //Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
-        Qsub -= outer_prod_1D(inner_right_prod(Qsub, vhouse), beta * vhouse);
+        Qsub -= h.beta * outer_prod_1D(inner_right_prod(Qsub, h.vec), h.vec);
         
         //std::cout << "Qsubp: \n";
         //std::cout << Qsub << "\n";
@@ -449,6 +495,7 @@ matrix<double> QLaccumulate(matrix<double> const& F, size_t col_bias)
         //std::cout << Q << "\n";
         
         nhrows--;
+        normi--;
     }
     
     return Q;
@@ -462,16 +509,8 @@ result::QL<double> QL(matrix<double> const& A)
     res.Y = QLfast(res.Y);
     
     res.Q = QLaccumulate(res.Y, 0);
-    
-    int64_t exrows = 2;
-    for(int64_t c = res.Y.cols() - 1; c >= 0; c--)
-    {
-        for(int64_t r = res.Y.rows() - exrows; r >= 0; r--)
-        {
-            res.Y(r, c) = 0.0;
-        }
-        exrows++;
-    }
+
+    matrix<double>::set_lower_tri(res.Y, 0.0, 2);
     
     return res;
 }
@@ -514,20 +553,12 @@ matrix<double>& QLHfast(matrix<double>& A)
 result::QLH<double> QLH(matrix<double> const& A)
 {
     result::QLH<double> res;
-    res.H = matrix<double>(A);
-    res.H = QLHfast(res.H);
+    res.Y = matrix<double>(A);
+    res.Y = QLHfast(res.Y);
     
-    res.Q = QLaccumulate(res.H, 1);
-    
-    int64_t exrows = 3;
-    for(int64_t c = res.H.cols() - 1; c >= 0; c--)
-    {
-        for(int64_t r = res.H.rows() - exrows; r >= 0; r--)
-        {
-            res.H(r, c) = 0.0;
-        }
-        exrows++;
-    }
+    res.Q = QLaccumulate(res.Y, 1);
+
+    matrix<double>::set_lower_tri(res.Y, 0.0, 3);
     
     return res;
 }
@@ -547,7 +578,8 @@ matrix<double>& LQfast(matrix<double>& A)
 {
     size_t M, m, N;
     house h;
-    
+    matrix<double> Asub;
+
     M = m = A.rows();
     N = A.cols();
     
@@ -555,8 +587,6 @@ matrix<double>& LQfast(matrix<double>& A)
     {
         m--;
     }
-    
-    matrix<double> Asub;
     
     std::cout << A<< "\n";
     
@@ -603,35 +633,52 @@ matrix<double> LQaccumulate(matrix<double> const& F)
         m--;
     }
     
-    matrix<double> Q = matrix<double>::eye(N);
-    matrix<double> vhouse, Qsub, Fh;
+    matrix<double> Q, vhouse, Qsub;
+
+    house h;
+    size_t normi = 0;
+
+    Q = matrix<double>::eye(N);
     
     for(int64_t i = m - 1; i >= 0; i--)
     {
-        vhouse = matrix<double>(1, N - i);
-        vhouse[0] = 1.0;
+        //vhouse = matrix<double>(1, N - i);
+        //vhouse[0] = 1.0;
         
-        Fh = F.sub_row(i, i + 1, N - i - 1);
+        //Fh = F.sub_row(i, i + 1, N - i - 1);
         
-        vhouse.set_sub_row(Fh, 0, 1);
+        //vhouse.set_sub_row(Fh, 0, 1);
+
+        h = house(F.sub_row(i, i + 1, N - i - 1), normi);
         
         Qsub = Q.sub_matrix(i, N - i, i, N - i);
         
-        double beta = 2/(1 + col_norm2sq_from(Fh, 0, 0));
+        //double beta = 2/(1 + vec_norm2sq_from(Fh, 0));
         
-        Qsub -= beta * outer_prod_1D(inner_right_prod(Qsub, vhouse), vhouse);
-        //Qsub -= beta * outer_prod_1D(vhouse, inner_left_prod(vhouse, Qsub));
+        Qsub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Qsub));
         
         std::cout << "Qsub = \n";
         std::cout << Qsub << "\n";
         
-        std::cout << "vhouse = \n";
-        std::cout << vhouse << "\n";
+        //std::cout << "vhouse = \n";
+        //std::cout << vhouse << "\n";
         
         Q.set_sub_matrix(Qsub, i, i);
     }
     
     return Q.transpose();
+}
+
+result::LQ<double> LQ(matrix<double> const& A)
+{
+    result::LQ<double> res;
+    res.Y = matrix<double>(A);
+    LQfast(res.Y);
+    res.Q = LQaccumulate(res.Y);
+
+    res.Y.fill_upper_triangle(0.0);
+
+    return res;
 }
 
 

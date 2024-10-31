@@ -13,8 +13,10 @@ TEST_CASE("test house")
     double zero_tol = 1E-11;
     double reldist = 1E-11;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::house (basic):";
-    
+#endif
+
     size_t M = S_RAND(100);
     matrix<double> x = matrix<double>::random_dense_matrix(M, 1, -1000, 1000);
     
@@ -28,10 +30,12 @@ TEST_CASE("test house")
     double max_mag = std::max(x2norm, xe1(0, 0));
     double absdiff = std::abs(x2norm - xe1(0,0));
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\tnorm2 = " << x2norm;
     std::cout << "\terrmax = " << absdiff;
     
     std::cout << "\n";
+#endif
     
     REQUIRE(absdiff < reldist * max_mag);
     
@@ -50,7 +54,9 @@ TEST_CASE("QRfast basic")
     double errmax;
     size_t errcnt;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QRfast (basic):";
+#endif
     
     // very basic test first
     matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
@@ -63,11 +69,12 @@ TEST_CASE("QRfast basic")
     
     errcnt = matrix<double>::abs_max_excess_err(basic, basic_chk.Y, zero_tol);
     errmax = matrix<double>::abs_max_err(basic, basic_chk.Y);
-    
+
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
-    
     std::cout << "\n";
+#endif
     
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
@@ -80,7 +87,9 @@ TEST_CASE("QRaccumulate basic, square")
     double errmax;
     size_t errcnt;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QRaccumulate (basic, square):";
+#endif
     
     matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
     matrix<double> basic_cpy(basic);
@@ -100,10 +109,11 @@ TEST_CASE("QRaccumulate basic, square")
     errcnt = matrix<double>::abs_max_excess_err(chk, basic_cpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, basic_cpy);
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
-    std::cout << "\terrmax = " << errmax;
-    
+    std::cout << "\terrmax = " << errmax;   
     std::cout << "\n";
+#endif
     
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
@@ -120,9 +130,11 @@ TEST_CASE("QRaccumulate rand, randsize, square")
     size_t errcnt;
     
     size_t M = GENERATE(take(20, random(1, 100)));
-    
+
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QRaccumulate (rand, M = " << M << ", N = " << M << ", square): ";
-    
+#endif
+   
     matrix<double> randm = matrix<double>::random_dense_matrix(20, 20, -1000, 1000);
     matrix<double> randmcpy(randm);
     
@@ -136,11 +148,11 @@ TEST_CASE("QRaccumulate rand, randsize, square")
     errcnt = matrix<double>::abs_max_excess_err(rchk, randmcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, randmcpy);
 
-    
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT   
     std::cout << "\terrcnt = " << errcnt;
-    std::cout << "\terrmax = " << errmax;
-    
+    std::cout << "\terrmax = " << errmax;    
     std::cout << "\n";
+#endif
     
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
@@ -160,8 +172,10 @@ TEST_CASE("QRaccumulate rand, randsize")
     auto S = GENERATE(take(1, rd_randmatsize(1, 100)));
     size_t M = S.M;
     size_t N = S.N;
-    
+
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QRaccumulate (rand, M = " << M << ", N = " << N << "): ";
+#endif
     
     matrix<double> tst = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     
@@ -185,10 +199,11 @@ TEST_CASE("QRaccumulate rand, randsize")
     errcnt = matrix<double>::abs_max_excess_err(rchk, tstcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, tstcpy);
     
-    
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
+#endif
     
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
@@ -207,8 +222,9 @@ TEST_CASE("QR")
     size_t M = S.M;
     size_t N = S.N;
     
-    
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QR (rand, M = " << M << ", N = " << N << "): ";
+#endif
     
     matrix<double> qrtst = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     
@@ -218,10 +234,12 @@ TEST_CASE("QR")
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, qrtst, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, qrtst);
-    
+
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
+#endif
     
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
@@ -238,7 +256,9 @@ TEST_CASE("QRHfast")
     
     size_t M = GENERATE(2, take(20, random(2, 100)));
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QRHfast (rand, M = " << M << ", N = " << M<< "): ";
+#endif
     
     matrix<double> htest = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
     matrix<double> htestcpy(htest);
@@ -285,9 +305,11 @@ TEST_CASE("QRHfast")
     //print_matrix(&adiff);
     //std::cout << "\n\n";
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
+#endif
  
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
@@ -305,22 +327,26 @@ TEST_CASE("QRH")
     
     size_t M = GENERATE(2, take(10, random(2, 100)));
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QRH (rand, M = " << M << ", N = " << M<< "): ";
-    
+#endif
+   
     matrix<double> qrhtest = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
     
     auto result = QRH(qrhtest);
     
     matrix<double> QT = result.Q.transpose();
-    matrix<double> hchk = mat_mul_alg1(&result.Q, &result.H);
+    matrix<double> hchk = mat_mul_alg1(&result.Q, &result.Y);
     matrix<double> hchk2 = mat_mul_alg1(&hchk, &QT);
     
     errcnt = matrix<double>::abs_max_excess_err(hchk2, qrhtest, zero_tol);
     errmax = matrix<double>::abs_max_err(hchk2, qrhtest);
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
+#endif
  
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
@@ -333,7 +359,9 @@ TEST_CASE("colpiv QRfast basic")
     double errmax;
     size_t errcnt;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::colpiv_QRfast (basic): ";
+#endif
     
     matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
     matrix<double> basiccpy(basic);
@@ -350,10 +378,12 @@ TEST_CASE("colpiv QRfast basic")
     errcnt = matrix<double>::abs_max_excess_err(bchk, basiccpy, zero_tol);
     errmax = matrix<double>::abs_max_err(bchk, basiccpy);
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
-    
+#endif
+   
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
 }
@@ -368,8 +398,10 @@ TEST_CASE("colpiv householder square")
     size_t M = GENERATE(2, take(10, random(2, 100)));
     //size_t M = 10;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::colpiv_QRfast (rand, M = " << M << ", N = " << M<< "): ";
-    
+#endif
+  
     matrix<double> mrand = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
     matrix<double> mrandcpy(mrand);
     
@@ -397,10 +429,12 @@ TEST_CASE("colpiv householder square")
     errcnt = matrix<double>::abs_max_excess_err(bchk, mrandcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(bchk, mrandcpy);
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
-    
+#endif
+   
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
 }
@@ -416,8 +450,11 @@ TEST_CASE("colpiv householder maybe square")
     size_t M = S.M;
     size_t N = S.N;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::colpiv_QRfast (rand, M = " << M << ", N = " << N << "): ";
-    
+#endif
+
+
     matrix<double> mrand = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
     matrix<double> mrandcpy(mrand);
     
@@ -433,10 +470,12 @@ TEST_CASE("colpiv householder maybe square")
     errcnt = matrix<double>::abs_max_excess_err(rchk, mrandcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, mrandcpy);
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
-    
+#endif
+  
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
 }
@@ -451,8 +490,10 @@ TEST_CASE("QL householder square")
     auto M = GENERATE(2, 100, take(10, random(2, 100)));
     auto N = M;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QL (rand, M = " << M << ", N = " << N << "): ";
-    
+#endif
+   
     matrix<double> b = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     matrix<double> bcpy(b);
     
@@ -463,10 +504,12 @@ TEST_CASE("QL householder square")
     errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, bcpy);
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
-    
+#endif
+   
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
 }
@@ -482,7 +525,9 @@ TEST_CASE("QL householder maybe square")
     size_t M = S.M;
     size_t N = S.N;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QL (rand, M = " << M << ", N = " << N << "): ";
+#endif
     
     matrix<double> b = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     matrix<double> bcpy(b);
@@ -494,9 +539,11 @@ TEST_CASE("QL householder maybe square")
     errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, bcpy);
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
+#endif
     
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);
@@ -513,23 +560,27 @@ TEST_CASE("QLH householder")
     size_t M = S;
     size_t N = S;
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QLH (rand, M = " << M << ", N = " << N << "): ";
-    
+#endif
+   
     matrix<double> b = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     
     auto result = QLH(b);
     
     matrix<double> QT = result.Q.transpose();
     
-    matrix<double> chk = mat_mul_alg1(&result.Q, &result.H);
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y);
     matrix<double> rchk = mat_mul_alg1(&chk, &QT);
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, b, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, b);
     
+#ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
     std::cout << "\n";
+#endif
     
     REQUIRE(errcnt <= cnt_tol);
     REQUIRE(errmax < zero_tol);

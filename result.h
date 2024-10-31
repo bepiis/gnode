@@ -1,5 +1,5 @@
 //
-//  results.h
+//  result.h
 //  Created by Ben Westcott on 10/1/24.
 //
 
@@ -10,9 +10,9 @@
 namespace result
 {
 
-// used to return a factorization where:
+// used to return a solution where:
 // Q is orthogonal
-// Y is triangular
+// Y is arbitrary
 template<typename T>
 struct QY
 {
@@ -26,38 +26,30 @@ struct QY
     
 };
 
-
 template<typename T>
 using QR = QY<T>;
 
 template<typename T>
 using QL = QY<T>;
 
-// used to return a factorization where:
+template<typename T>
+using LQ = QY<T>;
+
+// used to return a solution where:
 // Q is orthogonal
 // H is hessenberg
 template<typename T>
-struct QH
-{
-    matrix<T> Q;
-    matrix<T> H;
-    
-    QH(void) = default;
-    
-    QH(matrix<T> const& q, matrix<T> const& h)
-    : Q(q), H(h) {}
-};
+using QH = QY<T>;
 
-// For upper hessenberg factorization
+// For upper hessenberg solution
 template<typename T>
-using QRH = QH<T>;
+using QRH = QY<T>;
 
-// For lower hessenberg factorization
+// For lower hessenberg solution
 template<typename T>
-using QLH = QH<T>;
+using QLH = QY<T>;
 
-
-// used to return a factorization where:
+// used to return a solution where:
 // F is arbitrary
 // P is a column permutation
 template<typename T>
@@ -72,7 +64,7 @@ struct FP
     : F(f), P(p) {}
 };
 
-// used to return a rank-revealing factorization where:
+// used to return a rank-revealing solution where:
 // F is arbitrary
 // P is a column permutation
 // r is the rank
@@ -89,7 +81,7 @@ struct FPr
     : F(f), P(p), rank(rnk) {}
 };
 
-// used to return a factorization where:
+// used to return a solution where:
 // P is a row permutation
 // F is arbitrary
 template<typename T>

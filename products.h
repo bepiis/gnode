@@ -34,7 +34,7 @@ matrix<T> outer_prod_1D(matrix<T> const& cvec, matrix<T> const& rvec)
 
 // NOTE: DOES NOT VERIFY SIZE, OR IF THEY ARE VECTORS
 template<typename T>
-inline T inner_prod_1D(const matrix<T>& rvec, const matrix<T>& cvec, size_t offs)
+inline T inner_prod_1D(matrix<T> const& rvec, matrix<T> const& cvec, size_t offs)
 {
     T* rv_ptr = rvec.data();
     T* cv_ptr = cvec.data();
@@ -50,7 +50,7 @@ inline T inner_prod_1D(const matrix<T>& rvec, const matrix<T>& cvec, size_t offs
 }
 
 template<typename T>
-T inner_prod_1D(const matrix<T>& rvec, const matrix<T>& cvec)
+T inner_prod_1D(matrix<T> const& rvec, matrix<T> const& cvec)
 {
     if(rvec.size() != cvec.size())
     {
@@ -97,13 +97,13 @@ matrix<T> inner_right_prod(const matrix<T>& rvecs, const matrix<T>& cvec)
 }
 
 template<typename T>
-matrix<T> projection(const matrix<T>& u, const matrix<T>& v)
+matrix<T> projection(matrix<T> const& u, matrix<T> const& v)
 {
     return (inner_prod_1D(v, u)/inner_prod_1D(u, u)) * u;
 }
 
 template<typename T>
-double col_norm2sq_from(const matrix<T>& rhs, size_t c, size_t from_row)
+double col_norm2sq_from(matrix<T> const& rhs, size_t c, size_t from_row)
 {
     return inner_prod_1D(rhs.col(c), rhs.col(c), from_row);
 }
@@ -117,10 +117,16 @@ double col_norm2sq(const matrix<T>& rhs, size_t c)
     }
     
     return col_norm2sq_from(rhs, c, 0);
+} 
+
+template<typename T>
+double vec_norm2sq_from(matrix<T> const& rhs, size_t offs)
+{
+    return inner_prod_1D(rhs, rhs, offs);
 }
 
 template<typename T>
-matrix<double> cols_norm2sq(const matrix<T>& rhs)
+matrix<double> cols_norm2sq(matrix<T> const& rhs)
 {
     matrix<double> norms(1, rhs.cols());
     

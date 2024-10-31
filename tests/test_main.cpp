@@ -271,6 +271,10 @@ TEST_CASE("RQ TEST")
     basic = transformation::house::LQfast(basic);
     
     matrix<double> Qa = transformation::house::LQaccumulate(basic);
+
+    basic.fill_upper_triangle(0.0);
+
+    std::cout << basic << "\n";
     
     matrix<double> out = mat_mul_alg1(&basic, &Qa);
     
@@ -284,6 +288,9 @@ TEST_CASE("RQ TEST")
     b2 = transformation::house::LQfast(b2);
     
     matrix<double> Qb = transformation::house::LQaccumulate(b2);
+
+    b2.fill_upper_triangle(0.0);
+    std::cout << b2 << "\n";
     
     matrix<double> outb = mat_mul_alg1(&b2, &Qb);
     
@@ -346,7 +353,7 @@ TEST_CASE("test")
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
 //#include "test_givens.cpp"
-//#include "test_householder.cpp"
+#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
 

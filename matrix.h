@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <random>
 #include <algorithm>
+#include <cstdint>
 
 /*
  * TODO: expand matrix template so that we can
@@ -140,6 +141,8 @@ public:
 	static matrix<T> ones(size_t nrows, size_t ncols);
     static matrix<size_t> unit_permutation_matrix(size_t rank);
     
+    static matrix<T>& set_lower_tri(matrix<T> & rhs, T val, int64_t exrows);
+    
     // TODO: soon we will need to generate random matrix types i.e. symmetric, orthogonal, skew, pos. definite, etc. to test various algos
     static matrix<T> random_dense_matrix(size_t nrows, size_t ncols, float lowerbound, float upperbound);
     
@@ -149,6 +152,8 @@ public:
     static size_t abs_max_excess_err(matrix<T> const& result, matrix<T> const& expected, T tolerance);
     
     static T abs_max_element(matrix<T> const& rhs, size_t from_row);
+
+
 
 private:
     
@@ -920,6 +925,22 @@ matrix<T> matrix<T>::abs(matrix<T> const& rhs)
     );
     
     return abs_result;
+}
+
+// not optimal!, col access is outer loop.
+template<typename T>
+matrix<T>& matrix<T>::set_lower_tri(matrix<T> & rhs, T val, int64_t exrows)
+{
+    for(int64_t c = rhs.cols() - 1; c >= 0; c--)
+    {
+        for(int64_t r = rhs.rows() - exrows; r >= 0; r--)
+        {
+            rhs(r, c) = val;
+        }
+        exrows++;
+    }
+
+    return rhs;
 }
 
 template<typename T>
