@@ -308,7 +308,5 @@ result::QR<double> QR(matrix<double> const& A)
     return res;
 }
 
-
 }
-
 }

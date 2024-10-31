@@ -28,14 +28,23 @@ struct house
     double beta;
     
     house() = default;
-    house(matrix<double> const& v, double b)
-    : vec(v), beta(b) {}
-
+    house(matrix<double> const& v, double b);
     house(matrix<double> const& vessential, size_t normi);
 
     //house(matrix<double> const& x, size_t norm_indx);
 };
 
+house::house(matrix<double> const& v, double b)
+: vec(v), beta(b)
+{ 
+}
+
+/*
+ * Constructs a house vector from its essential form, 
+ * i.e. if          vhouse = [0 0 0 ... 0 1 v1 v2 ... vn]
+ *      then        vessential = [v1 v2 ... vn]
+ *      and         vec = [1 v1 v2 ... vn]
+ */
 house::house(matrix<double> const& vessential, size_t normi)
 {
     vec = matrix<double>(vessential.size() + 1, 1);
@@ -136,12 +145,11 @@ matrix<double>& colstep(matrix<double>& A, house& h, size_t i, size_t k, size_t 
 {
     h = housevec(A.sub_col(k, A.rows() - i, hc), s);
     //std::cout << A.sub_col(k, A.rows() - i, hc) << "\n";
-    
     matrix<double> Asub = A.sub_matrix(k, A.rows() - i, k, A.cols() - i);
     
     Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
-    
     A.set_sub_matrix(Asub, k, k);
+
     return A;
 }
 
@@ -223,7 +231,6 @@ matrix<double> QRaccumulate(matrix<double> const& F, size_t k, size_t cb)
     matrix<double> Im = matrix<double>::eye(M);
     matrix<double> Q = Im.sub_matrix(0, M, 0, M);
     matrix<double> vhouse;
-    
     matrix<double> Qsub;
     
     for(int64_t j = n - 1 - (int64_t)cb; j >= 0; j--)
@@ -280,7 +287,7 @@ result::QR<double> QR(matrix<double> const& A)
  *
  * A <- QAQ^T, where Q is orthogonal, and A becomes upper hessenberg
  */
-matrix<double>& QRHfast(matrix<double> &A /* must be square*/ )
+matrix<double>& QRHfast(matrix<double> &A /* must be square*/)
 {
     size_t N = A.rows();
     house h;
@@ -588,7 +595,7 @@ matrix<double>& LQfast(matrix<double>& A)
         m--;
     }
     
-    std::cout << A<< "\n";
+    std::cout << A << "\n";
     
     for(size_t i=0; i < m; i++)
     {
@@ -672,10 +679,10 @@ matrix<double> LQaccumulate(matrix<double> const& F)
 result::LQ<double> LQ(matrix<double> const& A)
 {
     result::LQ<double> res;
+
     res.Y = matrix<double>(A);
     LQfast(res.Y);
     res.Q = LQaccumulate(res.Y);
-
     res.Y.fill_upper_triangle(0.0);
 
     return res;
