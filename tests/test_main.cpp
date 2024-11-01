@@ -154,12 +154,6 @@ TEST_CASE("row dominant RandMatSizeGenerator")
     REQUIRE(i.M >= i.N);
 }
 
-TEST_CASE("test")
-{
-    matrix<double> b = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}};
-    
-    std::cout << b << "\n";
-}
 /*
 #include <experimental/simd>
 #include <chrono>
@@ -297,6 +291,13 @@ TEST_CASE("RQ TEST")
     std::cout << "out = \n";
     std::cout << outb << "\n";
 
+    std::cout << "\n====================================\n";
+
+    matrix<double> b3 = {{2, -1, 2, 3, 5}, {-4, 6, 3, 6, 7}, {-4, -1, 8, 1, 2}};
+
+    b3 = transformation::house::RQfast(b3);
+
+    //matrix<double> Q3 = transformation::house::RQaccumulate(b3);
     
     
 }

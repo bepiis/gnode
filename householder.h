@@ -188,7 +188,7 @@ matrix<double>& QRfast(matrix<double>& A)
             size_t i=1;
             for(size_t k = j+1; k < M; k++, i++)
             {
-                A(k, j) = h.vec(i, 0);
+                A(k, j) = h.vec[i];
             }
         }
     }
@@ -320,7 +320,7 @@ matrix<double>& QRHfast(matrix<double> &A /* must be square*/)
         size_t i=1;
         for(size_t j = k + 2; j < N; j++, i++)
         {
-            A(j, k) = h.vec(i, 0);
+            A(j, k) = h.vec[i];
         }
     }
     return A;
@@ -385,7 +385,7 @@ result::FPr<double> colpiv_QRfast(matrix<double>& A)
             size_t i = 1;
             for(size_t j = r + 1; j < M; j++, i++)
             {
-                A(j, r) = h.vec(i, 0);
+                A(j, r) = h.vec[i];
             }
         }
         
@@ -403,6 +403,16 @@ result::FPr<double> colpiv_QRfast(matrix<double>& A)
 
 matrix<double>& QLstep(matrix<double>& A, house& h, size_t i)
 {
+    /*
+    matrix<double>& colstep(matrix<double>& A, house& h, size_t i, size_t k, size_t hc, size_t s)
+
+
+    h = housevec(A.sub_col(k, A.rows() - i, hc), s);
+    matrix<double> Asub = A.sub_matrix(k, A.rows() - i, k, A.cols() - i);
+    
+    Asub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Asub));
+    A.set_sub_matrix(Asub, k, k);
+    */
     return colstep(A, h, i, 0, A.cols() - i - 1, A.rows() - i - 1);
 }
 
@@ -433,7 +443,7 @@ matrix<double>& QLfast(matrix<double>& A)
         {
             for(size_t k=0; k < M - j - 1; k++)
             {
-                A(k, N - j - 1) = h.vec(k, 0);
+                A(k, N - j - 1) = h.vec[k];
             }
         }
     }
@@ -479,6 +489,7 @@ matrix<double> QLaccumulate(matrix<double> const& F, size_t col_bias)
         //std::cout << "vhouse: \n";
         //std::cout << vhouse << "\n";
         
+        // TODO: why is this M - cb and not M - j - cb????
         Qsub = Q.sub_matrix(0, M - cb, 0, nhrows - cb);
         
         //std::cout << "Qsub: \n";
@@ -550,7 +561,7 @@ matrix<double>& QLHfast(matrix<double>& A)
         
         for(size_t k = 0; k < M - j - 2; k++)
         {
-            A(k, M - j - 1) = h.vec(k, 0);
+            A(k, M - j - 1) = h.vec[k];
         }
     }
     
@@ -569,17 +580,100 @@ result::QLH<double> QLH(matrix<double> const& A)
     
     return res;
 }
-/*
+
 matrix<double>& RQfast(matrix<double>& A)
 {
-    size_t M, N;
+    size_t M, N, m;
     house h;
     
-    M = A.rows();
+    M = m = A.rows();
     N = A.cols();
+
+    if(M == N)
+    {
+        m--;
+    }
     
     matrix<double> Asub;
-}*/
+
+    for(size_t i=0; i < m; i++)
+    {
+        std::cout << "i= " << i << "\n";
+        std::cout << A.sub_row(M - i - 1, 0, N - i) << "\n";
+
+        h = housevec(A.sub_row(M - i - 1, 0, N - i), N - i - 1);
+        std::cout << "vhouse = \n";
+        std::cout << h.vec << "\n";
+
+        Asub = A.sub_matrix(0, M - i, 0, N - i);
+
+        std::cout << "Asub = \n";
+        std::cout << Asub << "\n";
+
+        Asub -= h.beta * outer_prod_1D(inner_right_prod(Asub, h.vec), h.vec);
+
+        A.set_sub_matrix(Asub, 0, 0);
+
+        if(i < N)
+        {
+            for(size_t k=0; k < N - i - 1; k++)
+            {
+                A(M - i - 1, k) = h.vec[k];
+            }
+        }
+
+        std::cout << "A = \n";
+        std::cout << A << "\n";
+        std::cout << "\n-------------------------------------\n";
+
+    }
+    return A;
+}
+
+matrix<double> RQaccumulate(matrix<double> const& F/*, size_t col_bias*/)
+{
+    size_t M = F.rows();
+    size_t N = F.cols();
+    
+    int64_t m = (int64_t)M;
+    int64_t end_cond = 0;
+    int64_t nhcols = N;
+    //int64_t cb = (int64_t)col_bias;
+    
+    house h;
+    size_t normi = nhcols /*- cb*/ - 1;
+
+    if(M == N)
+    {
+        end_cond++;
+    }
+
+    matrix<double> Q = matrix<double>::eye(M);
+    matrix<double> vhouse, Qsub;
+    
+    //std::cout << "F = \n";
+    //std::cout << F << "\n";
+    
+    for(int64_t i = m - 1 /*-cb*/; i >= end_cond; i--)
+    {
+        std::cout << F.sub_row(i, 0, nhcols - 1);
+        h = house(F.sub_row(i, 0, nhcols - 1), normi);
+        std::cout << h.vec << "\n";
+
+        Qsub = Q.sub_matrix(0, N - i /*-cb*/, 0, nhcols /*-cb*/);
+
+
+
+        nhcols--;
+        normi--;
+    }
+
+    return Q;
+
+
+}
+
+
 
 matrix<double>& LQfast(matrix<double>& A)
 {
@@ -661,8 +755,8 @@ matrix<double> LQaccumulate(matrix<double> const& F)
         Qsub = Q.sub_matrix(i, N - i, i, N - i);
         
         //double beta = 2/(1 + vec_norm2sq_from(Fh, 0));
-        
-        Qsub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Qsub));
+        Qsub -= h.beta * outer_prod_1D(inner_right_prod(Qsub, h.vec), h.vec);
+        //Qsub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Qsub));
         
         std::cout << "Qsub = \n";
         std::cout << Qsub << "\n";
@@ -673,7 +767,7 @@ matrix<double> LQaccumulate(matrix<double> const& F)
         Q.set_sub_matrix(Qsub, i, i);
     }
     
-    return Q.transpose();
+    return Q;
 }
 
 result::LQ<double> LQ(matrix<double> const& A)

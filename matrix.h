@@ -1040,8 +1040,3 @@ std::ostream& operator<<(std::ostream& os, matrix<T> const& mat)
     }
     return os;
 }
-
-
-
-
-
