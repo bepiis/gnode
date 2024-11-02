@@ -143,6 +143,7 @@ public:
     
     static matrix<T>& set_lower_tri(matrix<T> & rhs, T val, int64_t exrows);
     
+    
     // TODO: soon we will need to generate random matrix types i.e. symmetric, orthogonal, skew, pos. definite, etc. to test various algos
     static matrix<T> random_dense_matrix(size_t nrows, size_t ncols, float lowerbound, float upperbound);
     

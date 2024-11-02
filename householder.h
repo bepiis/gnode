@@ -16,6 +16,32 @@
 // [3] https://www.cs.cornell.edu/~bindel/class/cs6210-f12/notes/lec16.pdf
 // [4] https://nhigham.com/2020/09/15/what-is-a-householder-matrix/
 
+/*
+ * TODO:
+ * I shouldnt actually need to explicitly write algorithms for
+ * XQ algs since they are just transposed problems of QX problems.
+ * 
+ * This would require some "TransposeView" object which will effectively
+ * wrap a matrix and reverse rows/cols in all its methods such that 
+ * its treated as a transposed matrix. Then we can just run the XQ algs
+ * on the TransposeView. 
+ * 
+ * This is kind of encroaching on the whole idea of making the matrix
+ * class much less monolithic. I.e. if we have a TransposeView, then
+ * this begs the question whether data access should even be defined in the 
+ * matrix class, and the answer is no it shouldnt be. 
+ * 
+ * Instead, we should have a matrix engine which handles the data
+ * and matrix contains an reference to an owning engine. Then when we want
+ * to have alternative views of the data, we create a non-owning engine which
+ * takes an owning reference, and views the data in the respective way. 
+ * 
+ * This extends even farther into the ability to view submatrices without
+ * having to explicitly make a copy of the relevant data. It should be possible
+ * to have a SubMatrixView which can read/write sections of the underlying data 
+ * without having to copy it into a smaller matrix. 
+ */
+
 namespace transformation
 {
 
@@ -141,6 +167,13 @@ matrix<double>& housestep(matrix<double>& A, house& h, size_t j)
     return A;
 }
 
+/*
+ * A : input matrix
+ * i : nbr of rows/cols off from M x N to consider
+ * k : corner value. This changes per iteration of QR and related factorizations.
+ * hc: column to be considered in current iteration
+ * s : index in house vector which is normalized. For QR, this is zero, for QL is the last elem
+ */
 matrix<double>& colstep(matrix<double>& A, house& h, size_t i, size_t k, size_t hc, size_t s)
 {
     h = housevec(A.sub_col(k, A.rows() - i, hc), s);
@@ -648,7 +681,7 @@ matrix<double> RQaccumulate(matrix<double> const& F/*, size_t col_bias*/)
         end_cond++;
     }
 
-    matrix<double> Q = matrix<double>::eye(M);
+    matrix<double> Q = matrix<double>::eye(N);
     matrix<double> vhouse, Qsub;
     
     //std::cout << "F = \n";
@@ -656,21 +689,24 @@ matrix<double> RQaccumulate(matrix<double> const& F/*, size_t col_bias*/)
     
     for(int64_t i = m - 1 /*-cb*/; i >= end_cond; i--)
     {
+        std::cout << "nhcols = " << nhcols << "\tnormi = " << normi << "\n";
         std::cout << F.sub_row(i, 0, nhcols - 1);
         h = house(F.sub_row(i, 0, nhcols - 1), normi);
         std::cout << h.vec << "\n";
 
-        Qsub = Q.sub_matrix(0, N - i /*-cb*/, 0, nhcols /*-cb*/);
+        Qsub = Q.sub_matrix(0, nhcols/*-cb*/, 0, N /*-cb*/);
 
+        Qsub -= h.beta * outer_prod_1D(h.vec, inner_left_prod(h.vec, Qsub));
+        Q.set_sub_matrix(Qsub, 0, 0);
 
+        std::cout << "Q = \n";
+        std::cout << Q << "\n";
 
         nhcols--;
         normi--;
     }
 
     return Q;
-
-
 }
 
 

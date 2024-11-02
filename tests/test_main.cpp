@@ -297,8 +297,22 @@ TEST_CASE("RQ TEST")
 
     b3 = transformation::house::RQfast(b3);
 
-    //matrix<double> Q3 = transformation::house::RQaccumulate(b3);
+    matrix<double> Q3 = transformation::house::RQaccumulate(b3);
     
+    size_t ex_cols = 2;
+    for(size_t r=0; r < b3.rows(); r++, ex_cols++)
+    {
+        for(size_t c=0; c < ex_cols; c++)
+        {
+            b3(r, c)= 0.0;
+        }
+    }
+
+    std::cout << b3 << "\n";
+
+    matrix<double> out3 = mat_mul_alg1(&b3, &Q3);
+
+    std::cout << out3 << "\n";
     
 }
 /*
@@ -354,7 +368,7 @@ TEST_CASE("test")
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
 //#include "test_givens.cpp"
-#include "test_householder.cpp"
+//#include "test_householder.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
 
