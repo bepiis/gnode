@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <iostream>
+#include <chrono>
 #include "../matrix.h"
 #include "../result.h"
 
@@ -251,7 +252,7 @@ TEST_CASE("test")
 }*/
 
 
-
+/*
 #include "../householder.h"
 
 TEST_CASE("RQ TEST")
@@ -314,7 +315,7 @@ TEST_CASE("RQ TEST")
 
     std::cout << out3 << "\n";
     
-}
+}*/
 /*
 TEST_CASE("test")
 {
@@ -364,6 +365,95 @@ TEST_CASE("test")
     std::cout << Qchk << "\n";
     
 }*/
+
+//#include <mdspan>
+
+ /*
+ TEST_CASE("mdspan")
+ {
+
+
+    std::vector v 
+    {
+        1,  2,  3,  4,
+        5,  6,  7,  8,
+        9,  10, 11, 12,
+        13, 14, 15, 16
+    };
+    
+    constexpr size_t M = 4;
+    constexpr size_t N = 4;
+
+    std::mdspan<int, 
+            std::extents<size_t, M, N>,
+            std::layout_right> mv{v.data()};
+
+    for (std::size_t r = 0; r < mv.extent(0); r++)
+    {
+        for (std::size_t c = 0; c < mv.extent(1); c++)
+        {
+            std::cout << mv[r, c] << ' ';
+        }
+        std::cout << '\n';
+    }
+
+    std::cout << "\n\n";
+
+    std::mdspan<int, 
+                  std::extents<size_t, std::dynamic_extent, std::dynamic_extent>, 
+                  std::layout_stride> 
+
+    mk{ v.data(), 
+       { std::dextents<size_t,2>{8, 2}, 
+         std::array<std::size_t, 2>{3, 1}}};
+
+    for (std::size_t r = 0; r < mk.extent(0); r++)
+    {
+        for (std::size_t c = 0; c < mk.extent(1); c++)
+        {
+            std::cout << mk[r, c] << ' ';
+        }
+        std::cout << '\n';
+    }
+
+   
+    std::dextents<size_t,2> shape{2, 2};
+    std::array<size_t, 2> strides{shape.extent(0), 4};
+
+    std::mdspan mk{v.data(), std::layout_stride::mapping{shape, strides}};
+
+    for (std::size_t r = 0; r < mk.extent(0); r++)
+    {
+        for (std::size_t c = 0; c < mk.extent(1); c++)
+        {
+            std::cout << mk[r, c] << ' ';
+        }
+        std::cout << '\n';
+    }
+
+    std::mdspan mp(v.data(), N, M);
+    for(size_t c=0; c < mp.extent(1); c++)
+    {
+        std::extents sub_ext(mp.extent(0));
+        std::array strides{mp.stride(0)};
+
+        std::layout_right::map sub_map(sub_ext, strides);
+        std::mdspan col_c(&mp[0, c], sub_map);
+
+    }
+
+ }*/
+
+#include "../givens.h"
+
+TEST_CASE("qrhfast")
+{
+    matrix<double> basic = {{2, -1, 2}, {-4, 6, 3}, {-4, -1, 8}};
+
+    basic = transformation::givens::QRHfast(basic);
+
+    
+}
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"

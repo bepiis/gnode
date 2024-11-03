@@ -222,6 +222,14 @@ matrix<double>& col_step(matrix<double>& A, givens g, size_t i, size_t k, size_t
     return A;
 }
 
+matrix<double>& nudge_first_rotation(matrix<double>& A, size_t M)
+{
+    double push = std::nextafter(A(M-2, 0), A(M-2, 0) + 1.0);
+    A(M-2, 0) += std::abs(A(M-2, 0)) - std::abs(push);
+
+    return A;
+}
+
 matrix<double>& QRfast(matrix<double>& A)
 {
     size_t N = A.cols();
@@ -231,8 +239,7 @@ matrix<double>& QRfast(matrix<double>& A)
     
     if(A(M-2, 0) == A(M-1, 0))
     {
-        double push = std::nextafter(A(M-2, 0), A(M-2, 0) + 1.0);
-        A(M-2, 0) += std::abs(A(M-2, 0)) - std::abs(push);
+        A = nudge_first_rotation(A, M);
     }
     
     for(size_t j = 0; j < N; j++)
@@ -242,9 +249,9 @@ matrix<double>& QRfast(matrix<double>& A)
             double r;
             g = givens(A(i-1, j), A(i, j));
             
-            std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
-            std::cout << "i = " << i << "\tj = " << j << "\n";
-            std::cout << "A(i, j) = " << A(i, j) << "\tA(i-1, j) = " << A(i-1, j) << "\n";
+            //std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
+            //std::cout << "i = " << i << "\tj = " << j << "\n";
+            //std::cout << "A(i, j) = " << A(i, j) << "\tA(i-1, j) = " << A(i-1, j) << "\n";
             
             //double r;
             //givens ga = comp_givens(A(i - 1, j), A(i, j), r);
@@ -256,12 +263,32 @@ matrix<double>& QRfast(matrix<double>& A)
             
             A(i, j) = g.flat();
             
-            std::cout << "rho = " << A(i, j) << "\n";
+            //std::cout << "rho = " << A(i, j) << "\n";
             
-            std::cout << A << "\n\n";
+            //std::cout << A << "\n\n";
         }
     }
     
+    return A;
+}
+
+matrix<double>& QRHfast(matrix<double>& A /* must be square! */)
+{
+    size_t M, N;
+    givens g;
+
+    M = A.rows();
+    N = A.cols();
+
+    for(size_t j = 0; j < N - 1; j++)
+    {
+        g = givens(A(j, j), A(j + 1, j));
+
+        A = col_step(A, g, j, j+1, 0);
+    }
+
+    std::cout << A << "\n";
+
     return A;
 }
 
@@ -280,15 +307,15 @@ matrix<double> QRaccumulate(matrix<double> const& A)
         {
             g = givens(A(i, j));
             
-            std::cout << "A(i, j) = " << A(i, j) << "\n";
-            std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
-            std::cout << "i = " << i << "\tj = " << j << "\n";
-            std::cout << "rho= " << A(i, j) << "\n";
+            //std::cout << "A(i, j) = " << A(i, j) << "\n";
+            //std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
+            //std::cout << "i = " << i << "\tj = " << j << "\n";
+            //std::cout << "rho= " << A(i, j) << "\n";
 
             Q = col_step(Q, g, i - 1, i, 0);
             
-            std::cout << "Q = \n";
-            std::cout << Q << "\n";
+            //std::cout << "Q = \n";
+            //std::cout << Q << "\n";
         }
     }
     
@@ -307,6 +334,8 @@ result::QR<double> QR(matrix<double> const& A)
     res.Y.fill_lower_triangle(0.0);
     return res;
 }
+
+
 
 }
 }

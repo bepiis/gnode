@@ -190,7 +190,7 @@ matrix<T> mat_mul_alg1(const matrix<T>* lhs, const matrix<T>* rhs)
     size_t N = lhs->cols();
     size_t K = rhs->cols();
     
-    tdpool pool(2);
+    tdpool pool(6);
     std::vector<std::future<matrix<T>>> oprod_results;
     
     size_t curr_adds = 0;

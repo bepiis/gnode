@@ -8,6 +8,45 @@
 
 using namespace transformation::givens;
 
+#define TEST_GIVENS_VERBOSE_OUTPUT
+
+TEST_CASE("QR householder")
+{
+    size_t cnt_tol = 0;
+    double zero_tol = 1E-11;
+    double errmax;
+    size_t errcnt;
+    
+    auto S = GENERATE(take(10, rd_randmatsize(1, 100)));
+    size_t M = S.M;
+    size_t N = S.N;
+
+#ifdef TEST_GIVENS_VERBOSE_OUTPUT
+    std::cout << "test transformation::givens::QR (rand, M = " << M << ", N = " << N << "): ";
+#endif
+    
+    matrix<double> b = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
+    matrix<double> bcpy(b);
+    
+    auto result = QR(b);
+    
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y);
+    
+    errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
+    errmax = matrix<double>::abs_max_err(chk, bcpy);
+    
+#ifdef TEST_GIVENS_VERBOSE_OUTPUT
+    std::cout << "\terrcnt = " << errcnt;
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\n";
+#endif
+    
+    REQUIRE(errcnt <= cnt_tol);
+    REQUIRE(errmax < zero_tol);
+}
+
+
+/*
 TEST_CASE("bruh")
 {
     
@@ -44,6 +83,4 @@ TEST_CASE("bruh")
     
     std::cout << res << "\n";
 
-
-    
-}
+}*/
