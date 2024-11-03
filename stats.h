@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <chrono>
 #include "matrix.h"
 #include "products.h"
 
@@ -191,5 +192,19 @@ stats eval_stats(const matrix<T> &in, size_t start_row, size_t break_row, size_t
 	
 	return box;
 } 
+
+template <typename fun, typename ... Args>
+decltype(auto) time_exec(uint64_t& elapsed, fun&& f, Args&& ... args)
+{
+	using namespace std::chrono;
+
+    auto start = high_resolution_clock::now();
+
+	decltype(auto) res = std::forward<fun>(f)(std::forward<Args>(args)...);
+
+	elapsed = duration_cast<nanoseconds>(high_resolution_clock::now() - start).count();
+
+	return res;
+}
 
 

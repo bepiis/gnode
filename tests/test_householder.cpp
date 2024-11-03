@@ -6,10 +6,15 @@
 #include "../householder.h"
 #include "../gram_schmidt.h"
 
-using namespace transformation::house;
+#ifdef TEST_FULL_VERBOSE_OUTPUT
+    #define TEST_HOUSEHOLDER_VERBOSE_OUTPUT
+#endif
 
+//#define TEST_HOUSE_VERBOSE_OUTPUT
 TEST_CASE("test house")
 {
+    using namespace transformation::house;
+
     double zero_tol = 1E-11;
     double reldist = 1E-11;
     
@@ -49,10 +54,13 @@ TEST_CASE("test house")
 
 TEST_CASE("QRfast basic")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol =  1E-14;
     double errmax;
     size_t errcnt;
+    uint64_t tR;
     
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QRfast (basic):";
@@ -62,7 +70,8 @@ TEST_CASE("QRfast basic")
     matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
     
     auto basic_chk = transformation::GS::QR(basic);
-    basic = QRfast(basic);
+
+    basic = time_exec(tR, QRfast, basic);
     
     //matrix<double> basic_chk(3, 3, {6, -3, -8, 1, 5.65685, -3.53553, 1, 2.41421, 0.707107});
     basic.fill_lower_triangle(0.0);
@@ -73,6 +82,7 @@ TEST_CASE("QRfast basic")
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttR = " << tR;
     std::cout << "\n";
 #endif
     
@@ -82,6 +92,8 @@ TEST_CASE("QRfast basic")
 
 TEST_CASE("QRaccumulate basic, square")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-14;
     double errmax;
@@ -124,6 +136,9 @@ TEST_CASE("QRaccumulate basic, square")
 
 TEST_CASE("QRaccumulate rand, randsize, square")
 {
+    using namespace transformation::house;
+
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -161,7 +176,9 @@ TEST_CASE("QRaccumulate rand, randsize, square")
 
 TEST_CASE("QRaccumulate rand, randsize")
 {
-    
+    using namespace transformation::house;
+
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -211,6 +228,8 @@ TEST_CASE("QRaccumulate rand, randsize")
 
 TEST_CASE("QR")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -247,6 +266,8 @@ TEST_CASE("QR")
 
 TEST_CASE("QRHfast")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -318,6 +339,8 @@ TEST_CASE("QRHfast")
 
 TEST_CASE("QRH")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -354,6 +377,8 @@ TEST_CASE("QRH")
 
 TEST_CASE("colpiv QRfast basic")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -390,6 +415,8 @@ TEST_CASE("colpiv QRfast basic")
 
 TEST_CASE("colpiv householder square")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -441,6 +468,8 @@ TEST_CASE("colpiv householder square")
 
 TEST_CASE("colpiv householder maybe square")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -482,6 +511,8 @@ TEST_CASE("colpiv householder maybe square")
 
 TEST_CASE("QL householder square")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -516,6 +547,8 @@ TEST_CASE("QL householder square")
 
 TEST_CASE("QL householder maybe square")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -551,6 +584,8 @@ TEST_CASE("QL householder maybe square")
 
 TEST_CASE("QLH householder")
 {
+    using namespace transformation::house;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;

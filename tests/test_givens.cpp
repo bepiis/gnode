@@ -6,12 +6,13 @@
 #include "../givens.h"
 #include "../gram_schmidt.h"
 
-using namespace transformation::givens;
 
 #define TEST_GIVENS_VERBOSE_OUTPUT
 
 TEST_CASE("QR householder")
 {
+    using namespace transformation::givens;
+
     size_t cnt_tol = 0;
     double zero_tol = 1E-11;
     double errmax;
@@ -27,10 +28,19 @@ TEST_CASE("QR householder")
     
     matrix<double> b = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     matrix<double> bcpy(b);
+    matrix<double> Q;
+
+    uint64_t tR, tQ;
     
-    auto result = QR(b);
+    //auto result = QR(b);
+    {
+        b = time_exec(tR, QRfast, b);
+        Q = time_exec(tQ, QRaccumulate, b);
+        b.fill_lower_triangle(0.0);
+
+    }
     
-    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y);
+    matrix<double> chk = mat_mul_alg1(&Q, &b);
     
     errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, bcpy);
@@ -38,6 +48,8 @@ TEST_CASE("QR householder")
 #ifdef TEST_GIVENS_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttR (ns) = " << tR;
+    std::cout << "\ttQ (ns) = " << tQ;
     std::cout << "\n";
 #endif
     

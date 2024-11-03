@@ -284,7 +284,7 @@ matrix<double>& QRHfast(matrix<double>& A /* must be square! */)
     {
         g = givens(A(j, j), A(j + 1, j));
 
-        A = col_step(A, g, j, j+1, 0);
+        A = rotate(A, g, j, j + 1, j, N - 1);
     }
 
     std::cout << A << "\n";

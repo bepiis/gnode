@@ -4,6 +4,11 @@ project(GNode CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# message(STATUS ${CMAKE_C_COMPILER})
+# message(STATUS ${CMAKE_CXX_COMPILER})
+# message(STATUS ${CMAKE_CXX_COMPILER_AR})
+# message(STATUS ${CMAKE_CXX_COMPILER_RANLIB})
+
 #find_package(Catch2 3 REQUIRED)
 Include(FetchContent)
 

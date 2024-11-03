@@ -5,6 +5,7 @@
 #include <chrono>
 #include "../matrix.h"
 #include "../result.h"
+#include "../stats.h"
 
 //#define PY_SSIZE_T_CLEAN
 //#include <Python.h>
@@ -443,23 +444,32 @@ TEST_CASE("test")
     }
 
  }*/
-
+/*
 #include "../givens.h"
 
 TEST_CASE("qrhfast")
 {
+    using namespace transformation::givens;
     matrix<double> basic = {{2, -1, 2}, {-4, 6, 3}, {-4, -1, 8}};
+    uint64_t elapsed = 0;
 
-    basic = transformation::givens::QRHfast(basic);
+    basic = time_exec(elapsed, QRHfast, basic);
 
-    
-}
+
+    std::cout << basic << "\n";
+    std::cout << elapsed << "\n";
+}*/
+
+
+#ifndef TEST_NONE
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-//#include "test_givens.cpp"
-//#include "test_householder.cpp"
+#include "test_householder.cpp"
+#include "test_givens.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
+
+#endif
 
 
