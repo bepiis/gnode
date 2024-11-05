@@ -444,29 +444,33 @@ TEST_CASE("test")
     }
 
  }*/
-/*
-#include "../givens.h"
+
+#include "../householder.h"
 
 TEST_CASE("qrhfast")
 {
-    using namespace transformation::givens;
+    using namespace transformation::house;
     matrix<double> basic = {{2, -1, 2}, {-4, 6, 3}, {-4, -1, 8}};
     uint64_t elapsed = 0;
 
-    basic = time_exec(elapsed, QRHfast, basic);
+    auto rbas = time_exec(elapsed, QR, basic);
+    auto lbas = time_exec(elapsed, QL, basic);
 
 
-    std::cout << basic << "\n";
+    std::cout << rbas.Y << "\n";
+    std::cout << lbas.Y << "\n";
     std::cout << elapsed << "\n";
-}*/
+}
+
+
 
 
 #ifndef TEST_NONE
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-#include "test_householder.cpp"
-#include "test_givens.cpp"
+//#include "test_householder.cpp"
+//#include "test_givens.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
 
