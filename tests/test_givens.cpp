@@ -3,11 +3,9 @@
 //  Created by Ben Westcott on 10/9/24.
 //
 
-#include "../givens.h"
-#include "../gram_schmidt.h"
-
-
-#define TEST_GIVENS_VERBOSE_OUTPUT
+#ifdef TEST_FULL_VERBOSE_OUTPUT
+    #define TEST_GIVENS_VERBOSE_OUTPUT
+#endif
 
 TEST_CASE("QR householder")
 {
@@ -40,7 +38,7 @@ TEST_CASE("QR householder")
 
     }
     
-    matrix<double> chk = mat_mul_alg1(&Q, &b);
+    matrix<double> chk = mat_mul_alg1(&Q, &b, mult_pool);
     
     errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, bcpy);

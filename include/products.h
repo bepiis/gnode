@@ -6,7 +6,7 @@
 #pragma once
 
 #include "matrix.h"
-#include "tdpool.hpp"
+#include "tdpool.h"
 #include <vector>
 #include <iostream>
 
@@ -184,13 +184,13 @@ void mat_mul_free_pairs(matrix<T>** tmpl, size_t N)
 }
 
 template<class T>
-matrix<T> mat_mul_alg1(const matrix<T>* lhs, const matrix<T>* rhs)
+matrix<T> mat_mul_alg1(const matrix<T>* lhs, const matrix<T>* rhs, tdpool & pool)
 {
     size_t M = lhs->rows();
     size_t N = lhs->cols();
     size_t K = rhs->cols();
     
-    tdpool pool(6);
+    //tdpool pool(6);
     std::vector<std::future<matrix<T>>> oprod_results;
     
     size_t curr_adds = 0;

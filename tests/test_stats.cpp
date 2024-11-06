@@ -3,8 +3,6 @@
 //  Created by Ben Westcott on 9/25/24.
 //
 
-#include "../stats.h"
-
 TEST_CASE("eval_stats")
 {
 	matrix<double> m(3, 3, {1, 0, 0, 1, 2, 0, 1, 2, 3});

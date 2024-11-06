@@ -268,7 +268,7 @@ matrix<double>& QRfast(matrix<double>& A)
             //std::cout << A << "\n\n";
         }
     }
-    
+
     return A;
 }
 

@@ -3,8 +3,6 @@
 //  Created by Ben Westcott on 9/25/24.
 //
 
-#include "../products.h"
-
 // TODO: write these tests... maybe just 
 
 TEST_CASE("outer product")

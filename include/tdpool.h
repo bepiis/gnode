@@ -19,6 +19,11 @@ class tdpool
 {
     
 public:
+
+    tdpool() = delete;
+    tdpool(tdpool const& other) = delete;
+    tdpool& operator=(tdpool const& other) = delete; 
+
     explicit inline tdpool(size_t nt)
     : stop(false)
     {

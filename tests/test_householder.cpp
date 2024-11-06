@@ -3,11 +3,8 @@
 //  Created by Ben Westcott on 9/28/24.
 //
 
-#include "../householder.h"
-#include "../gram_schmidt.h"
-
 #ifdef TEST_FULL_VERBOSE_OUTPUT
-    #define TEST_HOUSEHOLDER_VERBOSE_OUTPUT
+    #define TEST_HOUSE_VERBOSE_OUTPUT
 #endif
 
 //#define TEST_HOUSE_VERBOSE_OUTPUT
@@ -98,6 +95,7 @@ TEST_CASE("QRaccumulate basic, square")
     double zero_tol = 1E-14;
     double errmax;
     size_t errcnt;
+    uint64_t tR, tQ;
     
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::QRaccumulate (basic, square):";
@@ -106,24 +104,26 @@ TEST_CASE("QRaccumulate basic, square")
     matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
     matrix<double> basic_cpy(basic);
     
-    basic = QRfast(basic);
+    basic = time_exec(tR, QRfast, basic);
     
     //print_matrix(&basic);
     //std::cout << "\n\n";
     
-    matrix<double> Qb = QRaccumulate(basic, basic.rows(), 0);
+    matrix<double> Qb = time_exec(tQ, QRaccumulate, basic, basic.rows(), 0);
     
     //print_matrix(&Qb);
     //std::cout << "\n\n";
     basic.fill_lower_triangle(0.0);
-    matrix<double> chk = mat_mul_alg1(&Qb, &basic);
+    matrix<double> chk = mat_mul_alg1(&Qb, &basic, mult_pool);
     
     errcnt = matrix<double>::abs_max_excess_err(chk, basic_cpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, basic_cpy);
     
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
-    std::cout << "\terrmax = " << errmax;   
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttR = " << tR;
+    std::cout << "\ttQ = " << tQ;
     std::cout << "\n";
 #endif
     
@@ -143,6 +143,7 @@ TEST_CASE("QRaccumulate rand, randsize, square")
     double zero_tol = 1E-11;
     double errmax;
     size_t errcnt;
+    uint64_t tR, tQ;
     
     size_t M = GENERATE(take(20, random(1, 100)));
 
@@ -153,19 +154,21 @@ TEST_CASE("QRaccumulate rand, randsize, square")
     matrix<double> randm = matrix<double>::random_dense_matrix(20, 20, -1000, 1000);
     matrix<double> randmcpy(randm);
     
-    randm = QRfast(randm);
+    randm = time_exec(tR, QRfast, randm);
     
-    matrix<double> Qrand = QRaccumulate(randm, randm.rows(), 0);
+    matrix<double> Qrand = time_exec(tQ, QRaccumulate, randm, randm.rows(), 0);
 
     randm.fill_lower_triangle(0.0);
-    matrix<double> rchk = mat_mul_alg1(&Qrand, &randm);
+    matrix<double> rchk = mat_mul_alg1(&Qrand, &randm, mult_pool);
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, randmcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, randmcpy);
 
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT   
     std::cout << "\terrcnt = " << errcnt;
-    std::cout << "\terrmax = " << errmax;    
+    std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttR = " << tR;    
+    std::cout << "\ttQ = " << tQ;    
     std::cout << "\n";
 #endif
     
@@ -183,6 +186,7 @@ TEST_CASE("QRaccumulate rand, randsize")
     double zero_tol = 1E-11;
     double errmax;
     size_t errcnt;
+    uint64_t tQ, tR;
     
     //const size_t M = 100;
     //auto N = GENERATE(1, 100, take(20, filter([](size_t i) { return i <= 100; }, random(1, 100))));
@@ -197,12 +201,12 @@ TEST_CASE("QRaccumulate rand, randsize")
     matrix<double> tst = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     
     matrix<double> tstcpy(tst);
-    tst = QRfast(tst);
+    tst = time_exec(tR, QRfast, tst);
     
-    matrix<double> Qrand = QRaccumulate(tst, tst.rows(), 0);
+    matrix<double> Qrand = time_exec(tQ, QRaccumulate, tst, tst.rows(), 0);
     
     tst.fill_lower_triangle(0.0);
-    matrix<double> rchk = mat_mul_alg1(&Qrand, &tst);
+    matrix<double> rchk = mat_mul_alg1(&Qrand, &tst, mult_pool);
     
     //print_matrix(&rchk);
     //std::cout << "\n\n";
@@ -219,6 +223,8 @@ TEST_CASE("QRaccumulate rand, randsize")
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttR = " << tR;    
+    std::cout << "\ttQ = " << tQ;    
     std::cout << "\n";
 #endif
     
@@ -234,6 +240,7 @@ TEST_CASE("QR")
     double zero_tol = 1E-11;
     double errmax;
     size_t errcnt;
+    uint64_t tQR;
     
     //const size_t N = 100;
     //auto M = GENERATE(100, take(10, filter([](size_t i) { return i >= 100; }, random(100, 200))));
@@ -247,9 +254,9 @@ TEST_CASE("QR")
     
     matrix<double> qrtst = matrix<double>::random_dense_matrix(M, N, -1000, 1000);
     
-    auto qrresult = QR(qrtst);
+    auto qrresult = time_exec(tQR, QR, qrtst);
     
-    matrix<double> rchk = mat_mul_alg1(&qrresult.Q, &qrresult.Y);
+    matrix<double> rchk = mat_mul_alg1(&qrresult.Q, &qrresult.Y, mult_pool);
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, qrtst, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, qrtst);
@@ -257,6 +264,7 @@ TEST_CASE("QR")
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttQR = " << tQR;    
     std::cout << "\n";
 #endif
     
@@ -272,6 +280,7 @@ TEST_CASE("QRHfast")
     double zero_tol = 1E-11;
     double errmax;
     size_t errcnt;
+    uint64_t tQ, tRH;
     
     // TODO: fix 1x1 case
     
@@ -288,11 +297,11 @@ TEST_CASE("QRHfast")
     
     //std::cout << "\n\n";
     
-    htest = QRHfast(htest);
+    htest = time_exec(tRH, QRHfast, htest);
     
     //print_matrix(&htest);
     
-    matrix<double> Qh = QRaccumulate(htest, htest.rows(), 1);
+    matrix<double> Qh = time_exec(tQ, QRaccumulate, htest, htest.rows(), 1);
     
     //std::cout << "\n\n";
     
@@ -305,8 +314,8 @@ TEST_CASE("QRHfast")
     //print_matrix(&Qh);
     
     matrix<double> QhT = Qh.transpose();
-    matrix<double> hchk = mat_mul_alg1(&Qh, &htest);
-    matrix<double> hchk2 = mat_mul_alg1(&hchk, &QhT);
+    matrix<double> hchk = mat_mul_alg1(&Qh, &htest, mult_pool);
+    matrix<double> hchk2 = mat_mul_alg1(&hchk, &QhT, mult_pool);
     
     //matrix<double> Ih = mat_mul_alg1(&QhT, &Qh);
     //std::cout << "\n\n";
@@ -329,6 +338,8 @@ TEST_CASE("QRHfast")
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttRH = " << tRH;    
+    std::cout << "\ttQ = " << tQ;    
     std::cout << "\n";
 #endif
  
@@ -345,6 +356,7 @@ TEST_CASE("QRH")
     double zero_tol = 1E-11;
     double errmax;
     size_t errcnt;
+    uint64_t tQRH;
     
     // TODO: fix 1x1 case
     
@@ -356,11 +368,11 @@ TEST_CASE("QRH")
    
     matrix<double> qrhtest = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
     
-    auto result = QRH(qrhtest);
+    auto result = time_exec(tQRH, QRH, qrhtest);
     
     matrix<double> QT = result.Q.transpose();
-    matrix<double> hchk = mat_mul_alg1(&result.Q, &result.Y);
-    matrix<double> hchk2 = mat_mul_alg1(&hchk, &QT);
+    matrix<double> hchk = mat_mul_alg1(&result.Q, &result.Y, mult_pool);
+    matrix<double> hchk2 = mat_mul_alg1(&hchk, &QT, mult_pool);
     
     errcnt = matrix<double>::abs_max_excess_err(hchk2, qrhtest, zero_tol);
     errmax = matrix<double>::abs_max_err(hchk2, qrhtest);
@@ -368,6 +380,7 @@ TEST_CASE("QRH")
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttQRH = " << tQRH;    
     std::cout << "\n";
 #endif
  
@@ -383,6 +396,7 @@ TEST_CASE("colpiv QRfast basic")
     double zero_tol = 1E-11;
     double errmax;
     size_t errcnt;
+    uint64_t tRcp, tQ;
     
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "test transformation::house::colpiv_QRfast (basic): ";
@@ -391,12 +405,12 @@ TEST_CASE("colpiv QRfast basic")
     matrix<double> basic(3, 3, {2, -1, -2, -4, 6, 3, -4, -2, 8});
     matrix<double> basiccpy(basic);
     
-    auto result = colpiv_QRfast(basic);
+    auto result = time_exec(tRcp, colpiv_QRfast, basic);
     
-    matrix<double> Q = QRaccumulate(result.F, result.F.rows(), 0);
+    matrix<double> Q = time_exec(tQ, QRaccumulate, result.F, result.F.rows(), 0);
     
     result.F.fill_lower_triangle(0.0);
-    matrix<double> bchk = mat_mul_alg1(&Q, &result.F);
+    matrix<double> bchk = mat_mul_alg1(&Q, &result.F, mult_pool);
     
     bchk.permute_cols(result.P);
     
@@ -406,6 +420,8 @@ TEST_CASE("colpiv QRfast basic")
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttRcp = " << tRcp;    
+    std::cout << "\ttQ = " << tQ;    
     std::cout << "\n";
 #endif
    
@@ -421,6 +437,7 @@ TEST_CASE("colpiv householder square")
     double zero_tol = 1E-11;
     double errmax;
     size_t errcnt;
+    uint64_t tRcp, tQ;
     
     size_t M = GENERATE(2, take(10, random(2, 100)));
     //size_t M = 10;
@@ -436,12 +453,12 @@ TEST_CASE("colpiv householder square")
     //print_matrix(&mrandcpy);
     //std::cout << "\n\n";
     
-    auto result = colpiv_QRfast(mrand);
+    auto result = time_exec(tRcp, colpiv_QRfast, mrand);
     
-    matrix<double> Q = QRaccumulate(result.F, result.F.rows(), 0);
+    matrix<double> Q = time_exec(tQ, QRaccumulate, result.F, result.F.rows(), 0);
     
     result.F.fill_lower_triangle(0.0);
-    matrix<double> bchk = mat_mul_alg1(&Q, &result.F);
+    matrix<double> bchk = mat_mul_alg1(&Q, &result.F, mult_pool);
 
     
     bchk.permute_cols(result.P);
@@ -459,6 +476,8 @@ TEST_CASE("colpiv householder square")
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttRcp = " << tQ;    
+    std::cout << "\ttQ = " << tQ;    
     std::cout << "\n";
 #endif
    
@@ -474,6 +493,7 @@ TEST_CASE("colpiv householder maybe square")
     double zero_tol = 1E-11;
     double errmax;
     size_t errcnt;
+    uint64_t tRcp, tQ;
     
     auto S = GENERATE(take(10, rd_randmatsize(1, 100)));
     size_t M = S.M;
@@ -487,12 +507,12 @@ TEST_CASE("colpiv householder maybe square")
     matrix<double> mrand = matrix<double>::random_dense_matrix(M, M, -1000, 1000);
     matrix<double> mrandcpy(mrand);
     
-    auto result = colpiv_QRfast(mrand);
+    auto result = time_exec(tRcp, colpiv_QRfast, mrand);
     
-    matrix<double> Q = QRaccumulate(result.F, result.F.rows(), 0);
+    matrix<double> Q = time_exec(tQ, QRaccumulate, result.F, result.F.rows(), 0);
     
     result.F.fill_lower_triangle(0.0);
-    matrix<double> rchk = mat_mul_alg1(&Q, &result.F);
+    matrix<double> rchk = mat_mul_alg1(&Q, &result.F, mult_pool);
     
     rchk.permute_cols(result.P);
     
@@ -502,6 +522,8 @@ TEST_CASE("colpiv householder maybe square")
 #ifdef TEST_HOUSE_VERBOSE_OUTPUT
     std::cout << "\terrcnt = " << errcnt;
     std::cout << "\terrmax = " << errmax;
+    std::cout << "\ttRcp = " << tRcp;    
+    std::cout << "\ttQ = " << tQ;   
     std::cout << "\n";
 #endif
   
@@ -530,7 +552,7 @@ TEST_CASE("QL householder square")
     
     auto result = QL(b);
     
-    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y);
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y, mult_pool);
     
     errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, bcpy);
@@ -567,7 +589,7 @@ TEST_CASE("QL householder maybe square")
     
     auto result = QL(b);
     
-    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y);
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y, mult_pool);
     
     errcnt = matrix<double>::abs_max_excess_err(chk, bcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(chk, bcpy);
@@ -605,8 +627,8 @@ TEST_CASE("QLH householder")
     
     matrix<double> QT = result.Q.transpose();
     
-    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y);
-    matrix<double> rchk = mat_mul_alg1(&chk, &QT);
+    matrix<double> chk = mat_mul_alg1(&result.Q, &result.Y, mult_pool);
+    matrix<double> rchk = mat_mul_alg1(&chk, &QT, mult_pool);
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, b, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, b);

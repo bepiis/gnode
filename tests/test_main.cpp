@@ -3,27 +3,11 @@
 #include <cstdint>
 #include <iostream>
 #include <chrono>
-#include "../matrix.h"
-#include "../result.h"
-#include "../stats.h"
 
 //#define PY_SSIZE_T_CLEAN
 //#include <Python.h>
 
 #define S_RAND(N) ((size_t)(std::rand() % N))
-
-template<class T>
-void print_matrix(matrix<T>* mat)
-{
-    for(int i=0; i < mat->rows(); i++)
-    {
-        for(int j=0; j < mat->cols(); j++)
-        {
-            std::cout << mat->get_value(i, j) << "\t";
-        }
-        std::cout << "\n";
-    }
-}
 
 int* generate_random_ints(size_t nbr, size_t modulus)
 {
@@ -40,13 +24,26 @@ int* generate_random_ints(size_t nbr, size_t modulus)
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
+#include "matrix.h"
+#include "result.h"
+#include "products.h"
+#include "stats.h"
+#include "householder.h"
+#include "givens.h"
+#include "gram_schmidt.h"
+#include "tdpool.h"
+
+constexpr size_t mult_pool_size = 6;
+tdpool mult_pool(mult_pool_size);
+
 class RunListener : public Catch::EventListenerBase {
 public:
     using Catch::EventListenerBase::EventListenerBase;
     
     void testRunStarting(const Catch::TestRunInfo &info) override
     {
-        std::cout << "started\n";
+        //mult_pool = tdpool(mult_pool_size);
+        std::cout << "started mult pool with size " << mult_pool_size << "\n";
         //Py_Initialize();
         //PyRun_SimpleString("from time import time,ctime\nprint('Today is', ctime(time()))\n");
     }
@@ -155,6 +152,36 @@ TEST_CASE("row dominant RandMatSizeGenerator")
     REQUIRE(i.N <= 100);
     REQUIRE(i.M >= i.N);
 }
+
+TEST_CASE("qrhfast")
+{
+    using namespace transformation::house;
+    matrix<double> basic = {{2, -1, 2}, {-4, 6, 3}, {-4, -1, 8}};
+    uint64_t elapsed = 0;
+
+    auto rbas = time_exec(elapsed, QR, basic);
+    auto lbas = time_exec(elapsed, QL, basic);
+
+
+    std::cout << rbas.Y << "\n";
+    std::cout << lbas.Y << "\n";
+    std::cout << elapsed << "\n";
+}
+
+#define TEST_FULL_VERBOSE_OUTPUT
+
+
+#ifndef TEST_NONE
+
+//#include "test_mat.cpp"
+//#include "test_stats.cpp"
+#include "test_householder.cpp"
+#include "test_givens.cpp"
+//#include "test_prods.cpp"
+//#include "test_gram_schmidt.cpp"
+
+#endif
+
 
 /*
 #include <experimental/simd>
@@ -444,36 +471,3 @@ TEST_CASE("test")
     }
 
  }*/
-
-#include "../householder.h"
-
-TEST_CASE("qrhfast")
-{
-    using namespace transformation::house;
-    matrix<double> basic = {{2, -1, 2}, {-4, 6, 3}, {-4, -1, 8}};
-    uint64_t elapsed = 0;
-
-    auto rbas = time_exec(elapsed, QR, basic);
-    auto lbas = time_exec(elapsed, QL, basic);
-
-
-    std::cout << rbas.Y << "\n";
-    std::cout << lbas.Y << "\n";
-    std::cout << elapsed << "\n";
-}
-
-
-
-
-#ifndef TEST_NONE
-
-//#include "test_mat.cpp"
-//#include "test_stats.cpp"
-//#include "test_householder.cpp"
-//#include "test_givens.cpp"
-//#include "test_prods.cpp"
-//#include "test_gram_schmidt.cpp"
-
-#endif
-
-

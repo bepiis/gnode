@@ -3,8 +3,6 @@
 //  Created by Ben Westcott on 9/25/24.
 //
 
-#include "../gram_schmidt.h"
-
 /*
 TEST_CASE("gram schmidt")
 {
