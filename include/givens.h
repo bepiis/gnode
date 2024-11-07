@@ -42,6 +42,11 @@ inline void two_mult_fma(double x, double y, double& p, double& psq)
     psq = std::fma(x, y, -p);
 }
 
+inline double fmafm(double x1, double y1, double x2, double y2)
+{
+    return std::fma(x1, y1, std::fma(x2, y2, 0.0));
+}
+
 givens comp_givens(double a, double b, double& r)
 {
     r = std::hypot(a, b);
@@ -96,13 +101,14 @@ givens::givens(double a, double b)
         if(std::abs(b) > std::abs(a))
         {
             tau = -a/b;
-            s = 1/std::sqrt(1 + tau*tau);
+            s = 1/std::hypot(1.0, tau);
             c = s * tau;
+            
         }
         else
         {
             tau = -b/a;
-            c = 1/std::sqrt(1 + tau*tau);
+            c = 1/std::hypot(1.0, tau);
             s = c * tau;
         }
     }
@@ -179,13 +185,15 @@ double givens::flat(void)
     else if(std::abs(s) < std::abs(c))
     {
         //std::cout << "less" << "\n";
-        rho = ((c > 0) ? 1 : -1) * s/2;
+        //rho = ((c > 0) ? 1 : -1) * s/2;
+        rho = signum(c) * s/2;
         //std::cout << "copysign = " << std::copysign(s, c)/2 << "\n";
         //rho = std::copysign(s/2, c);
     }
     else
     {
-        rho = ((s > 0) ? 1 : -1) * 2/c;
+        //rho = ((s > 0) ? 1 : -1) * 2/c;
+        rho = signum(s) * 2/c;
         //std::cout << "copysign = " << 2/std::copysign(c, s) << "\n";
     }
     
@@ -197,8 +205,10 @@ matrix<double>& rotate(matrix<double>& A, givens g, size_t r1, size_t c1, size_t
     double tau1 = A(r1, c1);
     double tau2 = A(r2, c2);
         
-    A(r1, c1) = g.c * tau1 - g.s * tau2;
-    A(r2, c2) = g.s * tau1 + g.c * tau2;
+    //A(r1, c1) = g.c * tau1 - g.s * tau2;
+    //A(r2, c2) = g.s * tau1 + g.c * tau2;
+    A(r1, c1) = fmafm(g.c, tau1, -g.s, tau2);
+    A(r2, c2) = fmafm(g.s, tau1, g.c, tau2);
     
     return A;
 }
@@ -248,6 +258,7 @@ matrix<double>& QRfast(matrix<double>& A)
         {
             double r;
             g = givens(A(i-1, j), A(i, j));
+            //g = comp_givens(A(i-1, j), A(i, j), r);
             
             //std::cout << "s = " << g.s << "\tc = " << g.c << "\n";
             //std::cout << "i = " << i << "\tj = " << j << "\n";
@@ -260,6 +271,11 @@ matrix<double>& QRfast(matrix<double>& A)
             
             A = row_step(A, g, i - 1, i, j);
             //A = row_update(A, ga, i -1, i, j);
+            /*
+            if(i == M - 1)
+            {
+                std::cout << A << "\n";
+            }*/
             
             A(i, j) = g.flat();
             

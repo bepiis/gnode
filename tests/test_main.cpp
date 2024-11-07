@@ -152,7 +152,7 @@ TEST_CASE("row dominant RandMatSizeGenerator")
     REQUIRE(i.N <= 100);
     REQUIRE(i.M >= i.N);
 }
-
+/*
 TEST_CASE("qrhfast")
 {
     using namespace transformation::house;
@@ -166,6 +166,18 @@ TEST_CASE("qrhfast")
     std::cout << rbas.Y << "\n";
     std::cout << lbas.Y << "\n";
     std::cout << elapsed << "\n";
+}*/
+
+TEST_CASE("givens timecheck")
+{
+    using namespace transformation::givens;
+
+    matrix<double> randm = matrix<double>::random_dense_matrix(10, 10, -1000, 1000);
+
+    std::cout << randm << "\n";
+
+    randm = QRfast(randm);
+
 }
 
 #define TEST_FULL_VERBOSE_OUTPUT
@@ -175,7 +187,7 @@ TEST_CASE("qrhfast")
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-#include "test_householder.cpp"
+//#include "test_householder.cpp"
 #include "test_givens.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
