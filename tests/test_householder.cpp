@@ -412,7 +412,8 @@ TEST_CASE("colpiv QRfast basic")
     result.F.fill_lower_triangle(0.0);
     matrix<double> bchk = mat_mul_alg1(&Q, &result.F, mult_pool);
     
-    bchk.permute_cols(result.P);
+    //bchk.permute_cols(result.P);
+    permutation::oncols<double>(bchk, result.P);
     
     errcnt = matrix<double>::abs_max_excess_err(bchk, basiccpy, zero_tol);
     errmax = matrix<double>::abs_max_err(bchk, basiccpy);
@@ -461,7 +462,8 @@ TEST_CASE("colpiv householder square")
     matrix<double> bchk = mat_mul_alg1(&Q, &result.F, mult_pool);
 
     
-    bchk.permute_cols(result.P);
+    //bchk.permute_cols(result.P);
+    permutation::oncols(bchk, result.P);
     
     
     //print_matrix(&bchk);
@@ -514,7 +516,8 @@ TEST_CASE("colpiv householder maybe square")
     result.F.fill_lower_triangle(0.0);
     matrix<double> rchk = mat_mul_alg1(&Q, &result.F, mult_pool);
     
-    rchk.permute_cols(result.P);
+    //rchk.permute_cols(result.P);
+    permutation::oncols(rchk, result.P);
     
     errcnt = matrix<double>::abs_max_excess_err(rchk, mrandcpy, zero_tol);
     errmax = matrix<double>::abs_max_err(rchk, mrandcpy);

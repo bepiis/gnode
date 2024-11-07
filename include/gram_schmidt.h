@@ -36,7 +36,7 @@ result::QR<double> QR(const matrix<double>& X)
         
         matrix<double> curr_col = (1/R(j, j)) * V.col(j);
         
-        Qc.set_col(curr_col, j);
+        Qc.set_sub_col(curr_col, 0, j);
         
         for(size_t k=j+1; k < M; k++)
         {
@@ -45,7 +45,7 @@ result::QR<double> QR(const matrix<double>& X)
             matrix<double> sub = V.col(k);
             sub -= R(j, k) * curr_col;
             
-            V.set_col(sub, k);
+            V.set_sub_col(sub, 0, k);
         }
     }
     

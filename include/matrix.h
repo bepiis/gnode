@@ -100,17 +100,11 @@ public:
     bool is_symmetric(void) const;
 
     matrix<T> row(size_t r) const;
-    matrix<T>& set_row(matrix<T> const& rvec, size_t r);
-
     matrix<T> col(size_t c) const;
-    matrix<T>& set_col(matrix<T> const& cvec, size_t c);
 
     matrix<T>& swap_rows(size_t r1, size_t r2);
     matrix<T>& swap_cols(size_t c1, size_t c2);
     matrix<T>& sub_rows(size_t r1, size_t r2, T factor);
-    
-    matrix<T>& permute_rows(matrix<size_t> const& rpermute);
-    matrix<T>& permute_cols(matrix<size_t> const& cpermute);
 
     matrix<T> transpose(void) const;
     matrix<T> diag(void) const;
@@ -139,7 +133,6 @@ public:
 
     static matrix<T> eye(size_t rank);
 	static matrix<T> ones(size_t nrows, size_t ncols);
-    static matrix<size_t> unit_permutation_matrix(size_t rank);
     
     static matrix<T>& set_lower_tri(matrix<T> & rhs, T val, int64_t exrows);
     
@@ -509,18 +502,6 @@ matrix<T> matrix<T>::row(size_t r) const
 }
 
 template<typename T>
-matrix<T>& matrix<T>::set_row(matrix<T> const& rvec, size_t r)
-{
-    if(r >= m_rows)
-    {
-        throw std::range_error("set_row: row index is out of range.");
-    }
-
-    std::copy(rvec.data(), rvec.data() + rvec.cols(), data());
-    return *this;
-}
-
-template<typename T>
 matrix<T> matrix<T>::col(size_t c) const
 {
     if(c >= m_cols)
@@ -537,21 +518,6 @@ matrix<T> matrix<T>::col(size_t c) const
     return cvec;
 }
 
-template<typename T>
-matrix<T>& matrix<T>::set_col(matrix<T> const& cvec, size_t c)
-{
-    if(c >= m_cols)
-    {
-        throw std::range_error("set_col: column index is out of range.");
-    }
-
-    for(size_t r=0; r < m_rows; r++)
-    {
-        set_value(r, c, cvec.get_value(r, 0));
-    }
-
-    return *this;
-}
 
 template<typename T>
 matrix<T>& matrix<T>::swap_rows(size_t r1, size_t r2)
@@ -618,44 +584,6 @@ matrix<T>& matrix<T>::sub_rows(size_t r1, size_t r2, T factor)
         set_value(i1, get_value(i1) - factor * get_value(i2));
     }
 
-    return *this;
-}
-
-// TODO: once realloc is implemented, we can be more space efficient by rellocing an extra row/column for permute rows/cols instead of creating an entirely new matrix
-template<typename T>
-matrix<T>& matrix<T>::permute_rows(matrix<size_t> const& rpermute)
-{
-    if(rpermute.rows() != m_rows)
-    {
-        throw std::range_error("permute_rows: incorrect row dimensions.");
-    }
-
-    matrix<T> to(*this);
-    for(size_t r=0; r < rpermute.rows(); r++)
-    {
-        to.set_row(row(rpermute.get_value(r, 0)), r);
-    }
-
-    // TODO: hmmm
-    *this = std::move(to);
-    return *this;
-}
-
-template<typename T>
-matrix<T>& matrix<T>::permute_cols(matrix<size_t> const& cpermute)
-{
-    if(cpermute.rows() != m_cols)
-    {
-        throw std::range_error("permute_cols: incorrect column dimensions.");
-    }
-    
-    matrix<T> to(*this);
-    for(size_t c = 0; c < m_cols; c++)
-    {
-        to.set_col(col(c), cpermute.get_value(c, 0));
-    }
-    
-    *this = std::move(to);
     return *this;
 }
 
@@ -882,7 +810,7 @@ matrix<T> matrix<T>::ones(size_t nrows, size_t ncols)
 	I.ones();
 	return I;
 }
-
+/*
 template<>
 matrix<size_t> matrix<size_t>::unit_permutation_matrix(size_t rank)
 {
@@ -893,7 +821,7 @@ matrix<size_t> matrix<size_t>::unit_permutation_matrix(size_t rank)
     }
 
     return perm;
-}
+}*/
 
 template<typename T>
 matrix<T> matrix<T>::random_dense_matrix(size_t nrows, size_t ncols, float lowerbound, float upperbound)

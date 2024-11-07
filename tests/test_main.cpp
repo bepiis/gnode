@@ -31,6 +31,7 @@ int* generate_random_ints(size_t nbr, size_t modulus)
 #include "householder.h"
 #include "givens.h"
 #include "gram_schmidt.h"
+#include "permutation.h"
 #include "tdpool.h"
 
 constexpr size_t mult_pool_size = 6;
@@ -168,6 +169,7 @@ TEST_CASE("qrhfast")
     std::cout << elapsed << "\n";
 }*/
 
+/*
 TEST_CASE("givens timecheck")
 {
     using namespace transformation::givens;
@@ -178,6 +180,21 @@ TEST_CASE("givens timecheck")
 
     randm = QRfast(randm);
 
+}*/
+
+TEST_CASE("permutes")
+{
+
+    matrix<size_t> Fp = permutation::flip(6);
+    matrix<double> Im = matrix<double>::eye(6);
+
+    std::cout << Fp << "\n";
+
+    permutation::onrows(Im, Fp);
+
+    std::cout << Im << "\n";
+
+
 }
 
 #define TEST_FULL_VERBOSE_OUTPUT
@@ -187,8 +204,8 @@ TEST_CASE("givens timecheck")
 
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-//#include "test_householder.cpp"
-#include "test_givens.cpp"
+#include "test_householder.cpp"
+//#include "test_givens.cpp"
 //#include "test_prods.cpp"
 //#include "test_gram_schmidt.cpp"
 

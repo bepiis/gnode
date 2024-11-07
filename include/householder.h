@@ -9,6 +9,7 @@
 #include "matrix.h"
 #include "products.h"
 #include "result.h"
+#include "permutation.h"
 
 // refs:
 // [1] Matrix Computations 4th ed. Golub, Van Loan
@@ -389,8 +390,9 @@ result::FPr<double> colpiv_QRfast(matrix<double>& A)
     }
     
     matrix<double> c = cols_norm2sq(A);
-    matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
-    
+    //matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
+    matrix<size_t> piv = permutation::unit(N);
+
     size_t r = 0;
     double tau = matrix<double>::abs_max_element(c, 0);
     
