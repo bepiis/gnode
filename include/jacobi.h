@@ -6,7 +6,6 @@
 #pragma once
 
 #include "matrix.h"
-#include "linalg_exceptions.h"
 #include <cmath>
 #include <tuple>
 
@@ -20,6 +19,11 @@
 
 namespace transformation
 {
+
+inline int msgn(double x)
+{
+    return (x >= 0) ? 1 : -1;
+}
 
 // finds the abs max value for row k in upper triangle of input matrix mat
 size_t off_diag_row_abs_max(size_t k, size_t N, size_t bias, const matrix<double>& mat)
@@ -92,7 +96,7 @@ matrix<double> rotation_matrix(const matrix<double>& A, size_t p, size_t q)
      }*/
     
     double t, s, c;
-    matrix<double> Q = matrix<double>::identity(A.rows());
+    matrix<double> Q = matrix<double>::eye(A.rows());
     
     factors(A(p, p), A(q, q), A(p, q), c, s, t);
     
@@ -145,16 +149,16 @@ eigen_result eigen(matrix<double>& A)
     size_t state = N;
     
     matrix<double> eigvalues(1, A.cols());
-    matrix<double> eigvectors(matrix<double>::identity(A.rows()));
+    matrix<double> eigvectors(matrix<double>::eye(N));
     // keeps track of whether Akl = Apq has changed in the current iteration
     matrix<bool> changed(1, N);
     matrix<size_t> max_iv(1, N);
         
     for(size_t k=0; k < N; k++)
     {
-        max_iv(0, k) = off_diag_row_abs_max(k, N, 0, A);
-        eigvalues(0, k) = A(k, k);
-        changed(0, k) = true;
+        max_iv[k] = off_diag_row_abs_max(k, N, 0, A);
+        eigvalues[k] = A(k, k);
+        changed[k] = true;
     }
     
     while(state != 0)
@@ -164,29 +168,29 @@ eigen_result eigen(matrix<double>& A)
         // pick out maximum in the upper triangular of A
         for(size_t j = 1; j < N-1; j++)
         {
-            if(std::abs(A(j, max_iv(0, j))) > std::abs(A(m, max_iv(0, m))))
+            if(std::abs(A(j, max_iv[j])) > std::abs(A(m, max_iv[m])))
             {
                 m = j;
             }
         }
         
         size_t k = m;
-        size_t l = max_iv(0, m);
+        size_t l = max_iv[m];
         double p = A(k, l);
         double c, s, t;
         
-        factors(eigvalues(0, l), eigvalues(0, k), p, c, s, t);
+        factors(eigvalues[l], eigvalues[k], p, c, s, t);
         
         t *= -p;
         s = -s;
         
-        std::cout << t << "\n";
+        //std::cout << t << "\n";
         
         A(k, l) = 0.0;
         
         // update eigenvalues, state and changed arrays corresponding to entry A(k, l)
-        k_update(k, eigvalues(0, k), -t, state, changed(0, k));
-        k_update(l, eigvalues(0, l), t, state, changed(0, l));
+        k_update(k, eigvalues[k], -t, state, changed[k]);
+        k_update(l, eigvalues[l], t, state, changed[l]);
         
         // here, I am only rotating the indicies in the upper triangle
         // since rotating the lower triangle is the transpose of rotating
@@ -211,7 +215,7 @@ eigen_result eigen(matrix<double>& A)
             rotate(eigvectors, i, k, i, l, s, c);
             
             // update abs max locations for each row in upper triangle of A
-            max_iv(0, i) = off_diag_row_abs_max(i, N, 0, A);
+            max_iv[i] = off_diag_row_abs_max(i, N, 0, A);
         }
     }
     

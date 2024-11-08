@@ -5,9 +5,10 @@
 
 #pragma once
 
-#include "matrix.hpp"
-#include "pivot.h"
+#include "matrix.h"
+#include "permutation.h"
 #include <cmath>
+#include <cstdint>
 
 namespace transformation
 {
@@ -32,16 +33,14 @@ LU_work LU(const matrix<double>& A, const double tol)
     size_t N = A.rows();
     
     matrix<double> U(A);
-    matrix<double> L = matrix<double>::identity(N);
+    matrix<double> L = matrix<double>::eye(N);
     
     bool degenerate = false;
-    
-    std::vector<matrix<double>> lops;
-    
+        
     // 1xN matrix whose entires are their corresponding indicies
     // i.e. P_4 = [0, 1, 2, 3]^T
     // keeps track of row swaps during partial pivoting
-    matrix<size_t> P = matrix<size_t>::unit_permutation_matrix(N);
+    matrix<size_t> P = permutation::unit(N);
     
     
     for(size_t i=0; i < N; i++)
@@ -75,9 +74,12 @@ LU_work LU(const matrix<double>& A, const double tol)
         {
             nswaps++;
             
-            U.swap_rows(max_i, i);
-            P.swap_rows(max_i, i);
-            
+            //U.swap_rows(max_i, i);
+            //P.swap_rows(max_i, i);
+            permutation::swap_rows(U, max_i, i);
+            permutation::swap_rows(P, max_i, i);
+
+
             for(size_t j = 0; j < i; j++)
             {
                 double t = L(max_i, j);
@@ -137,7 +139,7 @@ LU_work LU(const matrix<double>& A, const double tol)
  */
 void forward_substitution(const matrix<double>& L, const matrix<double>& b, matrix<double>& soln, size_t N)
 {
-    soln(0, 0) = b(0, 0)/L(0, 0);
+    soln[0] = b[0]/L(0, 0);
     
     for(size_t i=1; i < N; i++)
     {
@@ -145,10 +147,10 @@ void forward_substitution(const matrix<double>& L, const matrix<double>& b, matr
         
         for(size_t j=0; j < i; j++)
         {
-            sum += L(i, j) * soln(j, 0);
+            sum += L(i, j) * soln[j];
         }
         
-        soln(i, 0) = (b(i, 0) - sum)/L(i, i);
+        soln[i]= (b[i] - sum)/L(i, i);
     }
 }
 
@@ -160,18 +162,18 @@ void forward_substitution(const matrix<double>& L, const matrix<double>& b, matr
  */
 void backward_substitution(const matrix<double>& U, const matrix<double> &b, matrix<double>& soln, size_t N)
 {
-    int last_i = (int)N - 1;
-    soln(last_i, 0) = b(last_i, 0)/U(last_i, last_i);
+    int64_t last_i = (int64_t)N - 1;
+    soln[last_i] = b[last_i]/U(last_i, last_i);
     
-    for(int i = last_i - 1; i >= 0; i--)
+    for(int64_t i = last_i - 1; i >= 0; i--)
     {
         double sum = 0.0;
         
-        for(int j=i+1; j < N; j++)
+        for(int64_t j=i+1; j < N; j++)
         {
-            sum += U(i, j) * soln(j, 0);
+            sum += U(i, j) * soln[j];
         }
-        soln(i, 0) = (b(i, 0) - sum)/U(i, i);
+        soln[i] = (b[i] - sum)/U(i, i);
     }
 }
 
@@ -192,7 +194,7 @@ matrix<double> LU_solve(const matrix<double>& A, const matrix<double>& b)
     matrix<double> input(N, 1);
     for(size_t r = 0; r < N; r++)
     {
-        input(r, 0) = b(result.P(r, 0), 0);
+        input[r] = b(result.P[r], 0);
     }
     
     matrix<double> y(N, 1), x(N, 1);
@@ -203,4 +205,3 @@ matrix<double> LU_solve(const matrix<double>& A, const matrix<double>& b)
     return x;
 }
 
-}

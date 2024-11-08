@@ -30,6 +30,3 @@ class non_distinct_indicies_error : public std::exception
         return "Expected non distinct indicies.";
     }
 };
-
-
-#endif /* exceptions_h */

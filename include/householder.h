@@ -390,7 +390,6 @@ result::FPr<double> colpiv_QRfast(matrix<double>& A)
     }
     
     matrix<double> c = cols_norm2sq(A);
-    //matrix<size_t> piv = matrix<size_t>::unit_permutation_matrix(A.cols());
     matrix<size_t> piv = permutation::unit(N);
 
     size_t r = 0;
@@ -402,16 +401,15 @@ result::FPr<double> colpiv_QRfast(matrix<double>& A)
         size_t k = r;
         for(; k < N; k++)
         {
-            if(c(0, k) == tau)
+            if(c[k] == tau)
             {
                 break;
             }
         }
         
-        //piv(r, 0) = k;
-        piv.swap_rows(r, k);
-        A.swap_cols(r, k);
-        c.swap_cols(r, k);
+        permutation::swap_rows(piv, r, k);
+        permutation::swap_cols(A, r, k);
+        permutation::swap_cols(c, r, k);
         
         A = QRstep(A, h, r);
         
@@ -427,7 +425,7 @@ result::FPr<double> colpiv_QRfast(matrix<double>& A)
         // update norm vector c by subtrating out A(r, :)**2
         for(size_t j = r + 1; j < N; j++)
         {
-            c(0, j) -= A(r, j) * A(r, j);
+            c[j] -= A(r, j) * A(r, j);
         }
         
         tau = matrix<double>::abs_max_element(c, ++r);

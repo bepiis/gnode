@@ -99,11 +99,6 @@ public:
     bool equals(matrix<T> const& rhs) const;
     bool is_symmetric(void) const;
 
-    matrix<T> row(size_t r) const;
-    matrix<T> col(size_t c) const;
-
-    matrix<T>& swap_rows(size_t r1, size_t r2);
-    matrix<T>& swap_cols(size_t c1, size_t c2);
     matrix<T>& sub_rows(size_t r1, size_t r2, T factor);
 
     matrix<T> transpose(void) const;
@@ -117,9 +112,11 @@ public:
     matrix<T>& set_sub_matrix(matrix<T> const& sub, size_t start_row, size_t start_col);
 
     matrix<T> sub_col(size_t start_row, size_t nrows, size_t c) const;
+    matrix<T> col(size_t c) const;
     matrix<T>& set_sub_col(matrix<T> const& sub, size_t start_row, size_t c);
     
     matrix<T> sub_row(size_t r, size_t start_col, size_t ncols) const;
+    matrix<T> row(size_t r) const;
     matrix<T>& set_sub_row(matrix<T> const& sub, size_t r, size_t start_col);
 
     template<typename R> 
@@ -491,83 +488,6 @@ bool matrix<T>::is_symmetric(void) const
 }
 
 template<typename T>
-matrix<T> matrix<T>::row(size_t r) const 
-{
-    if(r >= m_rows)
-    {
-        throw std::range_error("row: row index is out of range.");
-    }
-
-    return matrix<T>(1, m_cols, data() + row_offset(r));
-}
-
-template<typename T>
-matrix<T> matrix<T>::col(size_t c) const
-{
-    if(c >= m_cols)
-    {
-        throw std::range_error("col: column index is out of range.");
-    }
-
-    matrix<T> cvec(m_rows, 1);
-    for(size_t r=0; r < m_rows; r++)
-    {
-        cvec.set_value(r, 0, get_value(r, c));
-    }
-
-    return cvec;
-}
-
-
-template<typename T>
-matrix<T>& matrix<T>::swap_rows(size_t r1, size_t r2)
-{
-    if(r1 >= m_rows || r2 >= m_rows)
-    {
-        throw std::range_error("swap_rows: row index out of range.");
-    }
-
-    size_t i1 = row_offset(r1);
-    size_t i2 = row_offset(r2);
-    size_t i=0;
-
-    for(; i < m_cols; i1++, i2++, i++)
-    {
-        T tmp = get_value(i1);
-        set_value(i1, get_value(i2));
-        set_value(i2, tmp);
-    }
-    
-    return *this;
-}
-
-template<typename T>
-matrix<T>& matrix<T>::swap_cols(size_t c1, size_t c2)
-{
-    if(c1 >= m_cols || c2 >= m_cols)
-    {
-        throw std::range_error("swap_cols: column index is out of range.");
-    }
-
-    size_t i1, i2, r;
-    T t1, t2;
-
-    for(r=0; r < m_rows; r++)
-    {
-        i1 = offset(r, c1);
-        i2 = offset(r, c2);
-
-        t1 = get_value(i1);
-        t2 = get_value(i2);
-
-        set_value(i1, t2);
-        set_value(i2, t1);
-    }
-
-    return *this;
-}
-
-template<typename T>
 matrix<T>& matrix<T>::sub_rows(size_t r1, size_t r2, T factor)
 {
     if(r1 >= m_rows || r2 >= m_rows)
@@ -730,6 +650,13 @@ matrix<T> matrix<T>::sub_col(size_t start_row, size_t nrows, size_t c) const
     return sub_matrix(start_row, nrows, c, 1);
 }
 
+
+template<typename T>
+matrix<T> matrix<T>::col(size_t c) const
+{
+    return sub_col(0, m_rows, c);
+}
+
 template<typename T>
 matrix<T>& matrix<T>::set_sub_col(matrix<T> const& sub, size_t start_row, size_t c)
 {
@@ -740,6 +667,12 @@ template<typename T>
 matrix<T> matrix<T>::sub_row(size_t r, size_t start_col, size_t ncols) const
 {
     return sub_matrix(r, 1, start_col, ncols);
+}
+
+template<typename T>
+matrix<T> matrix<T>::row(size_t r) const 
+{
+    return sub_row(r, 0, m_cols);
 }
 
 template<typename T>
