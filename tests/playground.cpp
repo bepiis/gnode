@@ -3,39 +3,7 @@
 //  Created by Ben Westcott on 9/8/24.
 //
 
-/*
- * Plan of action for new structure:
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * engine_support:
- *      size_compare: returns whether two engines are the same size
- * 
- *      verify_initializer_list: returns whether supplied intializer list is valid
- *                  - i.e. {{1,2,3}, {4,5,6}} is valid
- *                  - but {{1,2,3}, {4,5}} is not
- * 
- *      verify_size: uses size_compare to verify if two engines have compatible sizes
- *      
- *      swap noexcept: swaps two things T1 and T2 via std::move
- * 
- *      verify_and_reshape: takes a destination, and source rows + cols and reshapes dst to fit source
- *          - checks if reshape need to occur (ie. dst rows & cols != src rows & cols)
- * 
- *      assign_from: takes an engine, and some other type and assigns the data of the other type to the engine
- *              - engine -> engine
- *              - mdspan -> engine
- *              - initializer_list (2D) -> engine
- *              - 1D random access container -> engine
- *       
- *      fill_(rows|cols) : fills r|c from pos a0 to a1
- * 
- *      move_elements: move elements from engine1 to engine2 starting at (0,0)??? to (n, m)
- * 
- *      exact_compare: compares element-wise (after checking size_compare) whether an engine is exactly equal to another engine or related type
- * 
- * 
- * 
- */
-
+ 
 #include <memory>
 TEST_CASE("std::allocator")
 {
