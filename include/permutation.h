@@ -13,7 +13,7 @@ using std::size_t;
 struct permutation
 {
     static matrix<size_t> unit(size_t rank);
-    static matrix<size_t> flip(size_t rank);    // also called exchange permutation
+    static matrix<size_t> flip(size_t rank);     // also called exchange permutation
 
     template<typename T>
     static matrix<T>& onrows(matrix<T> & A, matrix<size_t> const& perm);
