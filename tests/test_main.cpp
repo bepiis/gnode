@@ -165,7 +165,9 @@ using rect_init_list = std::initializer_list<std::initializer_list<T>>;
 
 const rect_init_list<int64_t> ex_1x1i = {{2}};
 const rect_init_list<int64_t> ex_1x2i = {{2, 3}};
+const rect_init_list<int64_t> ex_1x4i = {{9, 8, 7, 6}};
 const rect_init_list<int64_t> ex_2x1i = {{2}, {3}};
+const rect_init_list<int64_t> ex_4x1i = {{1},{2},{3},{4}};
 
 const rect_init_list<int64_t> ex_3x3ia = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
 const rect_init_list<int64_t> ex_3x3ib = {{0, 0, 0}, {3, 2, 1}, {9, -1, -100}};
@@ -201,8 +203,8 @@ const rect_init_list<double> ex_8x3da = {{e, pi, e},
                                          {e, e, e}, 
                                          {-pi, -pi, -pi}, 
                                          {-e, -e, -e},
-                                         {0, 0, 0}, 
-                                         {0, 0, 0}};
+                                         {pi, e, pi}, 
+                                         {-pi, -e, -pi}};
 
 const rect_init_list<double> ex_8x3db = {{sqrt2, sqrt2, sqrt2},
                                          {1/sqrt2, 1/sqrt2, 1/sqrt2},
@@ -229,7 +231,20 @@ const rect_init_list<double> ex_3x8db = {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, 
                                          {-1E-4, -1E-3, -1E-2, -1E-1, -1E0, 1E0, 1E1, 1E2},
                                          {1E3, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9, 1E10}};
 
+template<typename T>
+using rm_mse = matrix_storage_engine<T, std::allocator<T>, matrix_orientation::row_major_t>;
 
+template<typename T>
+using cm_mse = matrix_storage_engine<T, std::allocator<T>, matrix_orientation::col_major_t>;
+
+TEST_CASE("initializer list constructor")
+{
+    rm_mse<int64_t> m1(ex_1x1i);
+    cm_mse<int64_t> m2(ex_1x1i);
+
+    
+
+}
 
 #define TEST_FULL_VERBOSE_OUTPUT
 

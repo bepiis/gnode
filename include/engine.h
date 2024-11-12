@@ -381,7 +381,6 @@ struct engine_helper
                   std::layout_stride> 
  *  
  * */
-
 template<typename T, class Alloc, typename L>
 struct matrix_data
 {
