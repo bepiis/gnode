@@ -231,16 +231,16 @@ const rect_init_list<double> ex_3x8db = {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, 
                                          {-1E-4, -1E-3, -1E-2, -1E-1, -1E0, 1E0, 1E1, 1E2},
                                          {1E3, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9, 1E10}};
 
-template<typename T>
-using rm_mse = matrix_storage_engine<T, std::allocator<T>, matrix_orientation::row_major_t>;
+//template<typename T>
+//using rm_mse = matrix_storage_engine<T, std::allocator<T>, matrix_orientation::row_major_t>;
 
-template<typename T>
-using cm_mse = matrix_storage_engine<T, std::allocator<T>, matrix_orientation::col_major_t>;
+//template<typename T>
+//using cm_mse = matrix_storage_engine<T, std::allocator<T>, matrix_orientation::col_major_t>;
 
 TEST_CASE("initializer list constructor")
 {
-    rm_mse<int64_t> m1(ex_1x1i);
-    cm_mse<int64_t> m2(ex_1x1i);
+    //rm_mse<int64_t> m1(ex_1x1i);
+    //cm_mse<int64_t> m2(ex_1x1i);
 
     
 

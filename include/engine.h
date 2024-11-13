@@ -11,7 +11,6 @@
 #include <concepts>
 #include <algorithm>
 
-
 struct matrix_orientation
 {
     struct row_major_t{};
@@ -24,7 +23,6 @@ struct matrix_orientation
         return minor + major * minor_length;
     }
 };
-
 
 template<typename From, typename To>
 struct static_value_caster
@@ -381,8 +379,121 @@ struct engine_helper
                   std::layout_stride> 
  *  
  * */
-template<typename T, class Alloc, typename L>
+template<typename T, class Alloc, std::size_t R, std::size_t C, typename L>
 struct matrix_data
+{
+    using storage_type = std::vector<T, Alloc>;
+    using index_type = std::size_t;
+    // using mdspan_type = ...
+    // using const_mdspan_type = ...
+    
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_defined_row_vector = (R == 1);
+    static constexpr bool is_defined_col_vector = (C == 1);
+    static constexpr bool is_row_dynamic = false;
+    static constexpr bool is_col_dynamic = false;
+
+    static constexpr index_type m_rows = R;
+    static constexpr index_type m_row_reach = R;
+
+    static constexpr index_type m_cols = C;
+    static constexpr index_type m_col_reach = C;
+
+    storage_type m_data;
+
+    constexpr matrix_data(void)
+    : m_data(R * C)
+    {}
+};
+
+template<typename T, std::size_t R, std::size_t C, typename L>
+struct matrix_data<T, void, R, C, L>
+{
+    using storage_type = std::array<T, R * C>;
+    using index_type = std::size_t;
+    // using mdspan_type = ...
+    // using const_mdspan_type = ...
+
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_defined_row_vector = (R == 1);
+    static constexpr bool is_defined_col_vector = (C == 1);
+    static constexpr bool is_row_dynamic = false;
+    static constexpr bool is_col_dynamic = false;
+
+    static constexpr index_type m_rows = R;
+    static constexpr index_type m_row_reach = R;
+
+    static constexpr index_type m_cols = C;
+    static constexpr index_type m_col_reach = C;
+
+    storage_type m_data;
+
+    constexpr matrix_data(void)
+    : m_data()
+    {}
+};
+
+template<typename T, class Alloc, std::size_t R, typename L>
+struct matrix_data<T, Alloc, R, std::dynamic_extent, L>
+{
+    using storage_type = std::vector<T, Alloc>;
+    using index_type = std::size_t;
+    // using mdspan_type = ...
+    // using const_mdspan_type = ...
+
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_defined_row_vector = (R == 1);
+    static constexpr bool is_defined_col_vector = false;
+    static constexpr bool is_row_dynamic = false;
+    static constexpr bool is_col_dynamic = true;
+
+    static constexpr index_type m_rows = R;
+    static constexpr index_type m_row_reach = R;
+
+    storage_type m_data;
+
+    index_type m_cols;
+    index_type m_col_reach;
+
+    constexpr matrix_data(void)
+    : m_data(), m_cols(0), m_col_reach(0)
+    {}
+};
+
+template<typename T, class Alloc, std::size_t C, typename L>
+struct matrix_data<T, Alloc, std::dynamic_extent, C, L>
+{
+    using storage_type = std::vector<T, Alloc>;
+    using index_type = std::size_t;
+    // using mdspan_type = ...
+    // using const_mdspan_type = ...
+
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_defined_row_vector = false;
+    static constexpr bool is_defined_col_vector = (C == 1);
+    static constexpr bool is_row_dynamic = true;
+    static constexpr bool is_col_dynamic = false;
+
+    static constexpr index_type m_cols = C;
+    static constexpr index_type m_col_reach = C;
+
+    storage_type m_data;
+
+    index_type m_rows;
+    index_type m_row_reach;
+
+    constexpr matrix_data(void)
+    : m_data(), m_rows(0), m_row_reach(0)
+    {}
+};
+
+
+template<typename T, class Alloc, typename L>
+struct matrix_data<T, Alloc, std::dynamic_extent, std::dynamic_extent, L>
 {
     using storage_type = std::vector<T, Alloc>;
     using index_type = std::size_t;
@@ -395,6 +506,11 @@ struct matrix_data
 
     static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
     static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_defined_row_vector = false;
+    static constexpr bool is_defined_col_vector = false;
+    static constexpr bool is_row_dynamic = true;
+    static constexpr bool is_col_dynamic = true;
+
 
     storage_type m_data;
 
@@ -405,15 +521,8 @@ struct matrix_data
     index_type m_col_reach;
 
     constexpr matrix_data(void)
-    : m_data(), m_rows(0), m_row_reach(0), m_cols(0), m_col_reach(0) {}
-
-    constexpr matrix_data(matrix_data const& other) = default;
-    constexpr matrix_data(matrix_data && other) noexcept = default;
-
-    ~matrix_data(void) = default;
-
-    constexpr matrix_data & operator=(matrix_data const& other) = default;
-    constexpr matrix_data & operator=(matrix_data && other) = default;
+    : m_data(), m_rows(0), m_row_reach(0), m_cols(0), m_col_reach(0) 
+    {}
 };
 
 /*
@@ -429,10 +538,10 @@ struct matrix_data
  *      element access operators, associated mdspan object (maybe is a class variable?), reshape methods
  * 
  */
-template<typename T, class Alloc, typename L>
+template<typename T, class Alloc, std::size_t R, std::size_t C, typename L>
 struct matrix_storage_engine
 {
-    using storage_type = matrix_data<T, Alloc, L>;
+    using storage_type = matrix_data<T, Alloc, R, C, L>;
     using self_type = matrix_storage_engine;
     using orient = matrix_orientation;
     using helper = engine_helper;
@@ -447,6 +556,13 @@ public:
 
     static constexpr bool is_row_major = storage_type::is_row_major;
     static constexpr bool is_col_major = storage_type::is_col_major;
+    static constexpr bool is_defined_row_vector = storage_type::is_defined_row_vector;
+    static constexpr bool is_defined_col_vector = storage_type::is_defined_col_vector;
+    static constexpr bool is_row_dynamic = storage_type::is_row_dynamic;
+    static constexpr bool is_col_dynamic = storage_type::is_col_dynamic;
+    
+    static constexpr bool is_fully_dynamic = is_row_dynamic && is_col_dynamic;
+    static constexpr bool is_fully_static = (not is_row_dynamic) && (not is_col_dynamic);
 
     storage_type m_data;
 
@@ -458,8 +574,8 @@ public:
     using const_reference = T const&;
     using index_type = std::size_t;
 
-    using mdspan_type = typename matrix_data<T, Alloc, L>::mdspan_type;
-    using const_mdspan_type = typename matrix_data<T, Alloc, L>::mdspan_type;
+    //using mdspan_type = typename matrix_data<T, Alloc, L>::mdspan_type;
+    //using const_mdspan_type = typename matrix_data<T, Alloc, L>::mdspan_type;
 
     constexpr matrix_storage_engine(void) = default;
     constexpr matrix_storage_engine(matrix_storage_engine const& other) = default;
@@ -469,14 +585,30 @@ public:
     constexpr matrix_storage_engine & operator=(matrix_storage_engine && other) = default;
 
     constexpr matrix_storage_engine(index_type nbr_rows, index_type nbr_cols)
+    requires self_type::is_fully_dynamic
     : m_data()
     {
         __reshape(nbr_rows, nbr_rows, nbr_cols, nbr_cols);
     }
     constexpr matrix_storage_engine(index_type nbr_rows, index_type nbr_cols, index_type row_reach, index_type col_reach)
+    requires self_type::is_fully_dynamic
     : m_data()
     {
         __reshape(nbr_rows, row_reach, nbr_cols, col_reach);
+    }
+
+    constexpr matrix_storage_engine(index_type nbr_rows, index_type row_reach)
+    requires self_type::is_row_dynamic
+    : m_data()
+    {
+        __reshape_rows(nbr_rows, row_reach);
+    }
+
+    constexpr matrix_storage_engine(index_type nbr_cols, index_type col_reach)
+    requires self_type::is_col_dynamic
+    : m_data()
+    {
+        __reshape_cols(nbr_cols, col_reach);
     }
     
     //constexpr matrix_storage_engine(index_type nbr_rows);
@@ -505,19 +637,19 @@ public:
         return *this;
     }
 
-    template<typename R>
-    constexpr matrix_storage_engine(rect_init_list<R> lst)
+    template<typename U>
+    constexpr matrix_storage_engine(rect_init_list<U> lst)
     requires
-        std::convertible_to<R, data_type>
+        std::convertible_to<U, data_type>
     : m_data()
     {
         helper::copy2(lst, *this);
     }
 
-    template<typename R>
-    constexpr matrix_storage_engine & operator=(rect_init_list<R> lst)
+    template<typename U>
+    constexpr matrix_storage_engine & operator=(rect_init_list<U> lst)
     requires
-        std::convertible_to<R, data_type>
+        std::convertible_to<U, data_type>
     {
         helper::copy2(lst, *this);
         return *this;
@@ -606,18 +738,33 @@ public:
     //constexpr const_mdspan_type span() const noexcept
     
     constexpr void reshape(index_type nbr_rows, index_type row_reach, index_type nbr_cols, index_type col_reach)
+    requires self_type::is_fully_dynamic
     {
         __reshape(nbr_rows, row_reach, nbr_cols, col_reach);
     }
 
     constexpr void reshape_cols(index_type nbr_cols, index_type col_reach)
+    requires self_type::is_fully_dynamic
     {
         __reshape(m_data.m_rows, m_data.row_reach, nbr_cols, col_reach);
     }
 
+    constexpr void reshape_cols(index_type nbr_cols, index_type col_reach)
+    requires self_type::is_col_dynamic
+    {
+        __reshape_cols(nbr_cols, col_reach);
+    }
+
     constexpr void reshape_rows(index_type nbr_rows, index_type row_reach)
+    requires self_type::is_fully_dynamic
     {
         __reshape(nbr_rows, row_reach, m_data.m_rows, m_data.m_row_reach);
+    }
+
+    constexpr void reshape_rows(index_type nbr_rows, index_type row_reach)
+    requires self_type::is_row_dynamic
+    {
+        __reshape_rows(nbr_rows, row_reach);
     }
 
     constexpr void swap(self_type & other) noexcept
@@ -629,6 +776,7 @@ public:
 private:
 
     constexpr void __reshape(index_type nbr_rows, index_type row_reach, index_type nbr_cols, index_type col_reach)
+    requires self_type::is_fully_dynamic
     {
         helper::validate_length(nbr_rows);
         helper::validate_length(nbr_cols);
@@ -683,6 +831,7 @@ private:
     }
 
     constexpr void __reshape_rows(index_type nbr_rows, index_type row_reach)
+    requires self_type::is_row_dynamic
     {
         helper::validate_length(nbr_rows);
         helper::validate_reach(row_reach);
@@ -710,6 +859,7 @@ private:
     }
     
     constexpr void __reshape_cols(index_type nbr_cols, index_type col_reach)
+    requires self_type::is_col_dynamic
     {
         helper::validate_length(nbr_cols);
         helper::validate_reach(col_reach);
