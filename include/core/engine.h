@@ -221,8 +221,8 @@ struct engine_helper
     {
         using com = std::common_type_t<R1, C1, R2, C2, size_t>;
 
-        constexpr bool rows_eq = static_cast<com>(r1) == static_cast<com>(r2);
-        constexpr bool cols_eq = static_cast<com>(c1) == static_cast<com>(c2);
+        bool rows_eq = static_cast<com>(r1) == static_cast<com>(r2);
+        bool cols_eq = static_cast<com>(c1) == static_cast<com>(c2);
 
         return rows_eq && cols_eq;
     }
@@ -232,8 +232,8 @@ struct engine_helper
     {
         using com = std::common_type_t<R1, C1, R2, C2, size_t>;
 
-        constexpr com size1 = static_cast<com>(r1) * static_cast<com>(c1);
-        constexpr com size2 = static_cast<com>(r2) * static_cast<com>(c2);
+        com size1 = static_cast<com>(r1) * static_cast<com>(c1);
+        com size2 = static_cast<com>(r2) * static_cast<com>(c2);
 
         return size1 == size2;
     }
@@ -242,9 +242,19 @@ struct engine_helper
     static constexpr void validate_length(X x)
     {
         //return x >= static_cast<X>(0);
-        if(x < static_cast<X>(0))
+        if(x < static_cast<X>(1))
         {
             throw std::runtime_error("invalid length.");
+        }
+    }
+
+    template<typename X>
+    static constexpr void validate_reach(X x)
+    {
+        //return x > static_cast<X>(0);
+        if(x < static_cast<X>(0))
+        {
+            throw std::runtime_error("invalid reach.");
         }
     }
     
@@ -254,16 +264,6 @@ struct engine_helper
         if(!sizes_equal(x, y))
         {
             throw std::runtime_error("invalid size.");
-        }
-    }
-
-    template<typename X>
-    static constexpr void validate_reach(X x)
-    {
-        //return x > static_cast<X>(0);
-        if(x < static_cast<X>(1))
-        {
-            throw std::runtime_error("invalid reach.");
         }
     }
 

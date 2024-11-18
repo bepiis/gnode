@@ -154,8 +154,7 @@ struct matrix_data<T, Alloc, std::dynamic_extent, std::dynamic_extent, L>
     {}
 };
 
-/*
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * matrix_storage_engine (template takes data type, allocator type, and data orientation)
  * 
  *      class variables: engine_data  
