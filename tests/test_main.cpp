@@ -158,6 +158,8 @@ TEST_CASE("row dominant RandMatSizeGenerator")
 
 //#define TEST_FULL_VERBOSE_OUTPUT
 
+#define SHOW(...) std::cout << std::setw(42) << #__VA_ARGS__ << " == " << __VA_ARGS__ << '\n';
+
 
 #ifndef TEST_NONE
 

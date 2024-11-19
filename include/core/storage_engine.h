@@ -19,8 +19,8 @@ struct matrix_data
     
     static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
     static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
-    static constexpr bool is_defined_row_vector = (R == 1);
-    static constexpr bool is_defined_col_vector = (C == 1);
+    static constexpr bool is_static_row_vector = (R == 1);
+    static constexpr bool is_static_col_vector = (C == 1);
     static constexpr bool is_row_dynamic = false;
     static constexpr bool is_col_dynamic = false;
 
@@ -47,8 +47,8 @@ struct matrix_data<T, void, R, C, L>
 
     static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
     static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
-    static constexpr bool is_defined_row_vector = (R == 1);
-    static constexpr bool is_defined_col_vector = (C == 1);
+    static constexpr bool is_static_row_vector = (R == 1);
+    static constexpr bool is_static_col_vector = (C == 1);
     static constexpr bool is_row_dynamic = false;
     static constexpr bool is_col_dynamic = false;
 
@@ -75,8 +75,8 @@ struct matrix_data<T, Alloc, R, std::dynamic_extent, L>
 
     static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
     static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
-    static constexpr bool is_defined_row_vector = (R == 1);
-    static constexpr bool is_defined_col_vector = false;
+    static constexpr bool is_static_row_vector = (R == 1);
+    static constexpr bool is_static_col_vector = false;
     static constexpr bool is_row_dynamic = false;
     static constexpr bool is_col_dynamic = true;
 
@@ -103,8 +103,8 @@ struct matrix_data<T, Alloc, std::dynamic_extent, C, L>
 
     static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
     static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
-    static constexpr bool is_defined_row_vector = false;
-    static constexpr bool is_defined_col_vector = (C == 1);
+    static constexpr bool is_static_row_vector = false;
+    static constexpr bool is_static_col_vector = (C == 1);
     static constexpr bool is_row_dynamic = true;
     static constexpr bool is_col_dynamic = false;
 
@@ -136,8 +136,8 @@ struct matrix_data<T, Alloc, std::dynamic_extent, std::dynamic_extent, L>
 
     static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
     static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
-    static constexpr bool is_defined_row_vector = false;
-    static constexpr bool is_defined_col_vector = false;
+    static constexpr bool is_static_row_vector = false;
+    static constexpr bool is_static_col_vector = false;
     static constexpr bool is_row_dynamic = true;
     static constexpr bool is_col_dynamic = true;
 
@@ -184,8 +184,8 @@ public:
 
     static constexpr bool is_row_major = storage_type::is_row_major;
     static constexpr bool is_col_major = storage_type::is_col_major;
-    static constexpr bool is_defined_row_vector = storage_type::is_defined_row_vector;
-    static constexpr bool is_defined_col_vector = storage_type::is_defined_col_vector;
+    static constexpr bool is_static_row_vector = storage_type::is_static_row_vector;
+    static constexpr bool is_static_col_vector = storage_type::is_static_col_vector;
     static constexpr bool is_row_dynamic = storage_type::is_row_dynamic;
     static constexpr bool is_col_dynamic = storage_type::is_col_dynamic;
     
@@ -299,36 +299,42 @@ public:
     //constexpr matrix_storage_engine & operator=(Cntr const& other);
 
     // required for readability: rows -> index_type
+    //$ [PAFC]
     constexpr index_type rows(void) const noexcept
     {
         return m_data.m_rows;
     }
     
     // required for readability: row_reach -> index_type
+    //$ [PAFC]
     constexpr index_type row_reach(void) const noexcept
     {
         return m_data.m_row_reach;
     }
 
     // required for readability: cols -> index_type
+    //$ [PAFC]
     constexpr index_type cols(void) const noexcept
     {
         return m_data.m_cols;
     }
     
     // required for readability: col_reach -> index_type
+    //$ [PAFC]
     constexpr index_type col_reach(void) const noexcept
     {
         return m_data.m_col_reach;
     }
 
     // required for readability: size -> index_type
+    //$ [PAFC]
     constexpr index_type size(void) const noexcept
     {
         return m_data.m_rows * m_data.m_cols;
     }
     
     // required for readability: reach -> index_type
+    //$ [PAFC]
     constexpr index_type reach(void) const noexcept
     {
         return m_data.m_row_reach * m_data.m_col_reach;
