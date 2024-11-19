@@ -18,6 +18,29 @@ struct static_value_caster
     }
 };
 
+// see:
+// https://stackoverflow.com/questions/55288555/c-check-if-statement-can-be-evaluated-constexpr.
+template<typename Lambda, int = (Lambda{}(), 0)>
+constexpr bool is_constexpr(Lambda)
+{
+    return true;
+}
+
+constexpr bool is_constexpr(...)
+{
+    return false;
+}
+
+template<typename Egn>
+constexpr inline bool is_col_static_v = is_constexpr([]{Egn().cols(); });
+
+template<typename Egn>
+constexpr inline bool is_row_static_v = is_constexpr([]{Egn().rows(); });
+
+template<typename Egn>
+constexpr inline bool is_size_static_v = is_constexpr([]{Egn().size(); });
+
+
 struct matrix_orientation
 {
     struct row_major_t{};

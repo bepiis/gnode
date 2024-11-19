@@ -214,7 +214,11 @@ using rm_dyn_mse = matrix_storage_engine<T, std::allocator<T>, std::dynamic_exte
 template<typename T>
 using cm_dyn_mse = matrix_storage_engine<T, std::allocator<T>, std::dynamic_extent, std::dynamic_extent, matrix_orientation::col_major_t>;
 
-
+/*
+ *
+ * matrix_storage_engine<T, allocator<T>, R, C, row_major_t>
+ * 
+ */
 
 TEST_CASE("initializer list constructor")
 {
