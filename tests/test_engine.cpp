@@ -6,12 +6,36 @@
 #include "core/engine.h"
 #include <numbers>
 
+/*
+ * GNode roadmap:
+ *  - base engine and storage_engine unit tests
+ *  - simple banded_storage_engine + unit tests
+ *      - handles sparse matrices with a main diagonal w/ lower and upper bandwidth
+ *  - mutable and immutable view_engines + unit tests
+ *      - negation
+ *      - hermitian
+ *      - conjugate
+ *      - transpose
+ *      - sub matrix
+ *           - householder
+ *      - row and col views 
+ *           - givens views
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
 using namespace std::numbers;
 using std::size_t;
 using eh = engine_helper;
 
 template<typename T>
 using rect_init_list = std::initializer_list<std::initializer_list<T>>;
+
+template<typename T>
+using init_list = std::initializer_list<T>;
 
 const rect_init_list<int64_t> ex_1x1i = {{2}};
 const rect_init_list<int64_t> ex_1x2i = {{2, 3}};
@@ -309,7 +333,37 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF default constructed THEN rows() == nrows AND cols() == ncols",
+    "Type traits are consistent with template specialization.\n"
+    "[GIVEN ST dtype double STRONG]"
+    "[GIVEN ST atype std STRONG]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == 3]"
+    "[GIVEN ST ltype row_major STRONG]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    using mse_type = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    REQUIRE(std::same_as<atype, mse_type::allocator_type> == true);
+    REQUIRE(std::same_as<dtype, mse_type::data_type> == true);
+    REQUIRE(std::same_as<dtype&, mse_type::reference> == true);
+    REQUIRE(std::same_as<dtype const&, mse_type::const_reference> == true);
+    REQUIRE(std::same_as<std::size_t, mse_type::index_type> == true);
+    REQUIRE(std::same_as<ltype, mse_type::orientation_type> == true);
+}
+
+
+TEST_CASE
+(
+    "IF default constructed\n"
+    "THEN rows() == nrows AND cols() == ncols.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows 0]"
@@ -333,7 +387,8 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF default constructed THEN size() == reach() == nrows * ncols",
+    "IF default constructed\n"
+    "THEN size() == reach() == nrows * ncols.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows 1]"
@@ -357,7 +412,8 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF default constructed THEN rows() == nrows AND cols() == ncols",
+    "IF default constructed\n"
+    "THEN rows() == nrows AND cols() == ncols.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows 0]"
@@ -381,7 +437,8 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF default constructed THEN size() == reach() == nrows * ncols",
+    "IF default constructed\n"
+    "THEN size() == reach() == nrows * ncols.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows 1]"
@@ -406,7 +463,8 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF default constructed THEN filled with dtype{}",
+    "IF default constructed\n"
+    "THEN filled with dtype{}.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows 3]"
@@ -437,16 +495,8 @@ TEST_CASE
 
 TEST_CASE
 (
-    "matrix_storage_engine type alias consistency",
-    "[core/matrix_storage_engine][full_static]"
-)
-{
-    // ...
-}
-
-TEST_CASE
-(
-    "IF default constructed THEN expected row and col major storage tags",
+    "IF default constructed\n"
+    "THEN expected row and col major storage tags.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows 3]"
@@ -473,7 +523,8 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF default constructed THEN expected static and dynamic storage tags",
+    "IF default constructed\n"
+    "THEN expected static and dynamic storage tags.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows > 1 STRONG]"
@@ -498,7 +549,8 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF default constructed THEN expected static and dynamic storage tags",
+    "IF default constructed\n"
+    "THEN expected static and dynamic storage tags.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == 1 STRONG]"
@@ -527,7 +579,8 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF default constructed THEN expected static and dynamic storage tags",
+    "IF default constructed\n"
+    "THEN expected static and dynamic storage tags.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows > 1 STRONG]"
@@ -553,6 +606,676 @@ TEST_CASE
     REQUIRE(m.is_fully_dynamic == false);
     REQUIRE(m.is_fully_static == true);
 }
+
+TEST_CASE
+(
+    "IF rect init list constructed\n"
+    "THEN data matches input list.\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 8]"
+    "[GIVEN ST ncols == 3]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 8;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    const rect_init_list<int64_t> data_in = {{-11, -10, -9},
+                                              {-8, -7, -6},
+                                              {-5, -4, -3},
+                                              {-2, -1, 0},
+                                              {1, 2, 3},
+                                              {4, 5, 6},
+                                              {7, 8, 9},
+                                              {10, 11, 12}};
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(data_in);
+
+    size_t i, j;
+    auto din_i = data_in.begin();
+    
+    i = 0;
+    for(; i < m.rows(); i++, din_i++)
+    {
+        auto din_j = din_i->begin();
+        j = 0;
+
+        for(; j < m.cols(); j++, din_j++)
+        {
+            REQUIRE(m(i, j) == *din_j);
+        }
+    }
+}
+
+TEST_CASE
+(
+    "IF default constructed\n"
+    "AND THEN rect init list assigned\n"
+    "THEN data matches input list\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == 8]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = 8;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
+
+    const rect_init_list<int64_t> data_in = {{-100, 0, 90, 0, -80, 0, 70, 0},
+                                             {-60, 0, 50, 0, -40, 0, 30, 0},
+                                             {-20, 0, 10, 0, 0, -10, 0, 10}};
+
+    m = data_in;
+
+    size_t i, j;
+    auto din_i = data_in.begin();
+
+    i=0;
+    for(; i < m.rows(); i++, din_i++)
+    {
+        auto din_j = din_i->begin();
+        j = 0;
+
+        for(; j < m.cols(); j++, din_j++)
+        {
+            REQUIRE(m(i, j) == *din_j);
+        }
+    }
+}
+
+TEST_CASE
+(
+    "IF m1 is rect init list constructed\n"
+    "AND THEN m2 is copy constructed from m1\n"
+    "THEN m2 data matches input data.\n",
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == 8]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = 8;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    const rect_init_list<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+                                             {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
+                                             {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m1(data_in);
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2(m1);
+
+    size_t i, j;
+    auto din_i = data_in.begin();
+
+    i=0;
+    for(; i < m2.rows(); i++, din_i++)
+    {
+        auto din_j = din_i->begin();
+        j = 0;
+
+        for(; j < m2.cols(); j++, din_j++)
+        {
+            REQUIRE(m2(i, j) == *din_j);
+        }
+    }
+}
+
+TEST_CASE
+(
+    "IF m1 AND m2 are default constructed\n"
+    "AND THEN m1 is rect init list assigned\n"
+    "AND THEN m2 is copy assigned from m1\n"
+    "THEN m2 data matches input data.\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == 3]"
+    "[GIVEN ST ltype col_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::col_major_t;
+
+    const rect_init_list<int64_t> data_in = {{0, 0, 0}, {3, 2, 1}, {9, -1, -100}};
+    const rect_init_list<int64_t> data_in_cm = {{0, 3, 9}, {0, 2, -1}, {0, 1, -100}};
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m1;
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2;
+
+    m1 = data_in;
+    m2 = m1;
+
+    size_t i, j;
+    auto din_j = data_in_cm.begin();
+
+    j = 0;
+    for(; j < m2.cols(); j++, din_j++)
+    {
+        auto din_i = din_j->begin();
+        i = 0;
+
+        for(; i < m2.rows(); i++, din_i++)
+        {
+            REQUIRE(m2(i, j) == *din_i);
+        }
+    }
+}
+
+TEST_CASE
+(
+    "IF m is rect init list constructed\n"
+    "BUT m and input data have inconsistent sizes\n"
+    "THEN runtime error is thrown.\n",
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3 STRONG]"
+    "[GIVEN ST ncols == 3 STRONG]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    const rect_init_list<double> data_in =  {{sqrt2, sqrt2, sqrt2},
+                                             {1/sqrt2, 1/sqrt2, 1/sqrt2},
+                                             {sqrt2, sqrt2, sqrt2},
+                                             {1/sqrt2, 1/sqrt2, 1/sqrt2},
+                                             {sqrt2, sqrt2, sqrt2},
+                                             {1/sqrt2, 1/sqrt2, 1/sqrt2},
+                                             {sqrt2, sqrt2, sqrt2},
+                                             {1/sqrt2, 1/sqrt2, 1/sqrt2}};
+
+    // TODO: why doesnt REQUIRE_THROWS_AS work here?
+    REQUIRE_THROWS
+    (
+        matrix_storage_engine<dtype, atype, nrows, ncols, ltype>(data_in)
+        //,std::runtime_error
+    );
+}
+
+TEST_CASE
+(
+    "IF m is default constructed\n"
+    "AND THEN m is rect init list assigned\n"
+    "BUT m and input data have inconsistent sizes\n"
+    "THEN runtime error is thrown.\n",
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3 STRONG]"
+    "[GIVEN ST ncols == 3 STRONG]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    const rect_init_list<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+                                             {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
+                                             {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};  
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
+
+    REQUIRE_THROWS
+    (
+        m = data_in
+        //,std::runtime_error
+    );
+}
+
+TEST_CASE
+(
+    "IF m is default constructed\n"
+    "AND THEN reshape_rows is called SUCH THAT new_nbr_rows is invalid\n"
+    "THEN runtime error is thrown.\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent STRONG]"
+    "[GIVEN ST ncols == 3]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN DYN new_nbr_rows == -1 STRONG]"
+    "[GIVEN DYN new_row_reach == 3]"
+    "[core/storage_engine::matrix_storage_engine]"
+
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
+
+    int64_t new_nbr_rows = -1;
+    int64_t new_row_reach = 3;
+
+    REQUIRE_THROWS(m.reshape_rows(new_nbr_rows, new_row_reach));
+}
+
+TEST_CASE
+(
+    "IF m is default constructed\n"
+    "AND THEN reshape_rows is called SUCH THAT new_row_reach is invalid\n"
+    "THEN runtime error is thrown.\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent STRONG]"
+    "[GIVEN ST ncols == 3]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN DYN new_nbr_rows == 3]"
+    "[GIVEN DYN new_row_reach == -5 STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
+
+    int64_t new_nbr_rows = 3;
+    int64_t new_row_reach = -5;
+
+    REQUIRE_THROWS(m.reshape_rows(new_nbr_rows, new_row_reach));
+}
+
+TEST_CASE
+(
+    "IF m is default constructed\n"
+    "THEN\n"
+    "\t0 == rows() == row_reach()\n"
+    "\tAND ncols == cols() == col_reach().\n"
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent STRONG]"
+    "[GIVEN ST ncols == 3]"
+    "[GIVEN ST ltype row_major]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
+
+    REQUIRE(0 == m.rows());
+    REQUIRE(0 == m.row_reach());
+    REQUIRE(ncols == m.cols());
+    REQUIRE(ncols == m.col_reach());
+
+}
+
+
+TEST_CASE
+(
+    "IF m is nbr_rows, row_reach constructed\n"
+    "AND THEN reshape_rows is called SUCH THAT new_nbr_rows > row_reach()\n"
+    "THEN\n"
+    "\tnew_nbr_rows == rows()\n"
+    "\tAND row_reach == row_reach()\n"
+    "\tAND rows() <= row_reach()\n"
+    "\tAND ncols == cols()\n"
+    "\tAND ncols == col_reach().\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent STRONG]"
+    "[GIVEN ST ncols == 3 STRONG]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN DYN nbr_rows == 3 STRONG]"
+    "[GIVEN DYN row_reach == 3 STRONG]"
+    "[GIVEN DYN new_nbr_rows = 5 STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+}
+
+TEST_CASE
+(
+    "IF m is nbr_rows, row_reach constructed\n"
+    "AND THEN reshape_rows is called SUCH THAT new_row_reach != row_reach()\n"
+    "THEN\n"
+    "\tnbr_rows == rows()\n"
+    "\tAND new_row_reach == row_reach()\n"
+    "\tAND rows() <= row_reach()\n"
+    "\tAND ncols == cols()\n"
+    "\tAND ncols == col_reach().\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent STRONG]"
+    "[GIVEN ST ncols == 3 STRONG]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN DYN nbr_rows == 3 STRONG]"
+    "[GIVEN DYN row_reach == 6 STRONG]"
+    "[GIVEN DYN new_row_reach = 10 STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 3;
+
+    using ltype = matrix_orientation::row_major_t;
+
+}
+
+TEST_CASE
+(
+    "IF m is nbr_rows, row_reach constructed\n"
+    "AND THEN reshape_rows is called SUCH THAT new_nbr_rows <= row_reach() AND new_row_reach == row_reach()\n"
+    "THEN\n"
+    "\tnew_nbr_rows == rows()\n"
+    "\tAND new_row_reach == row_reach == row_reach()\n"
+    "\tAND rows() <= row_reach()\n"
+    "\tAND ncols == cols()\n"
+    "\tAND ncols == col_reach().\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent STRONG]"
+    "[GIVEN ST ncols == 6 STRONG]"
+    "[GIVEN ST ltype col_major]"
+    "[GIVEN DYN nbr_rows == 3 STRONG]"
+    "[GIVEN DYN row_reach == 6 STRONG]"
+    "[GIVEN DYN new_nbr_rows = 5 STRONG]"
+    "[GIVEN DYN new_row_reach = 6 STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 6;
+
+    using ltype = matrix_orientation::row_major_t;
+    
+}
+
+
+// dynamic rows, static cols rect init list constructed, then rows(), cols() matches input data rows, cols
+// dynamic rows, static cols, rect init list constructed, then size() and reach() consistent with input data size
+// dynamic rows, static cols rect init list constructed then data matches input data
+
+// dynamic rows, static cols default constructed, rect init list assigned then data matches input data
+
+// static rows, dynamic cols default constructed, reshape_cols throws on invalid col_rows
+// static rows, dynamic cols default constructed, reshape_cols throws on invalid cll_reach
+// static rows, dynamic cols default constructed, reshape_cols resizes when nbr_col > m_col_reach
+// static rows, dynamic cols default constructed, reshape_cols resizes when col_reach != m_col_reach
+// static rows, dynamic cols default constructed, reshape_cols extends m_rows to nbr_cols when nbr_cols <= m_col_reach and col_reach == m_col_reach
+
+// static rows, dynamic cols rect init list constructed, then rows(), cols() matches input data rows, cols
+// static rows, dynamic cols, rect init list constructed, then size() and reach() consistent with input data size
+
+// static rows, dynamic cols rect init list constructed then data matches input data
+// static rows, dynamic cols default constructed, rect init list assigned then data matches input data
+
+TEST_CASE
+(
+    "IF m is default constructed\n"
+    "AND THEN reshape_cols is called SUCH THAT new_nbr_cols is invalid\n"
+    "THEN runtime error is thrown.\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == dyn_extent STRONG]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN DYN new_nbr_cols == -1 STRONG]"
+    "[GIVEN DYN new_col_reach == 3]"
+    "[core/storage_engine::matrix_storage_engine]"
+
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+    
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
+
+    int64_t new_nbr_cols = -1;
+    int64_t new_col_reach = 3;
+
+    REQUIRE_THROWS(m.reshape_cols(new_nbr_cols, new_col_reach));
+}
+
+TEST_CASE
+(
+    "IF m is default constructed\n"
+    "AND THEN reshape_cols is called SUCH THAT new_col_reach is invalid\n"
+    "THEN runtime error is thrown.\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == dyn_extent]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN DYN new_nbr_cols == 3]"
+    "[GIVEN DYN new_col_reach == -5 STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+    
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
+
+    int64_t new_nbr_cols = 3;
+    int64_t new_col_reach = -5;
+
+    REQUIRE_THROWS(m.reshape_cols(new_nbr_cols, new_col_reach));
+}
+
+TEST_CASE
+(
+    "IF m is default constructed\n"
+    "THEN\n"
+    "\t0 == cols() == col_reach()\n"
+    "\tAND nrows == rows() == row_reach().\n"
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == dyn_extent STRONG]"
+    "[GIVEN ST ltype row_major]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
+
+    REQUIRE(nrows == m.rows());
+    REQUIRE(nrows == m.row_reach());
+    REQUIRE(0 == m.cols());
+    REQUIRE(0 == m.col_reach());
+}
+
+TEST_CASE
+(
+    "IF m is nbr_cols, col_reach constructed\n"
+    "AND THEN reshape_cols is called SUCH THAT new_nbr_cols > col_reach()\n"
+    "THEN\n"
+    "\tnew_nbr_cols == cols()\n"
+    "\tAND col_reach == col_reach()\n"
+    "\tAND cols() <= col_reach()\n"
+    "\tAND nrows == rows()\n"
+    "\tAND nrows == row_reach().\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == dyn_extent STRONG]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN DYN nbr_cols == 3 STRONG]"
+    "[GIVEN DYN col_reach == 3 STRONG]"
+    "[GIVEN DYN new_nbr_cols == 5 STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+
+}
+
+TEST_CASE
+(
+    "IF m is nbr_cols, col_reach constructed\n"
+    "AND THEN reshape_cols is called SUCH THAT new_col_reach != col_reach()\n"
+    "THEN\n"
+    "\tnbr_cols == cols()\n"
+    "\tAND new_col_reach == col_reach()\n"
+    "\tAND cols() <= col_reach()\n"
+    "\tAND nrows == rows()\n"
+    "\tAND nrows == row_reach().\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == dyn_extent STRONG]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN DYN nbr_cols == 3 STRONG]"
+    "[GIVEN DYN col_reach == 6 STRONG]"
+    "[GIVEN DYN new_col_reach = 10 STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+
+}
+
+TEST_CASE
+(
+    "IF m is nbr_cols, cols_reach constructed\n"
+    "AND THEN reshape_cols is called SUCH THAT new_nbr_cols <= row_reach() AND new_col_reach == col_reach()\n"
+    "THEN\n"
+    "\tnew_nbr_cols == cols()\n"
+    "\tAND new_col_reach == col_reach == col_reach()\n"
+    "\tAND cols() <= col_reach()\n"
+    "\tAND nrows == rows()\n"
+    "\tAND nrow == row_reach().\n",
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 6]"
+    "[GIVEN ST ncols == dyn_extent STRONG]"
+    "[GIVEN ST ltype col_major]"
+    "[GIVEN DYN nbr_cols == 3 STRONG]"
+    "[GIVEN DYN col_reach == 6 STRONG]"
+    "[GIVEN DYN new_nbr_cols = 5 STRONG]"
+    "[GIVEN DYN new_col_reach = 6 STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 6;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+    
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

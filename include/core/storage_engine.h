@@ -219,12 +219,14 @@ public:
     requires self_type::is_fully_dynamic
     : m_data()
     {
+        //std::cout << "called nbr_rows, nbr_cols constructor (requires is_fully_dynamic).\n";
         __reshape(nbr_rows, nbr_rows, nbr_cols, nbr_cols);
     }
     constexpr matrix_storage_engine(index_type nbr_rows, index_type nbr_cols, index_type row_reach, index_type col_reach)
     requires self_type::is_fully_dynamic
     : m_data()
     {
+        //std::cout << "called nbr_rows, row_reach, nbr_cols, col_reach constructor (requires is_fully_dynamic).\n";
         __reshape(nbr_rows, row_reach, nbr_cols, col_reach);
     }
 
@@ -232,6 +234,7 @@ public:
     requires self_type::is_row_dynamic
     : m_data()
     {
+        //std::cout << "called nbr_cols, col_reach constructor (requires is_row_dynamic).\n";
         __reshape_rows(nbr_rows, row_reach);
     }
 
@@ -239,6 +242,7 @@ public:
     requires self_type::is_col_dynamic
     : m_data()
     {
+        //std::cout << "called nbr_cols, col_reach constructor (requires is_col_dynamic).\n";
         __reshape_cols(nbr_cols, col_reach);
     }
     
@@ -256,6 +260,7 @@ public:
         std::convertible_to<typename Egn::data_type, data_type>
     : m_data()
     {
+        //std::cout << "called copy constructor.\n";
         helper::copy2(other, *this);
     }
 
@@ -264,6 +269,7 @@ public:
     requires
         std::convertible_to<typename Egn::data_type, data_type>
     {
+        //std::cout << "called copy assignment operator.\n";
         helper::copy2(other, *this);
         return *this;
     }
@@ -274,6 +280,7 @@ public:
         std::convertible_to<U, data_type>
     : m_data()
     {
+        //std::cout << "called rect init list constructor.\n";
         helper::copy2(lst, *this);
     }
 
@@ -282,6 +289,7 @@ public:
     requires
         std::convertible_to<U, data_type>
     {
+        //std::cout << "called rect init list assignment operator.\n";
         helper::copy2(lst, *this);
         return *this;
     }

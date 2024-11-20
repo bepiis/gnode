@@ -368,6 +368,7 @@ struct engine_helper
         
         src_index_type nbr_src_rows = src.rows();
         src_index_type nbr_src_cols = src.cols();
+
         
         // may reshape dst
         validate(dst, nbr_src_rows, nbr_src_cols);
@@ -409,6 +410,8 @@ struct engine_helper
 
         index_type dst_idx, dst_jdx;
         auto src_idx = src.begin();
+
+        dst_idx = dst_jdx = static_cast<data_type>(0);
 
         for(; dst_idx < dst.rows(); dst_idx++, src_idx++)
         {
