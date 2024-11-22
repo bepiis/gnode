@@ -32,28 +32,28 @@ using std::size_t;
 using eh = engine_helper;
 
 template<typename T>
-using rect_init_list = std::initializer_list<std::initializer_list<T>>;
+using literal2D = std::initializer_list<std::initializer_list<T>>;
 
 template<typename T>
-using init_list = std::initializer_list<T>;
+using literal1D = std::initializer_list<T>;
 
-const rect_init_list<int64_t> ex_1x1i = {{2}};
-const rect_init_list<int64_t> ex_1x2i = {{2, 3}};
-const rect_init_list<int64_t> ex_1x4i = {{9, 8, 7, 6}};
-const rect_init_list<int64_t> ex_2x1i = {{2}, {3}};
-const rect_init_list<int64_t> ex_4x1i = {{1},{2},{3},{4}};
+const literal2D<int64_t> ex_1x1i = {{2}};
+const literal2D<int64_t> ex_1x2i = {{2, 3}};
+const literal2D<int64_t> ex_1x4i = {{9, 8, 7, 6}};
+const literal2D<int64_t> ex_2x1i = {{2}, {3}};
+const literal2D<int64_t> ex_4x1i = {{1},{2},{3},{4}};
 
-const rect_init_list<int64_t> ex_3x3ia = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-const rect_init_list<int64_t> ex_3x3ib = {{0, 0, 0}, {3, 2, 1}, {9, -1, -100}};
+const literal2D<int64_t> ex_3x3ia = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+const literal2D<int64_t> ex_3x3ib = {{0, 0, 0}, {3, 2, 1}, {9, -1, -100}};
 
-const rect_init_list<int64_t> ex_3x3ic = {{INT64_MAX, -INT64_MAX, INT64_MAX}, 
+const literal2D<int64_t> ex_3x3ic = {{INT64_MAX, -INT64_MAX, INT64_MAX}, 
                                           {-INT64_MAX, -INT64_MAX, -INT64_MAX}, 
                                           {INT64_MAX, INT64_MAX, INT64_MAX}};
 
-const rect_init_list<int64_t> ex_boundsi = ex_3x3ic;
-const rect_init_list<int64_t> ex_invalidi = {{2, 3, 3}, {2, 1, 2}, {2, 1}};
+const literal2D<int64_t> ex_boundsi = ex_3x3ic;
+const literal2D<int64_t> ex_invalidi = {{2, 3, 3}, {2, 1, 2}, {2, 1}};
 
-const rect_init_list<int64_t> ex_8x3ia = {{1, 2, 3}, 
+const literal2D<int64_t> ex_8x3ia = {{1, 2, 3}, 
                                           {4, 5, 6}, 
                                           {7, 8, 9}, 
                                           {10, 11, 12},
@@ -62,7 +62,7 @@ const rect_init_list<int64_t> ex_8x3ia = {{1, 2, 3},
                                           {19, 20, 21},
                                           {22, 23, 24}};
 
-const rect_init_list<int64_t> ex_8x3ib = {{-11, -10, -9},
+const literal2D<int64_t> ex_8x3ib = {{-11, -10, -9},
                                           {-8, -7, -6},
                                           {-5, -4, -3},
                                           {-2, -1, 0},
@@ -71,7 +71,7 @@ const rect_init_list<int64_t> ex_8x3ib = {{-11, -10, -9},
                                           {7, 8, 9},
                                           {10, 11, 12}};
 
-const rect_init_list<double> ex_8x3da = {{e, pi, e}, 
+const literal2D<double> ex_8x3da = {{e, pi, e}, 
                                          {-e, -pi, -e},
                                          {pi, pi, pi}, 
                                          {e, e, e}, 
@@ -80,7 +80,7 @@ const rect_init_list<double> ex_8x3da = {{e, pi, e},
                                          {pi, e, pi}, 
                                          {-pi, -e, -pi}};
 
-const rect_init_list<double> ex_8x3db = {{sqrt2, sqrt2, sqrt2},
+const literal2D<double> ex_8x3db = {{sqrt2, sqrt2, sqrt2},
                                          {1/sqrt2, 1/sqrt2, 1/sqrt2},
                                          {sqrt2, sqrt2, sqrt2},
                                          {1/sqrt2, 1/sqrt2, 1/sqrt2},
@@ -89,19 +89,19 @@ const rect_init_list<double> ex_8x3db = {{sqrt2, sqrt2, sqrt2},
                                          {sqrt2, sqrt2, sqrt2},
                                          {1/sqrt2, 1/sqrt2, 1/sqrt2}};
 
-const rect_init_list<int64_t> ex_3x8ia = {{-100, 0, 90, 0, -80, 0, 70, 0},
+const literal2D<int64_t> ex_3x8ia = {{-100, 0, 90, 0, -80, 0, 70, 0},
                                           {-60, 0, 50, 0, -40, 0, 30, 0},
                                           {-20, 0, 10, 0, 0, -10, 0, 10}};
 
-const rect_init_list<int64_t> ex_3x8ib = {{-1, -2, -3, -4, -5, -6, -7, -8},
+const literal2D<int64_t> ex_3x8ib = {{-1, -2, -3, -4, -5, -6, -7, -8},
                                           {1, 2, 3, 4, 5, 6, 7, 8},
                                           {-9, 10, -11, 12 -13, 14, -15, 16}};
 
-const rect_init_list<double> ex_3x8da =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+const literal2D<double> ex_3x8da =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
                                           {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
                                           {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};  
 
-const rect_init_list<double> ex_3x8db = {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, -1E-7, -1E-6, -1E-5},
+const literal2D<double> ex_3x8db = {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, -1E-7, -1E-6, -1E-5},
                                          {-1E-4, -1E-3, -1E-2, -1E-1, -1E0, 1E0, 1E1, 1E2},
                                          {1E3, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9, 1E10}};
 
@@ -278,36 +278,36 @@ TEST_CASE
 
 TEST_CASE
 (
-    "validate_init_list continues execution for well defined 2D initializer lists",
-    "[engine_helper][validate_init_list(lst)]"
+    "validate_literal2D continues execution for well defined 2D initializer lists",
+    "[engine_helper][validate_literal2D(lst)]"
 )
 {
-    const rect_init_list<int64_t> l1 = {{-100, 0, 90, 0, -80, 0, 70, 0},
+    const literal2D<int64_t> l1 = {{-100, 0, 90, 0, -80, 0, 70, 0},
                                         {-60, 0, 50, 0, -40, 0, 30, 0},
                                         {-20, 0, 10, 0, 0, -10, 0, 10}};
 
-    const rect_init_list<int64_t> l2 = {{2}};
-    const rect_init_list<int64_t> l3 = {{1},{2},{3},{4}};
+    const literal2D<int64_t> l2 = {{2}};
+    const literal2D<int64_t> l3 = {{1},{2},{3},{4}};
 
-    REQUIRE_NOTHROW(eh::validate_init_list(l1));
-    REQUIRE_NOTHROW(eh::validate_init_list(l2));
-    REQUIRE_NOTHROW(eh::validate_init_list(l3));
+    REQUIRE_NOTHROW(eh::validate_literal2D(l1));
+    REQUIRE_NOTHROW(eh::validate_literal2D(l2));
+    REQUIRE_NOTHROW(eh::validate_literal2D(l3));
 }
 
 TEST_CASE
 (
-    "validate_init_list stops execution for improperly sized 2D initializer lists",
-    "[engine_helper][validate_init_list(lst)]"
+    "validate_literal2D stops execution for improperly sized 2D initializer lists",
+    "[engine_helper][validate_literal2D(lst)]"
 )
 {
 
-    const rect_init_list<int64_t> l1 = {{2, 3, 3}, {2, 1, 2}, {2, 1}};
-    const rect_init_list<int32_t> l2 = {{6, 5, 4},{2, 1, 0, -1}, {-2, -3, -4}};
-    const rect_init_list<int8_t> l3 = {{6, 5, 4, 3},{2, 1, 0}, {-2, -3, -4}};
+    const literal2D<int64_t> l1 = {{2, 3, 3}, {2, 1, 2}, {2, 1}};
+    const literal2D<int32_t> l2 = {{6, 5, 4},{2, 1, 0, -1}, {-2, -3, -4}};
+    const literal2D<int8_t> l3 = {{6, 5, 4, 3},{2, 1, 0}, {-2, -3, -4}};
 
-    REQUIRE_THROWS(eh::validate_init_list(l1));
-    REQUIRE_THROWS(eh::validate_init_list(l2));
-    REQUIRE_THROWS(eh::validate_init_list(l3));
+    REQUIRE_THROWS(eh::validate_literal2D(l1));
+    REQUIRE_THROWS(eh::validate_literal2D(l2));
+    REQUIRE_THROWS(eh::validate_literal2D(l3));
 }
 
 /*
@@ -628,7 +628,7 @@ TEST_CASE
 
     using ltype = matrix_orientation::row_major_t;
 
-    const rect_init_list<int64_t> data_in = {{-11, -10, -9},
+    const literal2D<int64_t> data_in = {{-11, -10, -9},
                                               {-8, -7, -6},
                                               {-5, -4, -3},
                                               {-2, -1, 0},
@@ -679,7 +679,7 @@ TEST_CASE
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
-    const rect_init_list<int64_t> data_in = {{-100, 0, 90, 0, -80, 0, 70, 0},
+    const literal2D<int64_t> data_in = {{-100, 0, 90, 0, -80, 0, 70, 0},
                                              {-60, 0, 50, 0, -40, 0, 30, 0},
                                              {-20, 0, 10, 0, 0, -10, 0, 10}};
 
@@ -724,7 +724,7 @@ TEST_CASE
 
     using ltype = matrix_orientation::row_major_t;
 
-    const rect_init_list<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+    const literal2D<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
                                              {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
                                              {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};
 
@@ -771,8 +771,8 @@ TEST_CASE
 
     using ltype = matrix_orientation::col_major_t;
 
-    const rect_init_list<int64_t> data_in = {{0, 0, 0}, {3, 2, 1}, {9, -1, -100}};
-    const rect_init_list<int64_t> data_in_cm = {{0, 3, 9}, {0, 2, -1}, {0, 1, -100}};
+    const literal2D<int64_t> data_in = {{0, 0, 0}, {3, 2, 1}, {9, -1, -100}};
+    const literal2D<int64_t> data_in_cm = {{0, 3, 9}, {0, 2, -1}, {0, 1, -100}};
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m1;
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2;
@@ -818,7 +818,7 @@ TEST_CASE
 
     using ltype = matrix_orientation::row_major_t;
 
-    const rect_init_list<double> data_in =  {{sqrt2, sqrt2, sqrt2},
+    const literal2D<double> data_in =  {{sqrt2, sqrt2, sqrt2},
                                              {1/sqrt2, 1/sqrt2, 1/sqrt2},
                                              {sqrt2, sqrt2, sqrt2},
                                              {1/sqrt2, 1/sqrt2, 1/sqrt2},
@@ -858,7 +858,7 @@ TEST_CASE
 
     using ltype = matrix_orientation::row_major_t;
 
-    const rect_init_list<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+    const literal2D<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
                                              {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
                                              {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};  
 
@@ -958,6 +958,7 @@ TEST_CASE
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
+    REQUIRE(m.rows() <= m.row_reach());
     REQUIRE(0 == m.rows());
     REQUIRE(0 == m.row_reach());
     REQUIRE(ncols == m.cols());
@@ -995,6 +996,31 @@ TEST_CASE
 
     using ltype = matrix_orientation::row_major_t;
 
+    size_t nbr_rows = 3;
+    size_t row_reach = 3;
+    
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(nbr_rows, row_reach);
+
+    size_t new_nbr_rows = 5;
+
+    m.reshape_rows(new_nbr_rows, row_reach);
+
+    REQUIRE(m.rows() <= m.row_reach());
+    REQUIRE(new_nbr_rows == m.rows());
+    REQUIRE(new_nbr_rows == m.row_reach());
+    REQUIRE(ncols == m.cols());
+    REQUIRE(ncols == m.col_reach());
+
+    new_nbr_rows = 10;
+    size_t new_row_reach = 15;
+
+    m.reshape_rows(new_nbr_rows, new_row_reach);
+
+    REQUIRE(m.rows() <= m.row_reach());
+    REQUIRE(new_nbr_rows == m.rows());
+    REQUIRE(new_row_reach == m.row_reach());
+    REQUIRE(ncols == m.cols());
+    REQUIRE(ncols == m.col_reach());
 }
 
 TEST_CASE
@@ -1026,6 +1052,19 @@ TEST_CASE
 
     using ltype = matrix_orientation::row_major_t;
 
+    size_t nbr_rows = 3;
+    size_t row_reach = 6;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(nbr_rows, row_reach);
+
+    size_t new_row_reach = 10;
+    m.reshape_rows(nbr_rows, new_row_reach);
+
+    REQUIRE(m.rows() <= m.row_reach());
+    REQUIRE(nbr_rows == m.rows());
+    REQUIRE(new_row_reach == m.row_reach());
+    REQUIRE(ncols == m.cols());
+    REQUIRE(ncols == m.col_reach());
 }
 
 TEST_CASE
@@ -1057,7 +1096,41 @@ TEST_CASE
     constexpr size_t ncols = 6;
 
     using ltype = matrix_orientation::row_major_t;
-    
+
+    size_t nbr_rows = 3;
+    size_t row_reach = 6;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(nbr_rows, row_reach);
+
+    size_t new_nbr_rows = 5;
+
+    m.reshape_rows(new_nbr_rows, row_reach);
+
+    REQUIRE(m.rows() <= m.row_reach());
+    REQUIRE(new_nbr_rows == m.rows());
+    REQUIRE(row_reach == m.row_reach());
+    REQUIRE(ncols == m.cols());
+    REQUIRE(ncols == m.col_reach());
+
+    new_nbr_rows = 2;
+
+    m.reshape_rows(new_nbr_rows, row_reach);
+
+    REQUIRE(m.rows() <= m.row_reach());
+    REQUIRE(new_nbr_rows == m.rows());
+    REQUIRE(row_reach == m.row_reach());
+    REQUIRE(ncols == m.cols());
+    REQUIRE(ncols == m.col_reach());
+
+    new_nbr_rows = 2;
+
+    m.reshape_rows(new_nbr_rows, row_reach);
+
+    REQUIRE(m.rows() <= m.row_reach());
+    REQUIRE(new_nbr_rows == m.rows());
+    REQUIRE(row_reach == m.row_reach());
+    REQUIRE(ncols == m.cols());
+    REQUIRE(ncols == m.col_reach());
 }
 
 
@@ -1168,6 +1241,7 @@ TEST_CASE
 
     REQUIRE(nrows == m.rows());
     REQUIRE(nrows == m.row_reach());
+    REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(0 == m.cols());
     REQUIRE(0 == m.col_reach());
 }
@@ -1199,7 +1273,34 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = std::dynamic_extent;
 
+
     using ltype = matrix_orientation::row_major_t;
+
+    size_t nbr_cols = 3;
+    size_t col_reach = 3;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(nbr_cols, col_reach);
+
+    size_t new_nbr_cols = 5;    
+
+    m.reshape_cols(new_nbr_cols, col_reach);
+
+    REQUIRE(m.cols() <= m.col_reach());
+    REQUIRE(new_nbr_cols == m.cols());
+    REQUIRE(new_nbr_cols == m.col_reach());
+    REQUIRE(nrows == m.rows());
+    REQUIRE(nrows == m.row_reach());
+
+    new_nbr_cols = 10;
+    size_t new_col_reach = 15;
+
+    m.reshape_cols(new_nbr_cols, new_col_reach);
+
+    REQUIRE(m.cols() <= m.col_reach());
+    REQUIRE(new_nbr_cols == m.cols());
+    REQUIRE(new_col_reach == m.col_reach());
+    REQUIRE(nrows == m.rows());
+    REQUIRE(nrows == m.row_reach());
 
 }
 
@@ -1232,12 +1333,26 @@ TEST_CASE
 
     using ltype = matrix_orientation::row_major_t;
 
+    size_t nbr_cols = 3;
+    size_t col_reach = 6;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(nbr_cols, col_reach);
+
+    size_t new_col_reach = 10;
+    m.reshape_cols(nbr_cols, new_col_reach);
+
+    REQUIRE(m.cols() <= m.col_reach());
+    REQUIRE(nbr_cols == m.cols());
+    REQUIRE(new_col_reach == m.col_reach());
+    REQUIRE(nrows == m.rows());
+    REQUIRE(nrows == m.row_reach());
+
 }
 
 TEST_CASE
 (
     "IF m is nbr_cols, cols_reach constructed\n"
-    "AND THEN reshape_cols is called SUCH THAT new_nbr_cols <= row_reach() AND new_col_reach == col_reach()\n"
+    "AND THEN reshape_cols is called SUCH THAT new_nbr_cols <= col_reach() AND new_col_reach == col_reach()\n"
     "THEN\n"
     "\tnew_nbr_cols == cols()\n"
     "\tAND new_col_reach == col_reach == col_reach()\n"
@@ -1263,6 +1378,41 @@ TEST_CASE
     constexpr size_t ncols = std::dynamic_extent;
 
     using ltype = matrix_orientation::row_major_t;
+
+    size_t nbr_cols = 3;
+    size_t col_reach = 6;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(nbr_cols, col_reach);
+
+    size_t new_nbr_cols = 5;
+
+    m.reshape_cols(new_nbr_cols, col_reach);
+
+    REQUIRE(m.cols() <= m.col_reach());
+    REQUIRE(new_nbr_cols == m.cols());
+    REQUIRE(col_reach == m.col_reach());
+    REQUIRE(nrows == m.rows());
+    REQUIRE(nrows == m.row_reach());
+
+    new_nbr_cols = 2;
+
+    m.reshape_cols(new_nbr_cols, col_reach);
+
+    REQUIRE(m.cols() <= m.col_reach());
+    REQUIRE(new_nbr_cols == m.cols());
+    REQUIRE(col_reach == m.col_reach());
+    REQUIRE(nrows == m.rows());
+    REQUIRE(nrows == m.row_reach());
+
+    new_nbr_cols = 2;
+
+    m.reshape_cols(new_nbr_cols, col_reach);
+
+    REQUIRE(m.cols() <= m.col_reach());
+    REQUIRE(new_nbr_cols == m.cols());
+    REQUIRE(col_reach == m.col_reach());
+    REQUIRE(nrows == m.rows());
+    REQUIRE(nrows == m.row_reach());
     
 }
 

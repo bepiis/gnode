@@ -226,10 +226,10 @@ concept col_reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
 struct engine_helper
 {
     template<typename T>
-    using rect_init_list = std::initializer_list<std::initializer_list<T>>;
+    using literal2D = std::initializer_list<std::initializer_list<T>>;
 
     template<typename T>
-    using init_list = std::initializer_list<T>;
+    using literal1D = std::initializer_list<T>;
 
     template<typename X, typename Y>
     static constexpr bool sizes_equal(X x, Y y)
@@ -291,7 +291,7 @@ struct engine_helper
     }
 
     template<typename T>
-    static constexpr void validate_init_list(rect_init_list<T> lst)
+    static constexpr void validate_literal2D(literal2D<T> lst)
     {
         size_t inner_len = lst.begin()->size();
         for(auto x : lst)
@@ -392,7 +392,7 @@ struct engine_helper
     //static constexpr void copy2(CntrX const& src, EgnY & dst);
 
     template<typename T, typename EgnY>
-    static constexpr void copy2(rect_init_list<T> src, EgnY & dst)
+    static constexpr void copy2(literal2D<T> src, EgnY & dst)
     requires
         std::convertible_to<T, typename EgnY::data_type> and
         writable_engine<EgnY>
@@ -400,7 +400,7 @@ struct engine_helper
         using index_type = typename EgnY::index_type;
         using data_type = typename EgnY::data_type;
 
-        validate_init_list(src);
+        validate_literal2D(src);
 
         auto nbr_rows = src.size();
         auto nbr_cols = src.begin()->size();
@@ -545,7 +545,7 @@ struct engine_helper
     }
 
     // TODO: 
-    //static constexpr bool compare_exact(Egn const& lhs, rect_init_list<T> rhs);
+    //static constexpr bool compare_exact(Egn const& lhs, literal2D<T> rhs);
     //static constexpr bool compare_exact(Egn const& lhs, mdspan<T, extents<IT, X0, X1>, SL, SA> const& src)
     //static constexpr bool compare_exact(Egn & dst, mdspan<T, extents<IT, X0>, SL, SA> const& src)
     //static constexpr bool compare_exact(Egn & dst, initializer_list<T> src)

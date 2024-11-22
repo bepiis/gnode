@@ -175,10 +175,10 @@ struct matrix_storage_engine
     using helper = engine_helper;
 
     template<typename U>
-    using rect_init_list = std::initializer_list<std::initializer_list<U>>;
+    using literal2D = std::initializer_list<std::initializer_list<U>>;
 
     template<typename U>
-    using init_list = std::initializer_list<U>;
+    using literal1D = std::initializer_list<U>;
 
 public:
 
@@ -275,7 +275,7 @@ public:
     }
 
     template<typename U>
-    constexpr matrix_storage_engine(rect_init_list<U> lst)
+    constexpr matrix_storage_engine(literal2D<U> lst)
     requires
         std::convertible_to<U, data_type>
     : m_data()
@@ -285,7 +285,7 @@ public:
     }
 
     template<typename U>
-    constexpr matrix_storage_engine & operator=(rect_init_list<U> lst)
+    constexpr matrix_storage_engine & operator=(literal2D<U> lst)
     requires
         std::convertible_to<U, data_type>
     {
@@ -477,13 +477,22 @@ private:
             if(nbr_rows < m_data.m_rows)
             {
                 helper::fill_rows(*this, nbr_rows, m_data.m_rows, T{});
-                m_data.m_rows = nbr_rows;
             }
+            else if(nbr_rows > m_data.m_rows)
+            {
+                helper::fill_rows(*this, m_data.m_rows, nbr_rows, T{});
+            }
+
             if(nbr_cols < m_data.m_cols)
             {
                 helper::fill_cols(*this, nbr_cols, m_data.m_cols, T{});
-                m_data.m_cols = nbr_cols;
             }
+            else if(nbr_cols > m_data.m_cols)
+            {
+                helper::fill_cols(*this, m_data.m_cols, nbr_cols, T{});
+            }
+            m_data.m_rows = nbr_rows;
+            m_data.m_cols = nbr_cols;
         }
 
     }
@@ -511,8 +520,12 @@ private:
             if(nbr_rows < m_data.m_rows)
             {
                 helper::fill_rows(*this, nbr_rows, m_data.m_rows, T{});
-                m_data.m_rows = nbr_rows;
             }
+            else if(nbr_rows > m_data.m_rows)
+            {
+                helper::fill_rows(*this, m_data.m_rows, nbr_rows, T{});
+            }
+            m_data.m_rows = nbr_rows;
         }
     }
     
@@ -539,8 +552,12 @@ private:
             if(nbr_cols < m_data.m_cols)
             {
                 helper::fill_cols(*this, nbr_cols, m_data.m_cols, T{});
-                m_data.m_cols = nbr_cols;
             }
+            else if(nbr_cols > m_data.m_cols)
+            {
+                helper::fill_cols(*this, m_data.m_cols, nbr_cols, T{});
+            }
+            m_data.m_cols = nbr_cols;
         }
     }
 
