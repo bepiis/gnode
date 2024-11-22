@@ -163,13 +163,13 @@ TEST_CASE("row dominant RandMatSizeGenerator")
 
 #ifndef TEST_NONE
 
-#include "test_engine.cpp"
+#include "engine_tests/test_engine.cpp"
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"
-//#include "test_householder.cpp"
-//#include "test_givens.cpp"
 //#include "test_prods.cpp"
-//#include "test_gram_schmidt.cpp"
-//#inlcude "test_jacobi.cpp"
+//#include "transformation_tests/test_gram_schmidt.cpp"
+//#inlcude "transformation_tests/test_jacobi.cpp"
+//#include "transformation_tests/test_householder.cpp"
+//#include "transformation_tests/test_givens.cpp"
 
 #endif

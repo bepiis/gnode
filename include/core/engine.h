@@ -341,7 +341,7 @@ struct engine_helper
             validate_size(nrows, eng.rows());
             if(ncols != eng.cols())
             {
-                eng.reshape_cols(ncols, eng.col_reach);
+                eng.reshape_cols(ncols, eng.col_reach());
             }
         }
         else
