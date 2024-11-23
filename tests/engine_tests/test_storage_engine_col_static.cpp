@@ -100,6 +100,51 @@ TEST_CASE
 
 TEST_CASE
 (
+    "IF m is default constructed\n"
+    "THEN storage flags set consistently.\n"
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent STRONG]"
+    "[GIVEN ST ncols == 1,3]"
+    "[GIVEN ST ltype row_major]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols1 = 1;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols1, ltype> m1;
+
+    REQUIRE(true == m1.is_row_major);
+    REQUIRE(false == m1.is_col_major);
+    REQUIRE(false == m1.is_static_row_vector);
+    REQUIRE(true == m1.is_static_col_vector);
+    REQUIRE(true == m1.is_row_dynamic);
+    REQUIRE(false == m1.is_col_dynamic);
+    REQUIRE(false == m1.is_fully_dynamic);
+    REQUIRE(false == m1.is_fully_static);
+
+    constexpr size_t ncols2 = 3;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols2, ltype> m2;
+
+    REQUIRE(true == m2.is_row_major);
+    REQUIRE(false == m2.is_col_major);
+    REQUIRE(false == m2.is_static_row_vector);
+    REQUIRE(false == m2.is_static_col_vector);
+    REQUIRE(true == m2.is_row_dynamic);
+    REQUIRE(false == m2.is_col_dynamic);
+    REQUIRE(false == m2.is_fully_dynamic);
+    REQUIRE(false == m2.is_fully_static);
+}
+
+TEST_CASE
+(
     "IF m is nbr_rows, row_reach constructed\n"
     "AND THEN reshape_rows is called SUCH THAT new_nbr_rows > row_reach()\n"
     "THEN\n"
@@ -465,7 +510,6 @@ TEST_CASE
         }
     }
 }
-
 
 // dynamic rows, static cols default constructed, literal2D assigned,
 // then data matches input data

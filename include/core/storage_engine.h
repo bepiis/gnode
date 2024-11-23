@@ -365,6 +365,7 @@ public:
     constexpr reference operator()(index_type i, index_type j)
     requires self_type::is_row_major
     {
+        //std::cout << "called reference 2D operator.\n";
         return m_data.m_data[orient::offset(i, j, m_data.m_col_reach)];
     }
 
@@ -379,6 +380,7 @@ public:
     constexpr const_reference operator()(index_type i, index_type j) const
     requires self_type::is_row_major
     {
+        //std::cout << "called const_reference 2D operator.\n";
         return m_data.m_data[orient::offset(i, j, m_data.m_col_reach)];
     }
     
