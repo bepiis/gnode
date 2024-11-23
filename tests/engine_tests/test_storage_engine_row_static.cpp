@@ -492,12 +492,12 @@ TEST_CASE
     auto din_i = data_in.begin();
 
     i = 0;
-    for(; i < m.rows(); i++, din_i++)
+    for(; din_i < data_in.end(); i++, din_i++)
     {
         auto din_j = din_i->begin();
         j = 0;
 
-        for(; j < m.cols(); j++, din_j++)
+        for(; din_j < din_i->end(); j++, din_j++)
         {
             REQUIRE(m(i, j) == *din_j);
         }
@@ -543,12 +543,12 @@ TEST_CASE
     auto din_i = data_in.begin();
 
     i = 0;
-    for(; i < m.rows(); i++, din_i++)
+    for(; din_i < data_in.end(); i++, din_i++)
     {
         auto din_j = din_i->begin();
         j = 0;
 
-        for(; j < m.cols(); j++, din_j++)
+        for(; din_j < din_i->end(); j++, din_j++)
         {
             REQUIRE(m(i, j) == *din_j);
         }

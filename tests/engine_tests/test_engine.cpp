@@ -385,24 +385,6 @@ TEST_CASE
 // static rows, dynamic cols rect init list constructed then data matches input data
 // static rows, dynamic cols default constructed, rect init list assigned then data matches input data
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 TEST_CASE
 (

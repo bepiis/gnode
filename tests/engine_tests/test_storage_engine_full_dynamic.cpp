@@ -283,6 +283,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(nbr_cols == m.cols());
     REQUIRE(col_reach == m.col_reach());
+
+    REQUIRE(new_nbr_rows * nbr_cols == m.size());
+    REQUIRE(new_nbr_rows * col_reach == m.reach());
 }
 
 // if m is dimension constructed then if new_row_reach != row_reach(), then
@@ -336,6 +339,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(nbr_cols == m.cols());
     REQUIRE(col_reach == m.col_reach());
+
+    REQUIRE(nbr_rows * nbr_cols == m.size());
+    REQUIRE(new_row_reach * col_reach == m.reach());
 }
 
 // if m is dimension construced then if new_row_reach < row_reach() and new_nbr_rows > row_reach() then,
@@ -390,6 +396,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(nbr_cols == m.cols());
     REQUIRE(col_reach == m.col_reach());
+
+    REQUIRE(new_nbr_rows * nbr_cols == m.size());
+    REQUIRE(new_nbr_rows * col_reach == m.reach());
 }
 
 // if m is dimension constructed, then if new_nbr_cols > col_reach(), then 
@@ -443,6 +452,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(new_nbr_cols == m.cols());
     REQUIRE(new_nbr_cols == m.col_reach());
+
+    REQUIRE(nbr_rows * new_nbr_cols == m.size());
+    REQUIRE(row_reach * new_nbr_cols == m.reach());
 }
 
 // if m is dimension constructed then if new_col_reach != col_reach(), then
@@ -496,6 +508,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(nbr_cols == m.cols());
     REQUIRE(new_col_reach == m.col_reach());
+
+    REQUIRE(nbr_rows * nbr_cols == m.size());
+    REQUIRE(row_reach * new_col_reach == m.reach());
 }
 
 // if m is dimension construced then if new_col_reach < col_reach() and new_nbr_cols > col_reach() then,
@@ -551,6 +566,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(new_nbr_cols == m.cols());
     REQUIRE(new_nbr_cols == m.col_reach());
+
+    REQUIRE(nbr_rows * new_nbr_cols == m.size());
+    REQUIRE(row_reach * new_nbr_cols == m.reach());
 }
 
 // if m is dimension constructed then if new_row_reach > new_nbr_rows, and new_col_reach > new_nbr_cols then
@@ -611,6 +629,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(new_nbr_cols == m.cols());
     REQUIRE(new_col_reach == m.col_reach());
+
+    REQUIRE(new_nbr_rows * new_nbr_cols == m.size());
+    REQUIRE(new_row_reach * new_col_reach == m.reach());
 
 }
 
@@ -673,6 +694,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(new_nbr_cols == m.cols());
     REQUIRE(col_reach == m.col_reach());
+
+    REQUIRE(new_nbr_rows * new_nbr_cols == m.size());
+    REQUIRE(row_reach * col_reach == m.reach());
 }
 
 // if m is dimension constructed then if new_nbr_rows <= row_reach, new_nbr_cols <= col_reach, new_row_reach == row_reach()
@@ -734,6 +758,9 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(new_nbr_cols == m.cols());
     REQUIRE(col_reach == m.col_reach());
+
+    REQUIRE(new_nbr_rows * new_nbr_cols == m.size());
+    REQUIRE(row_reach * col_reach == m.reach());
 }
 
 // if m is dimension constructed then if new_nbr_rows <= row_reach, new_nbr_cols <= col_reach, new_row_reach == row_reach()
@@ -795,4 +822,20 @@ TEST_CASE
     REQUIRE(m.cols() <= m.col_reach());
     REQUIRE(new_nbr_cols == m.cols());
     REQUIRE(col_reach == m.col_reach());
+
+    REQUIRE(new_nbr_rows * new_nbr_cols == m.size());
+    REQUIRE(row_reach * col_reach == m.reach());
 }
+
+// if m is literal2D constructed
+/// then rows(), row_reach(), cols() and col_reach matches input data rows, cols
+
+// if m is literal2D constructed
+// then size() and reach() consistent with input data size
+
+// if m is literal2D constructed
+// then m_data matches data_in
+
+// if m is default constructed and then literal2D assigned
+// then m_data matches data_in
+
