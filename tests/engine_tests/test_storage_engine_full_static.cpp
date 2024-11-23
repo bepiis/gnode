@@ -1,5 +1,5 @@
 //
-//  test_storage_engine_both_static.cpp
+//  test_storage_engine_full_static.cpp
 //  Created by Ben Westcott on 11/22/24.
 //
 

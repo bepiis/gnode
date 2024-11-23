@@ -222,7 +222,7 @@ public:
         //std::cout << "called nbr_rows, nbr_cols constructor (requires is_fully_dynamic).\n";
         __reshape(nbr_rows, nbr_rows, nbr_cols, nbr_cols);
     }
-    constexpr matrix_storage_engine(index_type nbr_rows, index_type nbr_cols, index_type row_reach, index_type col_reach)
+    constexpr matrix_storage_engine(index_type nbr_rows, index_type row_reach, index_type nbr_cols, index_type col_reach)
     requires self_type::is_fully_dynamic
     : m_data()
     {

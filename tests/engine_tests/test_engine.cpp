@@ -373,11 +373,10 @@ TEST_CASE
  * }
  */
 
-#include "test_storage_engine_both_static.cpp"
+#include "test_storage_engine_full_static.cpp"
 #include "test_storage_engine_col_static.cpp"
 #include "test_storage_engine_row_static.cpp"
-
-
+#include "test_storage_engine_full_dynamic.cpp"
 
 
 // static rows, dynamic cols rect init list constructed, then rows(), cols() matches input data rows, cols
