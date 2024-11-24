@@ -3,6 +3,8 @@
 //  Created by Ben Westcott on 11/23/24.
 //
 
+// TODO: move, copy constructor tests
+
 // if m in default constructed, and reshape is called with invalid new_nbr_rows
 // then runtime_error is thrown
 TEST_CASE
@@ -1004,4 +1006,3 @@ TEST_CASE
         }
     }
 }
-

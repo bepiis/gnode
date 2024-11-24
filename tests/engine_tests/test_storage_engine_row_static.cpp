@@ -556,4 +556,162 @@ TEST_CASE
     }
 }
 
+// if m1 is literal2D constructed, and then m2 is also literal2D constructed w/ same data
+// then compare exact m1, m2 returns true
+// then if m3 is move constructed from m2
+// then compare exact m1, m3 returns true
+TEST_CASE
+(
+    "IF m1 is literal2D constructed\n"
+    "AND THEN m2 is also literal2D constructed from same data_in\n"
+    "THEN compare exact m1, m2 returns TRUE\n"
+    "THEN IF m3 is move constructed from m2\n"
+    "THEN compare exact m1, m3 returns TRUE.\n"
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 6]"
+    "[GIVEN ST ncols == dyn_extents STRONG]"
+    "[GIVEN ST ltype col_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 6;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::col_major_t;
+
+    const literal2D<double> data_in  = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
+                                     {1.06, 1.07, 1.08, 1.09, 1.10, 1.11, -2.00, -2.20},
+                                     {1.12, 1.13, 1.14, 1.15, 1.16, 1.17, -3.00, -3.30},
+                                     {1.18, 1.19, 1.20, 1.21, 1.22, 1.23, -4.00, -4.40},
+                                     {1.24, 1.25, 1.26, 1.27, 1.28, 1.29, -5.00, -5.50},
+                                     {1.30, 1.31, 1.32, 1.33, 1.34, 1.35, -6.00, -6.60}};
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m1(data_in);
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2(data_in);
+
+    REQUIRE(true == eh::compare_exact(m1, m2));
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m3(std::move(m2));
+
+    REQUIRE(true == eh::compare_exact(m1, m3));
+}
+
+
+// if m1 is literal2D constructed, and then m2 is also literal2D constructed w/ different data
+// then compare exact returns false
+// and then if m2 is copy assigned from m1
+// then compare exact returns true
+// then if m2 is reshaped
+// then compare exact m1, m2 returns false
+TEST_CASE
+(
+    "IF m1 is literal2D constructed\n"
+    "AND THEN m2 is literal2D constructed with different data_in\n"
+    "THEN compare exact m1, m2 returns FALSE\n"
+    "THEN if m2 is copy assigned from m1\n"
+    "THEN compare exact m1, m2 returns TRUE\n"
+    "THEN if m2 is reshaped SUCH THAT m1.size() != m2.size()\n"
+    "THEN compare exact m1, m2 returns FALSE.\n"
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 3]"
+    "[GIVEN ST ncols == dyn_extents STRONG]"
+    "[GIVEN ST ltype col_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 3;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::col_major_t;
+
+    const literal2D<double> data_in1 =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+                                          {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
+                                          {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};  
+
+    const literal2D<double> data_in2 = {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, -1E-7, -1E-6, -1E-5},
+                                         {-1E-4, -1E-3, -1E-2, -1E-1, -1E0, 1E0, 1E1, 1E2},
+                                         {1E3, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9, 1E10}};
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m1(data_in1);
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2(data_in2);
+
+    REQUIRE(false == eh::compare_exact(m1, m2));
+
+    m2 = m1;
+
+    REQUIRE(true == eh::compare_exact(m1, m2));
+
+    size_t new_nbr_cols = 7;
+
+    m2.reshape_cols(new_nbr_cols, new_nbr_cols);
+
+    REQUIRE(false == eh::compare_exact(m1, m2));
+}
+
+// if m1 is default constructed, and then copy assigned from a literal2D
+// then m2 is copy constructed from m1
+// then compare exact returns true
+// then if m3 is move assigned from m2
+// then compare exact m1, m3 returns true
+TEST_CASE
+(
+    "IF m1 is default constructed\n"
+    "AND THEN m1 is copy assigned from a literal2D\n"
+    "AND THEN m2 is copy constructed from m1\n"
+    "THEN compare exact m1, m2 returns TRUE\n"
+    "THEN IF m3 is move assigned from m2\n"
+    "THEN compare exact m1, m3 returns TRUE.\n"
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == 6]"
+    "[GIVEN ST ncols == dyn_extents STRONG]"
+    "[GIVEN ST ltype col_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 8;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::col_major_t;
+
+    const literal2D<double> data_in = {{sqrt2, sqrt2, sqrt2},
+                                         {1/sqrt2, 1/sqrt2, 1/sqrt2},
+                                         {sqrt2, sqrt2, sqrt2},
+                                         {1/sqrt2, 1/sqrt2, 1/sqrt2},
+                                         {sqrt2, sqrt2, sqrt2},
+                                         {1/sqrt2, 1/sqrt2, 1/sqrt2},
+                                         {sqrt2, sqrt2, sqrt2},
+                                         {1/sqrt2, 1/sqrt2, 1/sqrt2}};
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m1;
+
+    m1 = data_in;
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2(m1);
+
+    REQUIRE(true == eh::compare_exact(m1, m2));
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m3;
+    
+    m3 = std::move(m2);
+
+    REQUIRE(true == eh::compare_exact(m1, m3));
+}
+
+
 

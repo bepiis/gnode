@@ -156,6 +156,16 @@ const literal2D<double> ex_3x5da = {{ln2, -ln2, ln2, -ln2, ln2},
                                     {-ln2, ln2, -ln2, ln2, -ln2},
                                     {ln2, -ln2, ln2, -ln2, ln2}};
 
+const literal2D<double> ex_3x5db = {{sqrt3, -sqrt3, sqrt3, -sqrt3, sqrt3},
+                                    {-sqrt3, sqrt3, -sqrt3, sqrt3, -sqrt3},
+                                    {sqrt3, -sqrt3, sqrt3, -sqrt3, sqrt3}};
+
+const literal2D<double> ex_5x3db = {{sqrt3, -sqrt3, sqrt3},
+                                    {-sqrt3, sqrt3, -sqrt3},
+                                    {sqrt3, -sqrt3, sqrt3},
+                                    {-sqrt3, sqrt3, -sqrt3},
+                                    {sqrt3, -sqrt3, sqrt3}};
+
 TEST_CASE
 (
     "is_constexpr correctly detects whether input is constexpr."

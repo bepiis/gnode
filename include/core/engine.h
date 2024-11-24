@@ -18,8 +18,18 @@ struct static_value_caster
     }
 };
 
-// see:
-// https://stackoverflow.com/questions/55288555/c-check-if-statement-can-be-evaluated-constexpr.
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * see:
+ * [1] https://stackoverflow.com/questions/55288555/c-check-if-statement-can-be-evaluated-constexpr.
+ * 
+ * essentially, since lambdas can be constexpr and captureless lambdas can be default constructed (>= C++20)
+ * then if a lambda appears as a template argument, then it must be a constant expression.
+ * 
+ * So if a constant expression appears within a captureless lambda, then it can be resolved as a template argument
+ * otherwise it cant, and is_constexpr(...) is used.
+ * 
+ */ 
 template<typename Lambda, int = (Lambda{}(), 0)>
 constexpr bool is_constexpr(Lambda)
 {
@@ -31,16 +41,34 @@ constexpr bool is_constexpr(...)
     return false;
 }
 
+// detects whether cols, rows or size methods are constexpr (see above note referencing [1])
 template<typename Egn>
-constexpr inline bool is_col_static_v = is_constexpr([]{Egn().cols();});
+constexpr inline bool is_col_ct_v = is_constexpr([]{Egn().cols();});
 
 template<typename Egn>
-constexpr inline bool is_row_static_v = is_constexpr([]{Egn().rows();});
+constexpr inline bool is_row_ct_v = is_constexpr([]{Egn().rows();});
 
 template<typename Egn>
-constexpr inline bool is_size_static_v = is_constexpr([]{Egn().size();});
+constexpr inline bool is_size_ct_v = is_constexpr([]{Egn().size();});
 
-// https://en.cppreference.com/w/cpp/types/void_t
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * see:
+ * [2] https://en.cppreference.com/w/cpp/types/void_t
+ * 
+ * Detecting whether a type contains a nested type can be done by
+ *  having a primary template which handles any type (inherits std::false_type)
+ * 
+ *  but then a template specialization which void casts the nested type in question will be chosen 
+ *  if the type has that nested type.
+ * 
+ *  So then primary template is only chosen for types which do not fit the specialization.
+ * 
+ *  Here, this is used to determine whether the engine type contains a type alias called "owning_engine_type"
+ *  If it has this type, then this implies that the engine type is not itself an owning engine, but rather points
+ *  to an owning engine, or in some way is associated with an owning engine, but doesnt locally own any data. 
+ * 
+ */
 template<typename Egn, typename = void>
 struct has_owning_engine_type_alias : public std::false_type
 {
@@ -55,6 +83,57 @@ struct has_owning_engine_type_alias<Egn, std::void_t<typename Egn::owning_engine
     using owning_engine_type = typename Egn::owning_engine_type;
 };
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * will extract the nbr of rows and cols of engine 
+ * if they are evaluated at compiletime, then they are returned
+ * if they are not, then they can only be std::dynamic_extent at compiletime so return that.
+ * uses same trick seen in [1]
+ * 
+ */ 
+template<typename Egn>
+struct engine_ct_extents
+{
+private:
+    
+    template<typename Lambda, int = (Lambda{}(), 0)>
+    static constexpr size_t get_ct_value(Lambda)
+    {
+        return Lambda{}();
+    }
+
+    // if param isnt satisfied by above template, then this one gets called:
+    static constexpr size_t get_ct_value(...)
+    {
+        return std::dynamic_extent;
+    }
+
+public:
+
+    // reaches dont need these since if std::dynamic_extent is returned for one
+    // then it is implied that its corresponding reach is also dynamic
+
+    static constexpr size_t size()
+    {
+        return static_cast<size_t>(get_ct_value([]{Egn().size();}));
+    }
+
+    static constexpr size_t rows()
+    {
+        return static_cast<size_t>(get_ct_value([]{Egn().rows();}));
+    }
+
+    static constexpr size_t cols()
+    {
+        return static_cast<size_t>(get_ct_value([]{Egn().cols();}));
+    }
+};
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  matrix orientation definitions
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 struct matrix_orientation
 {
@@ -69,6 +148,12 @@ struct matrix_orientation
     }
 };
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  The following two use the type detection idiom shown in [2]
+ *  to extract the matrix orientation of the supplied engine type
+ * 
+ */
 template<typename Egn, typename = void>
 struct get_engine_orientation
 {
@@ -82,23 +167,24 @@ struct get_engine_orientation<Egn, std::void_t<typename Egn::orientation_type>>
     using type = Egn::orientation_type;
 };
 
+// If engine orientation isnt row, or col major, then the engine cannot be indexed, 
+// and thus cannot be readble and thus cannot be writable. 
 template<typename L>
 concept valid_storage_orientation = 
     std::is_same_v<L, matrix_orientation::row_major_t> or
     std::is_same_v<L, matrix_orientation::col_major_t>;
 
-/*
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Engine concepts
  * 
- */
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *  Any engine needs to atleast state these type aliases.
  * 
  */
-
 template<typename Egn>
 concept base_types = requires (Egn const& eng)
 {
@@ -114,7 +200,6 @@ concept base_types = requires (Egn const& eng)
  *  taking a reference of the stated data type alias.
  * 
  */
-
 template<typename Egn>
 concept consistent_mutable_ref_type = 
     std::same_as<typename Egn::reference, typename Egn::data_type&>;
@@ -136,7 +221,6 @@ concept convertible_refs =
  *  methods are consistent with the stated indexing type
  * 
  */
-
 template<typename Egn>
 concept consistent_return_sizes = requires (Egn const& eng)
 {
@@ -162,7 +246,6 @@ concept consistent_return_lengths = requires (Egn const& eng)
  *  - non-const view types need only mutable access
  * 
  */
-
 template<typename T, typename Egn>
 concept valid_immutable_access_return_type = 
     consistent_immutable_ref_type<Egn> and
@@ -193,7 +276,6 @@ concept mutable_access = requires(Egn const& eng, typename Egn::index_type x)
  *  access data
  * 
  */
-
 template<typename Egn>
 concept readable_engine = 
     base_types<Egn> and 
@@ -210,7 +292,6 @@ concept readable_engine =
  *  access and modify data
  * 
  */
-
 template<typename Egn>
 concept writable_engine = 
     readable_engine<Egn> and 
@@ -221,7 +302,6 @@ concept writable_engine =
  *  Checks the supplied type for reshaping methods
  * 
  */
-
 template<typename Egn>
 concept reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
 {
@@ -239,6 +319,36 @@ concept col_reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
 {
     {eng.reshape_cols(x, x)};
 };
+
+/*
+ * An engine must have the following at the minimum:
+ * {
+ *  private type aliases:
+ *      using self_type = ...
+ *      using orient = matrix_orientation;
+ *      using helper = engine_helper;
+ *      // using mdhelper = ...     // not implemented yet
+ *      
+ * 
+ *  public type aliases: 
+ *      using orientation_type = ...
+ *      using data_type = ...
+ *      using index_type = ...
+ *      using reference = ...
+ *      using const_reference = ...
+ *      // using mdspan_type = ...      // not implemented yet
+ *      // using const_mdspan_type = ...    // not implemented yet
+ *  
+ *  public methods:
+ *      default destructor
+ *      default copy, move constructors
+ *      default copy, move assignment
+ * 
+ *      atleast one element access operator
+ * 
+ *      rows, row_reach, cols, col_reach, size and reach methods
+ * };
+ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * 
@@ -572,7 +682,7 @@ struct engine_helper
         return true;
     }
 
-    // TODO: 
+    //TODO: 
     //static constexpr bool compare_exact(Egn const& lhs, literal2D<T> rhs);
     //static constexpr bool compare_exact(Egn const& lhs, mdspan<T, extents<IT, X0, X1>, SL, SA> const& src)
     //static constexpr bool compare_exact(Egn & dst, mdspan<T, extents<IT, X0>, SL, SA> const& src)
@@ -583,29 +693,5 @@ struct engine_helper
 
 #define ENGINE_SUPPORTED
 #include "storage_engine.h"
-
-struct matrix_view
-{
-    struct transparent {};
-    struct const_transparent {};
-    
-    struct const_negation {};
-    struct const_conjugate {};
-    struct const_hermitian {};
-
-    struct banded {};
-    struct const_banded {};
-
-    struct transpose {};
-    struct const_transpose {};
-
-    struct row {};
-    struct const_row {};
-    struct col {};
-    struct const_col {};
-
-    struct sub_matrix {};
-    struct const_sub_matrix {};
-};
 
 #include "view_engine.h"
