@@ -40,6 +40,22 @@ constexpr inline bool is_row_static_v = is_constexpr([]{Egn().rows();});
 template<typename Egn>
 constexpr inline bool is_size_static_v = is_constexpr([]{Egn().size();});
 
+// https://en.cppreference.com/w/cpp/types/void_t
+template<typename Egn, typename = void>
+struct has_owning_engine_type_alias : public std::false_type
+{
+    static constexpr bool is_owning = true;
+    using owning_engine_type = Egn;
+};
+
+template<typename Egn>
+struct has_owning_engine_type_alias<Egn, std::void_t<typename Egn::owning_engine_type>> : public std::true_type
+{
+    static constexpr bool is_owning = false;
+    using owning_engine_type = typename Egn::owning_engine_type;
+};
+
+
 struct matrix_orientation
 {
     struct row_major_t{};
@@ -51,6 +67,19 @@ struct matrix_orientation
     {
         return minor + major * minor_length;
     }
+};
+
+template<typename Egn, typename = void>
+struct get_engine_orientation
+{
+    using type = matrix_orientation::none_t;
+};
+
+
+template<typename Egn>
+struct get_engine_orientation<Egn, std::void_t<typename Egn::orientation_type>>
+{
+    using type = Egn::orientation_type;
 };
 
 template<typename L>
@@ -554,3 +583,29 @@ struct engine_helper
 
 #define ENGINE_SUPPORTED
 #include "storage_engine.h"
+
+struct matrix_view
+{
+    struct transparent {};
+    struct const_transparent {};
+    
+    struct const_negation {};
+    struct const_conjugate {};
+    struct const_hermitian {};
+
+    struct banded {};
+    struct const_banded {};
+
+    struct transpose {};
+    struct const_transpose {};
+
+    struct row {};
+    struct const_row {};
+    struct col {};
+    struct const_col {};
+
+    struct sub_matrix {};
+    struct const_sub_matrix {};
+};
+
+#include "view_engine.h"

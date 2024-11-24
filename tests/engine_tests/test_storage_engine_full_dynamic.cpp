@@ -9,7 +9,7 @@ TEST_CASE
 (
     "IF m is default constructed\n"
     "AND THEN reshape is called SUCH THAT new_nbr_rows is invalid\n"
-    "THEN runtime error is thrown.\n"
+    "THEN runtime error is thrown.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -50,7 +50,7 @@ TEST_CASE
 (
     "IF m is default constructed\n"
     "AND THEN reshape is called SUCH THAT new_row_reach is invalid\n"
-    "THEN runtime error is thrown.\n"
+    "THEN runtime error is thrown.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -90,7 +90,7 @@ TEST_CASE
 (
     "IF m is default constructed\n"
     "AND THEN reshape is called SUCH THAT new_nbr_cols is invalid\n"
-    "THEN runtime error is thrown.\n"
+    "THEN runtime error is thrown.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -132,7 +132,7 @@ TEST_CASE
 (
     "IF m is default constructed\n"
     "AND THEN reshape is called SUCH THAT new_col_reach is invalid\n"
-    "THEN runtime error is thrown.\n"
+    "THEN runtime error is thrown.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -173,7 +173,7 @@ TEST_CASE
     "IF m is default constructed\n"
     "THEN\n"
     "\t0 == cols() == col_reach()\n"
-    "\tAND 0 == rows() == row_reach()\n"
+    "\tAND 0 == rows() == row_reach()\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent STRONG]"
@@ -203,7 +203,7 @@ TEST_CASE
 TEST_CASE
 (
     "IF m is default constructed\n"
-    "THEN storage tags set consistently.\n"
+    "THEN storage tags set consistently.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent STRONG]"
@@ -243,7 +243,7 @@ TEST_CASE
     "\tnew_nbr_rows == rows()\n"
     "\tAND new_nbr_rows == row_reach()\n"
     "\tAND nbr_cols == cols()\n"
-    "\tAND col_reach == col_reach.\n"
+    "\tAND col_reach == col_reach.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -299,7 +299,7 @@ TEST_CASE
     "\tnbr_rows == rows()\n"
     "\tAND new_row_reach == row_reach\n"
     "\tAND nbr_cols == cols()\n"
-    "\tAND col_reach == col_reach().\n"
+    "\tAND col_reach == col_reach().\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -354,7 +354,7 @@ TEST_CASE
     "THEN\n"
     "\tnew_nbr_rows == rows() == row_reach()\n"
     "\tnbr_cols == cols()\n"
-    "\tAND col_reach == col_reach().\n"
+    "\tAND col_reach == col_reach().\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -412,7 +412,7 @@ TEST_CASE
     "\tnbr_rows == rows()\n"
     "\tAND row_reach == row_reach()\n"
     "\tAND new_nbr_cols == col()\n"
-    "\tAND new_nbr_cols == col_reach.\n"
+    "\tAND new_nbr_cols == col_reach.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -468,7 +468,7 @@ TEST_CASE
     "\tnbr_rows == rows()\n"
     "\trow_reach == row_reach()\n"
     "\tnbr_cols == cols()\n"
-    "\tnew_col_reach == col_reach().\n"
+    "\tnew_col_reach == col_reach().\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -524,7 +524,7 @@ TEST_CASE
     "THEN\n"
     "\tnbr_rows == rows()\n"
     "\trow_reach == row_reach()\n"
-    "\tAND new_nbr_cols == cols() == col_reach.\n"
+    "\tAND new_nbr_cols == cols() == col_reach.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -583,7 +583,7 @@ TEST_CASE
     "\tnew_nbr_rows == rows()\n"
     "\tAND new_row_reach == row_reach()\n"
     "\tAND new_nbr_cols == cols()\n"
-    "\tAND new_col_reach == col_reach()"
+    "\tAND new_col_reach == col_reach().\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -652,7 +652,7 @@ TEST_CASE
     "\trow_reach == row_reach()\n"
     "\tAND col_reach == col_reach()\n"
     "\tAND new_nbr_rows == rows()\n"
-    "\tAND new_nbr_cols == cols()\n"
+    "\tAND new_nbr_cols == cols()\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -716,7 +716,7 @@ TEST_CASE
     "\trow_reach == row_reach()\n"
     "\tAND col_reach == col_reach()\n"
     "\tAND new_nbr_rows == rows()\n"
-    "\tAND new_nbr_cols == cols()\n"
+    "\tAND new_nbr_cols == cols()\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -780,7 +780,7 @@ TEST_CASE
     "\trow_reach == row_reach()\n"
     "\tAND col_reach == col_reach()\n"
     "\tAND new_nbr_rows == rows()\n"
-    "\tAND new_nbr_cols == cols()\n"
+    "\tAND new_nbr_cols == cols()\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
     "[GIVEN ST nrows == dyn_extent]"
@@ -829,13 +829,179 @@ TEST_CASE
 
 // if m is literal2D constructed
 /// then rows(), row_reach(), cols() and col_reach matches input data rows, cols
+TEST_CASE
+(
+    "IF m is literal2D constructed\n"
+    "THEN literal2D.size() == rows() == row_reach() AND literal2D.begin()->size() == cols() == col_reach().\n",
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent]"
+    "[GIVEN ST ncols == dyn_extent]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<double>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    const literal2D<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+                                          {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
+                                          {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};
+
+    size_t nbr_din_rows = data_in.size();
+    size_t nbr_din_cols = data_in.begin()->size();
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(data_in);
+
+    REQUIRE(nbr_din_rows == m.rows());
+    REQUIRE(nbr_din_rows == m.row_reach());
+    REQUIRE(nbr_din_cols == m.cols());
+    REQUIRE(nbr_din_cols == m.col_reach());
+}
 
 // if m is literal2D constructed
 // then size() and reach() consistent with input data size
+TEST_CASE
+(
+    "IF m is literal2D constructed\n"
+    "THEN literal2D.size() * literal2D.begin()->size() == size() = reach().\n",
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent]"
+    "[GIVEN ST ncols == dyn_extent]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<double>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    const literal2D<double> data_in  = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
+                                     {1.06, 1.07, 1.08, 1.09, 1.10, 1.11, -2.00, -2.20},
+                                     {1.12, 1.13, 1.14, 1.15, 1.16, 1.17, -3.00, -3.30},
+                                     {1.18, 1.19, 1.20, 1.21, 1.22, 1.23, -4.00, -4.40},
+                                     {1.24, 1.25, 1.26, 1.27, 1.28, 1.29, -5.00, -5.50},
+                                     {1.30, 1.31, 1.32, 1.33, 1.34, 1.35, -6.00, -6.60}};
+
+    size_t nbr_din_rows = data_in.size();
+    size_t nbr_din_cols = data_in.begin()->size();
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(data_in);
+
+    REQUIRE(nbr_din_rows * nbr_din_cols == m.size());
+    REQUIRE(nbr_din_rows * nbr_din_cols == m.reach());
+}
 
 // if m is literal2D constructed
 // then m_data matches data_in
+TEST_CASE
+(
+    "IF m is literal2D constructed\n"
+    "THEN m_data_ij = data_in_ij.\n",
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent]"
+    "[GIVEN ST ncols == dyn_extent]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<double>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    const literal2D<double> data_in = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05},
+                                    {1.06, 1.07, 1.08, 1.09, 1.10, 1.11},
+                                    {1.12, 1.13, 1.14, 1.15, 1.16, 1.17},
+                                    {1.18, 1.19, 1.20, 1.21, 1.22, 1.23},
+                                    {1.24, 1.25, 1.26, 1.27, 1.28, 1.29},
+                                    {1.30, 1.31, 1.32, 1.33, 1.34, 1.35},
+                                    {1.36, 1.37, 1.38, 1.39, 1.40, 1.41},
+                                    {1.42, 1.43, 1.44, 1.45, 1.46, 1.47}};
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(data_in);
+
+    size_t i, j;
+    auto din_i = data_in.begin();
+
+    i = 0;
+    for(; din_i < data_in.end(); i++, din_i++)
+    {
+        auto din_j = din_i->begin();
+        j = 0;
+
+        for(; din_j < din_i->end(); j++, din_j++)
+        {
+            REQUIRE(m(i, j) == *din_j);
+        }
+    }
+}
 
 // if m is default constructed and then literal2D assigned
 // then m_data matches data_in
+TEST_CASE
+(
+    "IF m is default constructed\n"
+    "AND THEN m is literal2D assigned\n"
+    "THEN m_data_ij == data_in_ij.\n",
+    "[GIVEN ST dtype double]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent]"
+    "[GIVEN ST ncols == dyn_extent]"
+    "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<double>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    const literal2D<double> data_in = {{1.00, 1.06, 1.12, 1.18, 1.24, 1.30},
+                                     {1.01, 1.07, 1.13, 1.19, 1.25, 1.31},
+                                     {1.02, 1.08, 1.14, 1.20, 1.26, 1.32},
+                                     {1.03, 1.09, 1.15, 1.21, 1.27, 1.33},
+                                     {1.04, 1.10, 1.16, 1.22, 1.28, 1.34},
+                                     {1.05, 1.11, 1.17, 1.23, 1.29, 1.35},
+                                     {-1.00, -2.00, -3.00, -4.00, -5.00, -6.00},
+                                     {-1.10, -2.20, -3.30, -4.40, -5.50, -6.60}};
+
+    matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m(data_in);
+
+    size_t i, j;
+    auto din_i = data_in.begin();
+
+    i = 0;
+    for(; din_i < data_in.end(); i++, din_i++)
+    {
+        auto din_j = din_i->begin();
+        j = 0;
+
+        for(; din_j < din_i->end(); j++, din_j++)
+        {
+            REQUIRE(m(i, j) == *din_j);
+        }
+    }
+}
 

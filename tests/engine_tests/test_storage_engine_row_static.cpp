@@ -418,6 +418,7 @@ TEST_CASE
     "[GIVEN ST nrows == 3]"
     "[GIVEN ST ncols == dyn_extent STRONG]"
     "[GIVEN ST ltype row_major]"
+    "[GIVEN ST data_in STRONG]"
     "[core/storage_engine::matrix_storage_engine]"
 )
 {
