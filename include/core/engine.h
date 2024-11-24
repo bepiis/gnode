@@ -180,6 +180,15 @@ concept valid_storage_orientation =
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+template<typename Egn>
+concept arithmetic_engine = std::is_arithmetic_v<typename Egn::data_type>;
+
+template<typename Egn>
+concept integral_engine = std::integral<typename Egn::data_type>;
+
+template<typename Egn>
+concept floating_point_engine = std::floating_point<typename Egn::data_type>;
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *  Any engine needs to atleast state these type aliases.

@@ -30,7 +30,7 @@
  *      // using mdspan_type = ...      // not implemented yet
  *      // using const_mdspan_type = ...    // not implemented yet
  * 
- *  private type aliases (required for view engine):
+ *  public type aliases (required for view engine):
  *       using engine_type = ...
  *       using owning_engine_type = ...
  *       
@@ -86,3 +86,4 @@ struct matrix_view
     struct const_sub_matrix {};
 };
 
+#include "transparent_view_engine.h"
