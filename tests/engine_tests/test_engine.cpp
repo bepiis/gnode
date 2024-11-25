@@ -6,27 +6,6 @@
 #include "core/engine.h"
 #include <numbers>
 
-/*
- * GNode roadmap:
- *  - base engine and storage_engine unit tests
- *  - simple banded_storage_engine + unit tests
- *      - handles sparse matrices with a main diagonal w/ lower and upper bandwidth
- *  - mutable and immutable view_engines + unit tests
- *      - negation
- *      - hermitian
- *      - conjugate
- *      - transpose
- *      - sub matrix
- *           - householder
- *      - row and col views 
- *           - givens views
- * 
- * 
- * 
- * 
- * 
- */
-
 using namespace std::numbers;
 using std::size_t;
 using eh = engine_helper;
@@ -392,8 +371,8 @@ TEST_CASE
  *      using dtype = ...;      // engine data type
  *      using atype = ...;      // engine allocator type
  *      
- *      ... size_t nrows = ...;
- *      ... size_t ncols = ...;
+ *      constexpr size_t nrows = ...;
+ *      constexpr size_t ncols = ...;
  * 
  *      using ltype = ...;      // engine orientation
  *      
@@ -407,6 +386,32 @@ TEST_CASE
 #include "test_storage_engine_col_static.cpp"
 #include "test_storage_engine_row_static.cpp"
 #include "test_storage_engine_full_dynamic.cpp"
+
+/*
+ * BEGIN matrix_view_engine tests
+ * NOTES:
+ *    - Test cases may used mathods marked with test tags, be aware.
+ *  
+ * All test code for this suite must start with the following layout:
+ * {
+ *      using dtype = ...;      // owning engine data type
+ *      using atype = ...;      // owning engine allocator type
+ *      
+ *      constexpr size_t nrows = ...;
+ *      constexpr size_t ncols = ...;
+ * 
+ *      using ltype = ...;      // engine orientation
+ *      
+ *      // owning engine type
+ *      using K = matrix_storage_engine<dtype, atype, ROWS, COLS, ltype> 
+ *      K m(...)
+ * 
+ *      
+ *      // ... case specific test code
+ * }
+ */
+
+#include "test_transparent_view_engine.cpp"
 
 
 // static rows, dynamic cols rect init list constructed, then rows(), cols() matches input data rows, cols

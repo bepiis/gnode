@@ -65,11 +65,6 @@ public:
     : m_eng_ptr(&rhs)
     {}
 
-    constexpr engine_ptr points_to() const
-    {
-        return m_eng_ptr;
-    }
-
     constexpr bool is_pointed() const
     {
         return m_eng_ptr != nullptr;
@@ -80,6 +75,8 @@ public:
 
     /* rule of zero */
 
+    // required for readable_engine (consistant_return_lengths): 
+    //      rows() -> index_type
     constexpr index_type rows() const noexcept
     {
         if constexpr(is_row_ct_v<engine_type>)
@@ -92,6 +89,8 @@ public:
         }
     }
 
+    // required for readable_engine (consistant_return_lengths): 
+    //      cols() -> index_type
     constexpr index_type cols() const noexcept
     {
         if constexpr(is_col_ct_v<engine_type>)
@@ -104,6 +103,8 @@ public:
         }
     }
 
+    // required for readable_engine (consistant_return_lengths): 
+    //      size() -> index_type
     constexpr index_type size() const noexcept
     {
         if constexpr(is_size_ct_v<engine_type>)
@@ -116,13 +117,26 @@ public:
         }
     }
 
+    // required or readable_engine (immutable_access):
+    //      (*this)(i, j) -> reference or const_reference or data_type
+    // required for writable_engine (mutable_access):
+    //      (*this)(i, j) -> reference
     constexpr reference operator()(index_type i, index_type j)
     {
         return (*m_eng_ptr)(i, j);
     }
 
+    // required or readable_engine (immutable_access):
+    //      (*this)(i) -> reference or const_reference or data_type
+    // required for writable_engine (mutable_access):
+    //      (*this)(i) -> reference
     constexpr reference operator()(index_type i)
     {
         return (*m_eng_ptr)(i);
+    }
+
+    constexpr void swap(matrix_view_engine & rhs) noexcept
+    {
+        helper::swap(*this, rhs);
     }
 };

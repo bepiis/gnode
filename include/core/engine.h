@@ -234,7 +234,7 @@ template<typename Egn>
 concept consistent_return_sizes = requires (Egn const& eng)
 {
     std::same_as<decltype(eng.size()), typename Egn::index_type>;
-    std::same_as<decltype(eng.reach()), typename Egn::index_type>;
+    //std::same_as<decltype(eng.reach()), typename Egn::index_type>;
 };
 
 template<typename Egn>
@@ -242,9 +242,19 @@ concept consistent_return_lengths = requires (Egn const& eng)
 {
     std::same_as<decltype(eng.rows()), typename Egn::index_type>;
     std::same_as<decltype(eng.cols()), typename Egn::index_type>;
+    //std::same_as<decltype(eng.row_reach()), typename Egn::index_type>;
+    //std::same_as<decltype(eng.col_reach()), typename Egn::index_type>;
+};
+
+/*
+template<typename Egn>
+concept consistent_return_reaches = requires (Egn const& eng)
+{
+    std::same_as<decltype(eng.reach()), typename Egn::index_type>;
     std::same_as<decltype(eng.row_reach()), typename Egn::index_type>;
     std::same_as<decltype(eng.col_reach()), typename Egn::index_type>;
-};
+}
+*/
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -255,10 +265,18 @@ concept consistent_return_lengths = requires (Egn const& eng)
  *  - non-const view types need only mutable access
  * 
  */
+/*
 template<typename T, typename Egn>
 concept valid_immutable_access_return_type = 
     consistent_immutable_ref_type<Egn> and
     std::same_as<T, typename Egn::const_reference>;
+*/
+
+template<typename I, typename Egn>
+concept valid_immutable_access_return_type = 
+    std::same_as<I, typename Egn::reference> or
+    std::same_as<I, typename Egn::const_reference> or
+    std::same_as<I, typename Egn::data_type>;
 
 template<typename Egn>
 concept immutable_access = requires(Egn const& eng, typename Egn::index_type x)
@@ -267,13 +285,13 @@ concept immutable_access = requires(Egn const& eng, typename Egn::index_type x)
     valid_immutable_access_return_type<decltype(eng(x)), Egn>;
 };
 
-template<typename T, typename Egn>
+template<typename I, typename Egn>
 concept valid_mutable_access_return_type =
     consistent_mutable_ref_type<Egn> and
-    std::same_as<T, typename Egn::reference>;
+    std::same_as<I, typename Egn::reference>;
 
 template<typename Egn>
-concept mutable_access = requires(Egn const& eng, typename Egn::index_type x)
+concept mutable_access = requires(Egn & eng, typename Egn::index_type x)
 {
     valid_mutable_access_return_type<decltype(eng(x, x)), Egn>;
     valid_mutable_access_return_type<decltype(eng(x)), Egn>;
@@ -293,7 +311,9 @@ concept readable_engine =
     consistent_immutable_ref_type<Egn> and
     consistent_return_sizes<Egn> and
     consistent_return_lengths<Egn> and
-    immutable_access<Egn>;
+    (immutable_access<Egn> or mutable_access<Egn>);
+    // TODO: maybe swappable?
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -306,6 +326,7 @@ concept writable_engine =
     readable_engine<Egn> and 
     mutable_access<Egn>;
 
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *  Checks the supplied type for reshaping methods
@@ -314,18 +335,25 @@ concept writable_engine =
 template<typename Egn>
 concept reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
 {
+    std::same_as<decltype(eng.reach()), typename Egn::index_type>;
+
     {eng.reshape(x, x, x, x)};
 };
+
 
 template<typename Egn>
 concept row_reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
 {
+    std::same_as<decltype(eng.row_reach()), typename Egn::index_type>;
+
     {eng.reshape_rows(x, x)};
 };
 
 template<typename Egn>
 concept col_reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
 {
+    std::same_as<decltype(eng.col_reach()), typename Egn::index_type>;
+
     {eng.reshape_cols(x, x)};
 };
 
@@ -516,7 +544,6 @@ struct engine_helper
         src_index_type nbr_src_rows = src.rows();
         src_index_type nbr_src_cols = src.cols();
 
-        
         // may reshape dst
         validate(dst, nbr_src_rows, nbr_src_cols);
     
@@ -704,3 +731,4 @@ struct engine_helper
 #include "storage_engine.h"
 
 #include "view_engine.h"
+

@@ -5,6 +5,10 @@
 
 #pragma once
 
+#ifndef ENGINE_SUPPORTED
+    #error view engine must be supported... include engine.h instead of its constituient parts!
+#endif
+
 /*
  * A view engine must have the following at the minimum:
  *  requires readable_engine for const view types
@@ -82,8 +86,8 @@ struct matrix_view
     struct col {};
     struct const_col {};
 
-    struct sub_matrix {};
-    struct const_sub_matrix {};
+    struct block {};
+    struct const_block {};
 };
 
 #include "transparent_view_engine.h"
