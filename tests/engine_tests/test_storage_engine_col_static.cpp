@@ -5,6 +5,123 @@
 
 TEST_CASE
 (
+    "IF M is a storage engine with static cols and dynamic rows\n"
+    "THEN it is an owning engine\n"
+    "THEN it has engine base types\n"
+    "THEN it has mutable access\n"
+    "THEN it has immutable access\n"
+    "THEN it has a consistent mutable reference type\n"
+    "THEN it has a consistent immutable reference type\n"
+    "THEN it has consistent return sizes\n"
+    "THEN it has consistent return lengths\n"
+    "THEN it is row reshapeable\n"
+    "THEN it is NOT col reshapeable\n"
+    "THEN it is NOT reshapeable\n"
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent]"
+    "[GIVEN ST ncols == 8]"
+    "[GIVEN ST ltype row_major]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 8;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    REQUIRE(true == has_owning_engine_type_alias<M>::is_owning);
+    REQUIRE(true == base_types<M>);
+    REQUIRE(true == consistent_mutable_ref_type<M>);
+    REQUIRE(true == consistent_immutable_ref_type<M>);
+    REQUIRE(true == consistent_return_sizes<M>);
+    REQUIRE(true == consistent_return_lengths<M>);
+    REQUIRE(true == mutable_access<M>);
+    REQUIRE(true == immutable_access<M>);
+
+    REQUIRE(false == reshapeable_engine<M>);
+    REQUIRE(true == row_reshapeable_engine<M>);
+    REQUIRE(false == col_reshapeable_engine<M>);
+}
+
+TEST_CASE
+(
+    "IF M is a storage engine with static cols and dynamic rows\n"
+    "THEN it is a readable engine\n"
+    "THEN it is a writable engine\n"
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent]"
+    "[GIVEN ST ncols == 8]"
+    "[GIVEN ST ltype row_major]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 8;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    REQUIRE(true == readable_engine<M>);
+    REQUIRE(true == writable_engine<M>);
+}
+
+TEST_CASE
+(
+    "IF M is a storage engine with static cols and dynamic rows\n"
+    "THEN it is copy constructible\n"
+    "THEN it is move constructible\n"
+    "THEN it is default constructible\n"
+    "THEN it is destructable\n"
+    "THEN it is size_t, size_t constructible\n"
+  //  "THEN it is copy constructible from another engine type\n"
+  //  "THEN it is copy assignable from another engine type\n"
+    "THEN it is constructible from a literal2D\n"
+    "THEN it is assignable from a literal2D\n"
+    "THEN it is nothrow swappable.\n"
+    "[GIVEN ST dtype int64_t]"
+    "[GIVEN ST atype std]"
+    "[GIVEN ST nrows == dyn_extent]"
+    "[GIVEN ST ncols == 8]"
+    "[GIVEN ST ltype row_major]"
+    "[core/storage_engine::matrix_storage_engine]"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = 8;
+
+    using ltype = matrix_orientation::row_major_t;
+
+    using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    REQUIRE(true == std::is_copy_constructible_v<M>);
+    REQUIRE(true == std::is_move_constructible_v<M>);
+    REQUIRE(true == std::is_default_constructible_v<M>);
+    REQUIRE(true == std::is_destructible_v<M>);
+    REQUIRE(true == std::constructible_from<M, size_t, size_t>);
+    REQUIRE(false == std::constructible_from<M, size_t, size_t, size_t, size_t>);
+    //REQUIRE(false == std::constructible_from<)
+    REQUIRE(true == std::constructible_from<M, literal2D<dtype>>);
+    REQUIRE(true == std::assignable_from<M&, literal2D<dtype>>);
+    REQUIRE(true == std::is_nothrow_swappable_v<M&>);
+}
+
+
+TEST_CASE
+(
     "IF m is default constructed\n"
     "AND THEN reshape_rows is called SUCH THAT new_nbr_rows is invalid\n"
     "THEN runtime error is thrown.\n",

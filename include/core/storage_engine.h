@@ -91,6 +91,12 @@ struct matrix_data<T, Alloc, R, std::dynamic_extent, L>
     constexpr matrix_data(void)
     : m_data(), m_cols(0), m_col_reach(0)
     {}
+
+    constexpr matrix_data(matrix_data const& other) = default;
+    constexpr matrix_data(matrix_data && other) = default;
+
+    constexpr matrix_data & operator=(matrix_data const& other) = default;
+    constexpr matrix_data & operator=(matrix_data && other) = default;
 };
 
 template<typename T, class Alloc, std::size_t C, typename L>
@@ -169,6 +175,9 @@ struct matrix_data<T, Alloc, std::dynamic_extent, std::dynamic_extent, L>
 template<typename T, class Alloc, std::size_t R, std::size_t C, typename L>
 struct matrix_storage_engine
 {
+
+private:
+
     using storage_type = matrix_data<T, Alloc, R, C, L>;
     using self_type = matrix_storage_engine;
     using orient = matrix_orientation;
@@ -180,6 +189,9 @@ struct matrix_storage_engine
     template<typename U>
     using literal1D = std::initializer_list<U>;
 
+    storage_type m_data;
+
+
 public:
 
     static constexpr bool is_row_major = storage_type::is_row_major;
@@ -189,10 +201,9 @@ public:
     static constexpr bool is_row_dynamic = storage_type::is_row_dynamic;
     static constexpr bool is_col_dynamic = storage_type::is_col_dynamic;
     
-    static constexpr bool is_fully_dynamic = is_row_dynamic && is_col_dynamic;
-    static constexpr bool is_fully_static = (not is_row_dynamic) && (not is_col_dynamic);
+    static constexpr bool is_fully_dynamic = is_row_dynamic and is_col_dynamic;
+    static constexpr bool is_fully_static = (not is_row_dynamic) and (not is_col_dynamic);
 
-    storage_type m_data;
 
     using allocator_type = Alloc;
 
@@ -216,14 +227,16 @@ public:
     constexpr matrix_storage_engine & operator=(matrix_storage_engine && other) = default;
 
     constexpr matrix_storage_engine(index_type nbr_rows, index_type nbr_cols)
-    requires self_type::is_fully_dynamic
+    requires 
+        self_type::is_fully_dynamic
     : m_data()
     {
         //std::cout << "called nbr_rows, nbr_cols constructor (requires is_fully_dynamic).\n";
         __reshape(nbr_rows, nbr_rows, nbr_cols, nbr_cols);
     }
     constexpr matrix_storage_engine(index_type nbr_rows, index_type row_reach, index_type nbr_cols, index_type col_reach)
-    requires self_type::is_fully_dynamic
+    requires 
+        self_type::is_fully_dynamic
     : m_data()
     {
         //std::cout << "called nbr_rows, row_reach, nbr_cols, col_reach constructor (requires is_fully_dynamic).\n";
@@ -231,7 +244,8 @@ public:
     }
 
     constexpr matrix_storage_engine(index_type nbr_rows, index_type row_reach)
-    requires self_type::is_row_dynamic
+    requires 
+        self_type::is_row_dynamic and (not self_type::is_col_dynamic)
     : m_data()
     {
         //std::cout << "called nbr_cols, col_reach constructor (requires is_row_dynamic).\n";
@@ -239,7 +253,8 @@ public:
     }
 
     constexpr matrix_storage_engine(index_type nbr_cols, index_type col_reach)
-    requires self_type::is_col_dynamic
+    requires 
+        self_type::is_col_dynamic and (not self_type::is_row_dynamic)
     : m_data()
     {
         //std::cout << "called nbr_cols, col_reach constructor (requires is_col_dynamic).\n";
@@ -401,11 +416,12 @@ public:
     }
 
     // required for column reshapeability
+    /*
     constexpr void reshape_cols(index_type nbr_cols, index_type col_reach)
     requires self_type::is_fully_dynamic
     {
         __reshape(m_data.m_rows, m_data.row_reach, nbr_cols, col_reach);
-    }
+    }*/
 
     constexpr void reshape_cols(index_type nbr_cols, index_type col_reach)
     requires self_type::is_col_dynamic
@@ -414,11 +430,12 @@ public:
     }
 
     // required for row reshapeability
+    /*
     constexpr void reshape_rows(index_type nbr_rows, index_type row_reach)
     requires self_type::is_fully_dynamic
     {
         __reshape(nbr_rows, row_reach, m_data.m_rows, m_data.m_row_reach);
-    }
+    }*/
 
     constexpr void reshape_rows(index_type nbr_rows, index_type row_reach)
     requires self_type::is_row_dynamic

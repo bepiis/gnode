@@ -351,7 +351,6 @@ TEST_CASE
     "[engine_helper][validate_literal2D(lst)]"
 )
 {
-
     const literal2D<int64_t> l1 = {{2, 3, 3}, {2, 1, 2}, {2, 1}};
     const literal2D<int32_t> l2 = {{6, 5, 4},{2, 1, 0, -1}, {-2, -3, -4}};
     const literal2D<int8_t> l3 = {{6, 5, 4, 3},{2, 1, 0}, {-2, -3, -4}};

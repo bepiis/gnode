@@ -43,6 +43,7 @@ TEST_CASE
 TEST_CASE
 (
     "IF M is a type transparent_view_engine\n"
+    "THEN M is a readable_engine\n"
     "THEN M is a writable_engine.\n"
 )
 {
@@ -60,6 +61,7 @@ TEST_CASE
 
     using M = matrix_view_engine<K, matrix_view::transparent>;
 
+    REQUIRE(true == readable_engine<M>);
     REQUIRE(true == writable_engine<M>);
 }
 
@@ -105,12 +107,13 @@ TEST_CASE
 (
     "IF M is a transparent view engine\n"
     "THEN it is trivially copyable\n"
-    "THEN it is trivially copy constructable\n"
-    "THEN it is trivially move constructable\n"
-    "THEN it is default constructable\n"
-    "THEN it is nothrow default constructable\n"
-    "THEN it is NOT trivially default constructable\n"
-    "THEN it is constructable from its engine type.\n"
+    "THEN it is trivially copy constructible\n"
+    "THEN it is trivially move constructible\n"
+    "THEN it is default constructible\n"
+    "THEN it is nothrow default constructible\n"
+    "THEN it is NOT trivially default constructible\n"
+    "THEN it is constructable from its engine type\n"
+    "THEN it is nothrow swappable.\n"
 )
 {
     using dtype = int64_t;
@@ -131,6 +134,31 @@ TEST_CASE
     REQUIRE(true == std::is_nothrow_default_constructible_v<M>);
     REQUIRE(false == std::is_trivially_default_constructible_v<M>);
     REQUIRE(true == std::constructible_from<M, K const&>);
+    REQUIRE(true == std::is_nothrow_swappable_v<M&>);
+}
+
+TEST_CASE
+(
+    "IF m is a transparent view engine\n"
+    "THEN IF it is default constructed\n"
+    "THEN m's engine ptr is nullptr.\n"
+)
+{
+
+}
+
+TEST_CASE
+(
+    "IF k is a matrix storage engine which is literal2D constructed\n"
+    "THEN IF m is constructed with k\n"
+    "THEN m's rows equals k's rows\n"
+    "THEN m's cols equals k's cols\n"
+    "THEN m's size equals k's size\n"
+    "THEN m_ij == k_ij\n"
+    "THEN m_i == k_i.\n"
+)
+{
+
 }
 
 

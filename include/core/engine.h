@@ -30,7 +30,7 @@ struct static_value_caster
  * otherwise it cant, and is_constexpr(...) is used.
  * 
  */ 
-template<typename Lambda, int = (Lambda{}(), 0)>
+template<typename Lambda, int = (Lambda{}(), 0)> 
 constexpr bool is_constexpr(Lambda)
 {
     return true;
@@ -332,14 +332,6 @@ concept writable_engine =
  *  Checks the supplied type for reshaping methods
  * 
  */
-template<typename Egn>
-concept reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
-{
-    std::same_as<decltype(eng.reach()), typename Egn::index_type>;
-
-    {eng.reshape(x, x, x, x)};
-};
-
 
 template<typename Egn>
 concept row_reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
@@ -356,6 +348,15 @@ concept col_reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
 
     {eng.reshape_cols(x, x)};
 };
+
+template<typename Egn>
+concept reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
+{
+    std::same_as<decltype(eng.reach()), typename Egn::index_type>;
+
+    {eng.reshape(x, x, x, x)};
+};
+
 
 /*
  * An engine must have the following at the minimum:
