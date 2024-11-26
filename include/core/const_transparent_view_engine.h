@@ -33,16 +33,14 @@ private:
     
 /* view engine public type alias requirements */
 public:
-    
-    // engine_type is not required to have a valid orientation type to be readable, so it may
-    // not have one defined, thus we have to preform type detection to extract its orientation type
-    // correctly.
     using owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
     using engine_type = Egn;
     
 /* engine public type alias requirements */
 public:
-    
+    // engine_type is not required to have a valid orientation type to be readable, so it may
+    // not have one defined, thus we have to preform type detection to extract its orientation type
+    // correctly.
     using orientation_type = typename get_engine_orientation<Egn>::type;
     
     // Egn must have these by readable_engine requirement:

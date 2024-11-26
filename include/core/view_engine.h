@@ -91,3 +91,4 @@ struct matrix_view
 
 #include "transparent_view_engine.h"
 #include "const_transparent_view_engine.h"
+#include "const_negation_view_engine.h"

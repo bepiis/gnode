@@ -360,6 +360,40 @@ TEST_CASE
     REQUIRE_THROWS(eh::validate_literal2D(l3));
 }
 
+namespace has_unary_operator_test_space
+{
+    struct foo
+    {
+        foo operator-() const
+        {
+            return *this;
+        }
+    };
+
+    struct bar
+    {};
+
+    bar operator-(bar const& b)
+    {
+        return b;
+    }
+
+    struct foobar {};
+};
+
+TEST_CASE
+(
+    "has member unary minus operator of certain types is valid.\n"
+)
+{
+    using namespace has_unary_operator_test_space;
+
+    REQUIRE(true == valid_unary_minus_operator<foo>);
+    REQUIRE(true == valid_unary_minus_operator<bar>);
+    REQUIRE(false == valid_unary_minus_operator<foobar>);
+    REQUIRE(true == valid_unary_minus_operator<int32_t>);
+}
+
 /*
  * BEGIN matrix_storage_engine tests
  * NOTES:
@@ -412,18 +446,8 @@ TEST_CASE
 
 #include "test_transparent_view_engine.cpp"
 #include "test_const_transparent_view_engine.cpp"
+#include "test_const_negation_view_engine.cpp"
 
 
-// static rows, dynamic cols rect init list constructed, then rows(), cols() matches input data rows, cols
-// static rows, dynamic cols, rect init list constructed, then size() and reach() consistent with input data size
-
-// static rows, dynamic cols rect init list constructed then data matches input data
-// static rows, dynamic cols default constructed, rect init list assigned then data matches input data
-
-/*
-TEST_CASE
-(
-    "matrix_storage_engine is copy constructable and shares shame "
-)*/
 
  

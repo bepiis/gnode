@@ -164,6 +164,7 @@ TEST_CASE
 (
     "IF k is a matrix storage engine which is literal2D constructed\n"
     "THEN IF m is constructed with k\n"
+    "THEN m has a view\n"
     "THEN m's rows equals k's rows\n"
     "THEN m's cols equals k's cols\n"
     "THEN m's size equals k's size\n"
@@ -202,6 +203,8 @@ TEST_CASE
     
     K k(data_in);
     M m(k);
+
+    REQUIRE(true == m.has_view());
     
     REQUIRE(m.rows() == k.rows());
     REQUIRE(m.cols() == k.cols());

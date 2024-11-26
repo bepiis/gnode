@@ -199,6 +199,23 @@ concept integral_engine = std::integral<typename Egn::data_type>;
 template<typename Egn>
 concept floating_point_engine = std::floating_point<typename Egn::data_type>;
 
+template<typename X>
+concept valid_unary_minus_operator = requires(X const& x)
+{
+    { -x } -> std::convertible_to<X>;
+};
+
+template<typename T1, typename T2>
+concept comparable_types_one_sided = requires(T1 t1, T2 t2)
+{
+    { t1 == t2 } -> std::same_as<bool>;
+};
+
+template<typename T1, typename T2>
+concept comparable_types = 
+    comparable_types_one_sided<T1, T2> and 
+    comparable_types_one_sided<T2, T1>;
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *  Any engine needs to atleast state these type aliases.
@@ -680,18 +697,19 @@ struct engine_helper
     static constexpr bool compare_exact(EgnX const& lhs, EgnY const& rhs)
     requires 
         readable_engine<EgnX> and 
-        readable_engine<EgnY>
+        readable_engine<EgnY> and
+        comparable_types<typename EgnX::data_type, typename EgnY::data_type>
     {
         using index_type_lhs = typename EgnX::index_type;
         using index_type_rhs = typename EgnY::index_type;
 
-        index_type_lhs lhs_nbr_rows = lhs.rows();
-        index_type_lhs lhs_nbr_cols = lhs.cols();
+        index_type_lhs lhs_rows = lhs.rows();
+        index_type_lhs lhs_cols = lhs.cols();
         
-        index_type_rhs rhs_nbr_rows = rhs.rows();
-        index_type_rhs rhs_nbr_cols = rhs.cols();
+        index_type_rhs rhs_rows = rhs.rows();
+        index_type_rhs rhs_cols = rhs.cols();
 
-        if(!sizes_equal(lhs_nbr_rows, lhs_nbr_cols, rhs_nbr_rows, rhs_nbr_cols))
+        if(!sizes_equal(lhs_rows, lhs_cols, rhs_rows, rhs_cols))
         {
             return false;
         }
@@ -702,12 +720,12 @@ struct engine_helper
         lhs_i = static_cast<index_type_lhs>(0);
         rhs_i = static_cast<index_type_rhs>(0);
 
-        for(; lhs_i < lhs_nbr_rows; lhs_i++, rhs_i++)
+        for(; lhs_i < lhs_rows; lhs_i++, rhs_i++)
         {
             lhs_j = static_cast<index_type_lhs>(0);
             rhs_j = static_cast<index_type_rhs>(0);
 
-            for(; lhs_j < lhs_nbr_cols; lhs_j++, rhs_j++)
+            for(; lhs_j < lhs_cols; lhs_j++, rhs_j++)
             {
                 if(lhs(lhs_i, lhs_j) !=  rhs(rhs_i, rhs_j))
                 {
@@ -718,12 +736,53 @@ struct engine_helper
         return true;
     }
 
+    template<typename Egn, typename T>
+    static constexpr bool compare_exact(Egn const& lhs, literal2D<T> rhs)
+    requires
+        readable_engine<Egn> and
+        comparable_types<typename Egn::data_type, T>
+    {
+        using index_type_lhs = typename Egn::index_type;
+
+        index_type_lhs lhs_cols = lhs.cols();
+        index_type_lhs lhs_rows = lhs.rows();
+
+        size_t rhs_cols = rhs.begin()->size();
+        size_t rhs_rows = rhs.size();
+
+        if(!sizes_equal(lhs_rows, lhs_cols, rhs_rows, rhs_cols))
+        {
+            return false;
+        }
+
+        index_type_lhs lhs_i, lhs_j;
+        auto rhs_i = rhs.begin();
+
+        lhs_i = static_cast<index_type_lhs>(0);
+        for(; lhs_i < lhs_rows; lhs_i++, rhs_i++)
+        {
+            lhs_j = static_cast<index_type_lhs>(0);
+            auto rhs_j = rhs_i->begin();
+
+            for(; lhs_j < lhs_cols; lhs_j++, rhs_j++)
+            {
+                if(lhs(lhs_i, lhs_j) != *rhs_j)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
     //TODO: 
     //static constexpr bool compare_exact(Egn const& lhs, literal2D<T> rhs);
     //static constexpr bool compare_exact(Egn const& lhs, mdspan<T, extents<IT, X0, X1>, SL, SA> const& src)
     //static constexpr bool compare_exact(Egn & dst, mdspan<T, extents<IT, X0>, SL, SA> const& src)
     //static constexpr bool compare_exact(Egn & dst, initializer_list<T> src)
     //static constexpr bool compare_exact(Egn & dst, Ctnr const& src)
+
 };
 
 

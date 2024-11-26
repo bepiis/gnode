@@ -7,8 +7,8 @@
 
 template<typename Egn>
 requires
-    readable_engine<Egn>
-    // TODO: and data type has a negation operator
+    readable_engine<Egn> and
+    valid_unary_minus_operator<typename Egn::data_type>
 struct matrix_view_engine<Egn, matrix_view::const_negation>
 {
     
@@ -34,22 +34,22 @@ private:
     
 /* view engine public type alias requirements */
 public:
-    // engine_type is not required to have a valid orientation type to be readable, so it may
-    // not have one defined, thus we have to preform type detection to extract its orientation type
-    // correctly.
+
     using owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
     using engine_type = Egn;
     
 /* engine public type alias requirements */
 public:
-    
+    // engine_type is not required to have a valid orientation type to be readable, so it may
+    // not have one defined, thus we have to preform type detection to extract its orientation type
+    // correctly.
     using orientation_type = typename get_engine_orientation<Egn>::type;
     
     // Egn must have these by readable_engine requirement:
     using data_type = typename engine_type::data_type;
     using index_type = typename engine_type::index_type;
-    using reference = typename engine_type::const_reference;
-    using const_reference = typename engine_type::const_reference;
+    using reference = typename engine_type::data_type;
+    using const_reference = typename engine_type::data_type;
     // using mdspan_type = ...
     // using const_mdspan_type = ...
     
