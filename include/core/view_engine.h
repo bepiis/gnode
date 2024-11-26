@@ -53,8 +53,7 @@
  *  public methods (required for view engine):
  *      default constructor noexcept, initializes engine_ptr to nullptr
  *      engine_type constructor: intializes engine_ptr to address of supplied engine_type reference
- *      points_to: returns engine which it points to
- *      is_pointed: returns whether engine points to a valid engine
+ *      has_view: returns whether engine points to a valid engine
  * 
  *  private data (required for view engine):
  *      engine_ptr ptr;
@@ -91,3 +90,4 @@ struct matrix_view
 };
 
 #include "transparent_view_engine.h"
+#include "const_transparent_view_engine.h"

@@ -9,7 +9,7 @@
     #error engine must be supported... include engine.h instead of its constituient parts!
 #endif
 
-template<typename T, class Alloc, std::size_t R, std::size_t C, typename L>
+template<typename T, typename Alloc, std::size_t R, std::size_t C, typename L>
 struct matrix_data
 {
     using storage_type = std::vector<T, Alloc>;
@@ -65,7 +65,7 @@ struct matrix_data<T, void, R, C, L>
     {}
 };
 
-template<typename T, class Alloc, std::size_t R, typename L>
+template<typename T, typename Alloc, std::size_t R, typename L>
 struct matrix_data<T, Alloc, R, std::dynamic_extent, L>
 {
     using storage_type = std::vector<T, Alloc>;
@@ -92,14 +92,14 @@ struct matrix_data<T, Alloc, R, std::dynamic_extent, L>
     : m_data(), m_cols(0), m_col_reach(0)
     {}
 
-    constexpr matrix_data(matrix_data const& other) = default;
-    constexpr matrix_data(matrix_data && other) = default;
+    //constexpr matrix_data(matrix_data const& other) = default;
+    //constexpr matrix_data(matrix_data && other) = default;
 
-    constexpr matrix_data & operator=(matrix_data const& other) = default;
-    constexpr matrix_data & operator=(matrix_data && other) = default;
+    //constexpr matrix_data & operator=(matrix_data const& other) = default;
+    //constexpr matrix_data & operator=(matrix_data && other) = default;
 };
 
-template<typename T, class Alloc, std::size_t C, typename L>
+template<typename T, typename Alloc, std::size_t C, typename L>
 struct matrix_data<T, Alloc, std::dynamic_extent, C, L>
 {
     using storage_type = std::vector<T, Alloc>;
@@ -128,7 +128,7 @@ struct matrix_data<T, Alloc, std::dynamic_extent, C, L>
 };
 
 
-template<typename T, class Alloc, typename L>
+template<typename T, typename Alloc, typename L>
 struct matrix_data<T, Alloc, std::dynamic_extent, std::dynamic_extent, L>
 {
     using storage_type = std::vector<T, Alloc>;
@@ -172,10 +172,11 @@ struct matrix_data<T, Alloc, std::dynamic_extent, std::dynamic_extent, L>
  *      element access operators, associated mdspan object (maybe is a class variable?), reshape methods
  * 
  */
-template<typename T, class Alloc, std::size_t R, std::size_t C, typename L>
+template<typename T, typename Alloc, std::size_t R, std::size_t C, typename L>
 struct matrix_storage_engine
 {
 
+/* storage engine private type aliases */
 private:
 
     using storage_type = matrix_data<T, Alloc, R, C, L>;
@@ -189,9 +190,11 @@ private:
     template<typename U>
     using literal1D = std::initializer_list<U>;
 
+/* storage engine private data */
+private:
     storage_type m_data;
 
-
+/* storage engine public tags */
 public:
 
     static constexpr bool is_row_major = storage_type::is_row_major;
@@ -204,7 +207,8 @@ public:
     static constexpr bool is_fully_dynamic = is_row_dynamic and is_col_dynamic;
     static constexpr bool is_fully_static = (not is_row_dynamic) and (not is_col_dynamic);
 
-
+/* storage engine public type aliases */
+public:
     using allocator_type = Alloc;
 
     // required valid orientation: row_major_t or col_major_t
@@ -218,7 +222,9 @@ public:
 
     //using mdspan_type = typename matrix_data<T, Alloc, L>::mdspan_type;
     //using const_mdspan_type = typename matrix_data<T, Alloc, L>::mdspan_type;
-
+    
+/* storage engine public constructors */
+public:
     constexpr matrix_storage_engine(void) = default;
     constexpr matrix_storage_engine(matrix_storage_engine const& other) = default;
     constexpr matrix_storage_engine(matrix_storage_engine && other) = default;
@@ -449,7 +455,7 @@ public:
         helper::swap(m_data, other.m_data);
     }
 
-    
+/* storage engine private methods */
 private:
 
     constexpr void __reshape(index_type nbr_rows, index_type row_reach, index_type nbr_cols, index_type col_reach)

@@ -18,6 +18,16 @@ struct static_value_caster
     }
 };
 
+// https://stackoverflow.com/questions/31762958/check-if-class-is-a-template-specialization
+// what??? (it works though)
+template<typename T, template<typename ...> typename Tmplte>
+struct is_specialization : std::false_type
+{};
+
+template<template<typename ...> typename Tmplte, typename ... Args>
+struct is_specialization<Tmplte<Args...>, Tmplte> : std::true_type
+{};
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * see:
@@ -31,12 +41,12 @@ struct static_value_caster
  * 
  */ 
 template<typename Lambda, int = (Lambda{}(), 0)> 
-constexpr bool is_constexpr(Lambda)
+inline constexpr bool is_constexpr(Lambda)
 {
     return true;
 }
 
-constexpr bool is_constexpr(...)
+inline constexpr bool is_constexpr(...)
 {
     return false;
 }
@@ -115,17 +125,17 @@ public:
 
     static constexpr size_t size()
     {
-        return static_cast<size_t>(get_ct_value([]{Egn().size();}));
+        return get_ct_value([]{ return static_cast<size_t>(Egn().size());});
     }
 
     static constexpr size_t rows()
     {
-        return static_cast<size_t>(get_ct_value([]{Egn().rows();}));
+        return get_ct_value([]{ return static_cast<size_t>(Egn().rows());});
     }
 
     static constexpr size_t cols()
     {
-        return static_cast<size_t>(get_ct_value([]{Egn().cols();}));
+        return get_ct_value([]{ return static_cast<size_t>(Egn().cols());});
     }
 };
 
@@ -233,28 +243,16 @@ concept convertible_refs =
 template<typename Egn>
 concept consistent_return_sizes = requires (Egn const& eng)
 {
-    std::same_as<decltype(eng.size()), typename Egn::index_type>;
-    //std::same_as<decltype(eng.reach()), typename Egn::index_type>;
+    { eng.size() } -> std::same_as<typename Egn::index_type>;
 };
 
 template<typename Egn>
 concept consistent_return_lengths = requires (Egn const& eng)
 {
-    std::same_as<decltype(eng.rows()), typename Egn::index_type>;
-    std::same_as<decltype(eng.cols()), typename Egn::index_type>;
-    //std::same_as<decltype(eng.row_reach()), typename Egn::index_type>;
-    //std::same_as<decltype(eng.col_reach()), typename Egn::index_type>;
+    { eng.rows() } -> std::same_as<typename Egn::index_type>;
+    { eng.cols() } -> std::same_as<typename Egn::index_type>;
 };
 
-/*
-template<typename Egn>
-concept consistent_return_reaches = requires (Egn const& eng)
-{
-    std::same_as<decltype(eng.reach()), typename Egn::index_type>;
-    std::same_as<decltype(eng.row_reach()), typename Egn::index_type>;
-    std::same_as<decltype(eng.col_reach()), typename Egn::index_type>;
-}
-*/
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -281,8 +279,8 @@ concept valid_immutable_access_return_type =
 template<typename Egn>
 concept immutable_access = requires(Egn const& eng, typename Egn::index_type x)
 {
-    valid_immutable_access_return_type<decltype(eng(x, x)), Egn>;
-    valid_immutable_access_return_type<decltype(eng(x)), Egn>;
+    { eng(x, x) } -> valid_immutable_access_return_type<Egn>;
+    { eng(x) } -> valid_immutable_access_return_type<Egn>;
 };
 
 template<typename I, typename Egn>
@@ -293,8 +291,8 @@ concept valid_mutable_access_return_type =
 template<typename Egn>
 concept mutable_access = requires(Egn & eng, typename Egn::index_type x)
 {
-    valid_mutable_access_return_type<decltype(eng(x, x)), Egn>;
-    valid_mutable_access_return_type<decltype(eng(x)), Egn>;
+    { eng(x, x) } -> valid_mutable_access_return_type<Egn>;
+    { eng(x) } -> valid_mutable_access_return_type<Egn>;
 };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -306,12 +304,13 @@ concept mutable_access = requires(Egn & eng, typename Egn::index_type x)
 template<typename Egn>
 concept readable_engine = 
     base_types<Egn> and 
-    //convertible_refs<Egn> and 
-    consistent_mutable_ref_type<Egn> and
-    consistent_immutable_ref_type<Egn> and
+    convertible_refs<Egn> and 
+    //consistent_mutable_ref_type<Egn> and
+    //consistent_immutable_ref_type<Egn> and
     consistent_return_sizes<Egn> and
     consistent_return_lengths<Egn> and
-    (immutable_access<Egn> or mutable_access<Egn>);
+    //(immutable_access<Egn> or mutable_access<Egn>);
+    immutable_access<Egn>;
     // TODO: maybe swappable?
 
 
@@ -334,27 +333,27 @@ concept writable_engine =
  */
 
 template<typename Egn>
-concept row_reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
+concept row_reshapeable_engine = writable_engine<Egn>
+and requires(Egn & eng, typename Egn::index_type x)
 {
-    std::same_as<decltype(eng.row_reach()), typename Egn::index_type>;
-
-    {eng.reshape_rows(x, x)};
+    { eng.row_reach() } -> std::same_as<typename Egn::index_type>;
+    { eng.reshape_rows(x, x) };
 };
 
 template<typename Egn>
-concept col_reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
+concept col_reshapeable_engine = writable_engine<Egn>
+and requires(Egn & eng, typename Egn::index_type x)
 {
-    std::same_as<decltype(eng.col_reach()), typename Egn::index_type>;
-
-    {eng.reshape_cols(x, x)};
+    { eng.col_reach() } -> std::same_as<typename Egn::index_type>;
+    { eng.reshape_cols(x, x) };
 };
 
 template<typename Egn>
-concept reshapeable_engine = requires(Egn & eng, typename Egn::index_type x)
+concept reshapeable_engine = writable_engine<Egn>
+and requires(Egn & eng, typename Egn::index_type x)
 {
-    std::same_as<decltype(eng.reach()), typename Egn::index_type>;
-
-    {eng.reshape(x, x, x, x)};
+    { eng.reach() } -> std::same_as<typename Egn::index_type>;
+    { eng.reshape(x, x, x, x) };
 };
 
 
@@ -490,7 +489,7 @@ struct engine_helper
         }
     }
 
-    template<class Egn, typename R, typename C>
+    template<typename Egn, typename R, typename C>
     static constexpr void validate(Egn & eng, R nbr_rows, C nbr_cols)
     requires writable_engine<Egn>
     {
@@ -530,7 +529,7 @@ struct engine_helper
     //template<class Egn, typename X>
     //static constexpr void validate(Egn & eng, X size);
 
-    template<class EgnX, class EgnY>
+    template<typename EgnX, typename EgnY>
     static constexpr void copy2(EgnX const& src, EgnY & dst)
     requires
         std::convertible_to<typename EgnX::data_type, typename EgnY::data_type> and
@@ -603,7 +602,7 @@ struct engine_helper
     //static constexpr void copy2(Egn & dst, mdspan<T, extents<IT, X0>, SL, SA> const& src)
     //static constexpr void copy2(Egn & dst, initializer_list<T> src)
     
-    template<class Egn, typename R1, typename R2, typename C1, typename C2>
+    template<typename Egn, typename R1, typename R2, typename C1, typename C2>
     static constexpr void move_data(Egn & src, Egn & dst, R1 ilb_inc, R2 iub_ex, C1 jlb_inc, C2 jub_ex)
     requires writable_engine<Egn>
     {
@@ -624,14 +623,14 @@ struct engine_helper
         }
     }
     
-    template<class Egn, typename R, typename C>
+    template<typename Egn, typename R, typename C>
     static constexpr void move_data(Egn & src, Egn & dst, R nbr_rows, C nbr_cols)
     requires writable_engine<Egn>
     {
         move_data<Egn, R, R, C, C>(src, dst, 0, nbr_rows, 0, nbr_cols);
     }
 
-    template<class Egn, typename C1, typename C2, typename T>
+    template<typename Egn, typename C1, typename C2, typename T>
     static constexpr void fill_cols(Egn & dst, C1 jlb_inc, C2 jub_ex, T const& value)
     requires
         std::convertible_to<T, typename Egn::data_type> and
@@ -654,7 +653,7 @@ struct engine_helper
         }
     }
 
-    template<class Egn, typename R1, typename R2, typename T>
+    template<typename Egn, typename R1, typename R2, typename T>
     static constexpr void fill_rows(Egn & dst, R1 ilb_inc, R2 iub_ex, T const& value)
     requires
         std::convertible_to<T, typename Egn::data_type> and
@@ -676,8 +675,8 @@ struct engine_helper
             }
         }
     }
-
-    template<class EgnX, class EgnY>
+    
+    template<typename EgnX, typename EgnY>
     static constexpr bool compare_exact(EgnX const& lhs, EgnY const& rhs)
     requires 
         readable_engine<EgnX> and 
@@ -729,7 +728,7 @@ struct engine_helper
 
 
 #define ENGINE_SUPPORTED
-#include "storage_engine.h"
 
+#include "storage_engine.h"
 #include "view_engine.h"
 

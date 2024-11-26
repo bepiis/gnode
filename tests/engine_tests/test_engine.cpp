@@ -411,6 +411,7 @@ TEST_CASE
  */
 
 #include "test_transparent_view_engine.cpp"
+#include "test_const_transparent_view_engine.cpp"
 
 
 // static rows, dynamic cols rect init list constructed, then rows(), cols() matches input data rows, cols
