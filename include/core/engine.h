@@ -8,6 +8,7 @@
 //#include <type_traits>
 #include <concepts>
 #include <algorithm>
+#include <complex>
 
 template<typename From, typename To>
 struct static_value_caster
@@ -215,6 +216,15 @@ template<typename T1, typename T2>
 concept comparable_types = 
     comparable_types_one_sided<T1, T2> and 
     comparable_types_one_sided<T2, T1>;
+
+
+template<typename X>
+concept has_conjugate = requires(X const& x)
+{
+    { std::conj(x) } -> std::convertible_to<X>;
+};
+
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *

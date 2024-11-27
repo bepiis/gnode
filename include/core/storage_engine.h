@@ -225,7 +225,7 @@ public:
     
 /* storage engine public constructors */
 public:
-    constexpr matrix_storage_engine(void) = default;
+    constexpr matrix_storage_engine() = default;
     constexpr matrix_storage_engine(matrix_storage_engine const& other) = default;
     constexpr matrix_storage_engine(matrix_storage_engine && other) = default;
 
@@ -329,42 +329,42 @@ public:
 
     // required for readability: rows -> index_type
     //$ [PAFC]
-    constexpr index_type rows(void) const noexcept
+    constexpr index_type rows() const noexcept
     {
         return m_data.m_rows;
     }
     
     // required for readability: row_reach -> index_type
     //$ [PAFC]
-    constexpr index_type row_reach(void) const noexcept
+    constexpr index_type row_reach() const noexcept
     {
         return m_data.m_row_reach;
     }
 
     // required for readability: cols -> index_type
     //$ [PAFC]
-    constexpr index_type cols(void) const noexcept
+    constexpr index_type cols() const noexcept
     {
         return m_data.m_cols;
     }
     
     // required for readability: col_reach -> index_type
     //$ [PAFC]
-    constexpr index_type col_reach(void) const noexcept
+    constexpr index_type col_reach() const noexcept
     {
         return m_data.m_col_reach;
     }
 
     // required for readability: size -> index_type
     //$ [PAFC]
-    constexpr index_type size(void) const noexcept
+    constexpr index_type size() const noexcept
     {
         return m_data.m_rows * m_data.m_cols;
     }
     
     // required for readability: reach -> index_type
     //$ [PAFC]
-    constexpr index_type reach(void) const noexcept
+    constexpr index_type reach() const noexcept
     {
         return m_data.m_row_reach * m_data.m_col_reach;
     }

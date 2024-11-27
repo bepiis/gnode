@@ -165,6 +165,9 @@ TEST_CASE("row dominant RandMatSizeGenerator")
 
 #ifndef TEST_NONE
 
+#include "core/engine.h"
+#include <numbers>
+#include <complex>
 #include "engine_tests/test_engine.cpp"
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"

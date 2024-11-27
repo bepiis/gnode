@@ -3,9 +3,6 @@
 //  Created by Ben Westcott on 9/8/24.
 //
 
-#include "core/engine.h"
-#include <numbers>
-
 using namespace std::numbers;
 using std::size_t;
 using eh = engine_helper;
@@ -32,7 +29,7 @@ const literal2D<int64_t> ex_3x3ic = {{INT64_MAX, -INT64_MAX, INT64_MAX},
 const literal2D<int64_t> ex_boundsi = ex_3x3ic;
 const literal2D<int64_t> ex_invalidi = {{2, 3, 3}, {2, 1, 2}, {2, 1}};
 
-const literal2D<int64_t> ex_8x3ia = {{1, 2, 3}, 
+const literal2D<int64_t> ex_8x3ia =      {{1, 2, 3}, 
                                           {4, 5, 6}, 
                                           {7, 8, 9}, 
                                           {10, 11, 12},
@@ -41,7 +38,7 @@ const literal2D<int64_t> ex_8x3ia = {{1, 2, 3},
                                           {19, 20, 21},
                                           {22, 23, 24}};
 
-const literal2D<int64_t> ex_8x3ib = {{-11, -10, -9},
+const literal2D<int64_t> ex_8x3ib =      {{-11, -10, -9},
                                           {-8, -7, -6},
                                           {-5, -4, -3},
                                           {-2, -1, 0},
@@ -50,7 +47,7 @@ const literal2D<int64_t> ex_8x3ib = {{-11, -10, -9},
                                           {7, 8, 9},
                                           {10, 11, 12}};
 
-const literal2D<double> ex_8x3da = {{e, pi, e}, 
+const literal2D<double> ex_8x3da =      {{e, pi, e}, 
                                          {-e, -pi, -e},
                                          {pi, pi, pi}, 
                                          {e, e, e}, 
@@ -59,7 +56,7 @@ const literal2D<double> ex_8x3da = {{e, pi, e},
                                          {pi, e, pi}, 
                                          {-pi, -e, -pi}};
 
-const literal2D<double> ex_8x3db = {{sqrt2, sqrt2, sqrt2},
+const literal2D<double> ex_8x3db =      {{sqrt2, sqrt2, sqrt2},
                                          {1/sqrt2, 1/sqrt2, 1/sqrt2},
                                          {sqrt2, sqrt2, sqrt2},
                                          {1/sqrt2, 1/sqrt2, 1/sqrt2},
@@ -68,19 +65,19 @@ const literal2D<double> ex_8x3db = {{sqrt2, sqrt2, sqrt2},
                                          {sqrt2, sqrt2, sqrt2},
                                          {1/sqrt2, 1/sqrt2, 1/sqrt2}};
 
-const literal2D<int64_t> ex_3x8ia = {{-100, 0, 90, 0, -80, 0, 70, 0},
+const literal2D<int64_t> ex_3x8ia =      {{-100, 0, 90, 0, -80, 0, 70, 0},
                                           {-60, 0, 50, 0, -40, 0, 30, 0},
                                           {-20, 0, 10, 0, 0, -10, 0, 10}};
 
-const literal2D<int64_t> ex_3x8ib = {{-1, -2, -3, -4, -5, -6, -7, -8},
+const literal2D<int64_t> ex_3x8ib =      {{-1, -2, -3, -4, -5, -6, -7, -8},
                                           {1, 2, 3, 4, 5, 6, 7, 8},
                                           {-9, 10, -11, 12 -13, 14, -15, 16}};
 
-const literal2D<double> ex_3x8da =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+const literal2D<double> ex_3x8da =       {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
                                           {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
                                           {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};  
 
-const literal2D<double> ex_3x8db = {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, -1E-7, -1E-6, -1E-5},
+const literal2D<double> ex_3x8db =      {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, -1E-7, -1E-6, -1E-5},
                                          {-1E-4, -1E-3, -1E-2, -1E-1, -1E0, 1E0, 1E1, 1E2},
                                          {1E3, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9, 1E10}};
 
@@ -392,6 +389,34 @@ TEST_CASE
     REQUIRE(true == valid_unary_minus_operator<bar>);
     REQUIRE(false == valid_unary_minus_operator<foobar>);
     REQUIRE(true == valid_unary_minus_operator<int32_t>);
+}
+
+namespace is_specialization_of_test_space
+{
+
+    template<typename T, typename = void>
+    struct foo : public std::false_type
+    {};
+
+    template<typename T>
+    struct foo<T, std::void_t<int64_t>> : public std::true_type
+    {};
+};
+
+TEST_CASE
+(
+    "is specialization works for non class types.\n"
+)
+{
+    using namespace is_specialization_of_test_space;
+
+    REQUIRE(true == is_specialization<foo<int64_t, int64_t>, foo>::value);
+    REQUIRE(true == is_specialization<foo<int64_t>, foo>::value);
+
+    REQUIRE(true == is_specialization<std::vector<double>, std::vector>::value);
+    REQUIRE(true == is_specialization<std::complex<float>, std::complex>::value);
+
+    REQUIRE(false == is_specialization<std::array<float, 5>, std::vector>::value);
 }
 
 /*
