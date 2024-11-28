@@ -31,7 +31,7 @@ TEST_CASE
     constexpr size_t nrows = 8;
     constexpr size_t ncols = 8;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
 
@@ -68,7 +68,7 @@ TEST_CASE
     constexpr size_t nrows = 8;
     constexpr size_t ncols = 8;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
 
@@ -104,7 +104,7 @@ TEST_CASE
     constexpr size_t nrows = 8;
     constexpr size_t ncols = 8;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
 
@@ -137,7 +137,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     using mse_type = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
 
@@ -168,7 +168,7 @@ TEST_CASE
     constexpr size_t nrows = 0;
     constexpr size_t ncols = 0;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
     REQUIRE(m.rows() == nrows);
@@ -193,7 +193,7 @@ TEST_CASE
     constexpr size_t nrows = 1;
     constexpr size_t ncols = 2;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
     REQUIRE(m.size() == (nrows * ncols));
@@ -218,7 +218,7 @@ TEST_CASE
     constexpr size_t nrows = 0;
     constexpr size_t ncols = 0;
 
-    using ltype = matrix_orientation::col_major_t;
+    using ltype = matrix_orientation::col_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
     REQUIRE(m.rows() == nrows);
@@ -243,7 +243,7 @@ TEST_CASE
     constexpr size_t nrows = 1;
     constexpr size_t ncols = 2;
 
-    using ltype = matrix_orientation::col_major_t;
+    using ltype = matrix_orientation::col_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
     REQUIRE(m.size() == (nrows * ncols));
@@ -269,7 +269,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -301,7 +301,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
@@ -329,7 +329,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::col_major_t;
+    using ltype = matrix_orientation::col_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -355,7 +355,7 @@ TEST_CASE
     constexpr size_t nrows = 1;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -385,7 +385,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 1;
 
-    using ltype = matrix_orientation::col_major_t;
+    using ltype = matrix_orientation::col_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -416,7 +416,7 @@ TEST_CASE
     constexpr size_t nrows = 8;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     const literal2D<int64_t> data_in = {{-11, -10, -9},
                                               {-8, -7, -6},
@@ -465,7 +465,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 8;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -512,7 +512,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 8;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     const literal2D<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
                                              {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
@@ -559,7 +559,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::col_major_t;
+    using ltype = matrix_orientation::col_major;
 
     const literal2D<int64_t> data_in = {{0, 0, 0}, {3, 2, 1}, {9, -1, -100}};
     const literal2D<int64_t> data_in_cm = {{0, 3, 9}, {0, 2, -1}, {0, 1, -100}};
@@ -606,7 +606,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     const literal2D<double> data_in =  {{sqrt2, sqrt2, sqrt2},
                                              {1/sqrt2, 1/sqrt2, 1/sqrt2},
@@ -646,7 +646,7 @@ TEST_CASE
     constexpr size_t nrows = 3;
     constexpr size_t ncols = 3;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     const literal2D<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
                                              {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},

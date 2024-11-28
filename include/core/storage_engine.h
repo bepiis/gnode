@@ -17,8 +17,8 @@ struct matrix_data
     // using mdspan_type = ...
     // using const_mdspan_type = ...
     
-    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
-    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major>;
     static constexpr bool is_static_row_vector = (R == 1);
     static constexpr bool is_static_col_vector = (C == 1);
     static constexpr bool is_row_dynamic = false;
@@ -45,8 +45,8 @@ struct matrix_data<T, void, R, C, L>
     // using mdspan_type = ...
     // using const_mdspan_type = ...
 
-    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
-    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major>;
     static constexpr bool is_static_row_vector = (R == 1);
     static constexpr bool is_static_col_vector = (C == 1);
     static constexpr bool is_row_dynamic = false;
@@ -73,8 +73,8 @@ struct matrix_data<T, Alloc, R, std::dynamic_extent, L>
     // using mdspan_type = ...
     // using const_mdspan_type = ...
 
-    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
-    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major>;
     static constexpr bool is_static_row_vector = (R == 1);
     static constexpr bool is_static_col_vector = false;
     static constexpr bool is_row_dynamic = false;
@@ -107,8 +107,8 @@ struct matrix_data<T, Alloc, std::dynamic_extent, C, L>
     // using mdspan_type = ...
     // using const_mdspan_type = ...
 
-    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
-    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major>;
     static constexpr bool is_static_row_vector = false;
     static constexpr bool is_static_col_vector = (C == 1);
     static constexpr bool is_row_dynamic = true;
@@ -140,8 +140,8 @@ struct matrix_data<T, Alloc, std::dynamic_extent, std::dynamic_extent, L>
     using mdspan_type = typename std::mdspan<T, extents_type, stride_type>;
     using const_mdspan_type = typename std::mdspan<T const, extents_type, stride_type>;
 
-    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major_t>;
-    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major_t>;
+    static constexpr bool is_row_major = std::is_same_v<L, matrix_orientation::row_major>;
+    static constexpr bool is_col_major = std::is_same_v<L, matrix_orientation::col_major>;
     static constexpr bool is_static_row_vector = false;
     static constexpr bool is_static_col_vector = false;
     static constexpr bool is_row_dynamic = true;
@@ -211,7 +211,7 @@ public:
 public:
     using allocator_type = Alloc;
 
-    // required valid orientation: row_major_t or col_major_t
+    // required valid orientation: row_major or col_major
     using orientation_type = L;
 
     // required for readability:

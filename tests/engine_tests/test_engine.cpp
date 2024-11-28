@@ -23,149 +23,197 @@ const literal2D<int64_t> ex_4x1i = {{1},{2},{3},{4}};
 const literal2D<int64_t> ex_3x3ia = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
 const literal2D<int64_t> ex_3x3ib = {{0, 0, 0}, {3, 2, 1}, {9, -1, -100}};
 
-const literal2D<int64_t> ex_3x3ic = {{INT64_MAX, -INT64_MAX, INT64_MAX}, 
-                                          {-INT64_MAX, -INT64_MAX, -INT64_MAX}, 
-                                          {INT64_MAX, INT64_MAX, INT64_MAX}};
+const literal2D<int64_t> ex_3x3ic =
+    {{INT64_MAX, -INT64_MAX, INT64_MAX},
+     {-INT64_MAX, -INT64_MAX, -INT64_MAX},
+     {INT64_MAX, INT64_MAX, INT64_MAX}};
 
 const literal2D<int64_t> ex_boundsi = ex_3x3ic;
 const literal2D<int64_t> ex_invalidi = {{2, 3, 3}, {2, 1, 2}, {2, 1}};
 
-const literal2D<int64_t> ex_8x3ia =      {{1, 2, 3}, 
-                                          {4, 5, 6}, 
-                                          {7, 8, 9}, 
-                                          {10, 11, 12},
-                                          {13, 14, 15},
-                                          {16, 17, 18},
-                                          {19, 20, 21},
-                                          {22, 23, 24}};
+const literal2D<int64_t> ex_8x3ia =
+   {{1, 2, 3},
+    {4, 5, 6},
+    {7, 8, 9},
+    {10, 11, 12},
+    {13, 14, 15},
+    {16, 17, 18},
+    {19, 20, 21},
+    {22, 23, 24}};
 
-const literal2D<int64_t> ex_8x3ib =      {{-11, -10, -9},
-                                          {-8, -7, -6},
-                                          {-5, -4, -3},
-                                          {-2, -1, 0},
-                                          {1, 2, 3},
-                                          {4, 5, 6},
-                                          {7, 8, 9},
-                                          {10, 11, 12}};
+const literal2D<int64_t> ex_8x3ib =
+    {{-11, -10, -9},
+      {-8, -7, -6},
+      {-5, -4, -3},
+      {-2, -1, 0},
+      {1, 2, 3},
+      {4, 5, 6},
+      {7, 8, 9},
+      {10, 11, 12}};
 
-const literal2D<double> ex_8x3da =      {{e, pi, e}, 
-                                         {-e, -pi, -e},
-                                         {pi, pi, pi}, 
-                                         {e, e, e}, 
-                                         {-pi, -pi, -pi}, 
-                                         {-e, -e, -e},
-                                         {pi, e, pi}, 
-                                         {-pi, -e, -pi}};
+const literal2D<double> ex_8x3da =
+    {{e, pi, e},
+     {-e, -pi, -e},
+     {pi, pi, pi},
+     {e, e, e},
+     {-pi, -pi, -pi},
+     {-e, -e, -e},
+     {pi, e, pi},
+     {-pi, -e, -pi}};
 
-const literal2D<double> ex_8x3db =      {{sqrt2, sqrt2, sqrt2},
-                                         {1/sqrt2, 1/sqrt2, 1/sqrt2},
-                                         {sqrt2, sqrt2, sqrt2},
-                                         {1/sqrt2, 1/sqrt2, 1/sqrt2},
-                                         {sqrt2, sqrt2, sqrt2},
-                                         {1/sqrt2, 1/sqrt2, 1/sqrt2},
-                                         {sqrt2, sqrt2, sqrt2},
-                                         {1/sqrt2, 1/sqrt2, 1/sqrt2}};
+const literal2D<double> ex_8x3db =
+    {{sqrt2, sqrt2, sqrt2},
+     {1/sqrt2, 1/sqrt2, 1/sqrt2},
+     {sqrt2, sqrt2, sqrt2},
+     {1/sqrt2, 1/sqrt2, 1/sqrt2},
+     {sqrt2, sqrt2, sqrt2},
+     {1/sqrt2, 1/sqrt2, 1/sqrt2},
+     {sqrt2, sqrt2, sqrt2},
+     {1/sqrt2, 1/sqrt2, 1/sqrt2}};
 
-const literal2D<int64_t> ex_3x8ia =      {{-100, 0, 90, 0, -80, 0, 70, 0},
-                                          {-60, 0, 50, 0, -40, 0, 30, 0},
-                                          {-20, 0, 10, 0, 0, -10, 0, 10}};
+const literal2D<int64_t> ex_3x8ia =
+    {{-100, 0, 90, 0, -80, 0, 70, 0},
+      {-60, 0, 50, 0, -40, 0, 30, 0},
+      {-20, 0, 10, 0, 0, -10, 0, 10}};
 
-const literal2D<int64_t> ex_3x8ib =      {{-1, -2, -3, -4, -5, -6, -7, -8},
-                                          {1, 2, 3, 4, 5, 6, 7, 8},
-                                          {-9, 10, -11, 12 -13, 14, -15, 16}};
+const literal2D<int64_t> ex_3x8ib =
+    {{-1, -2, -3, -4, -5, -6, -7, -8},
+     {1, 2, 3, 4, 5, 6, 7, 8},
+     {-9, 10, -11, 12 -13, 14, -15, 16}};
 
-const literal2D<double> ex_3x8da =       {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
-                                          {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
-                                          {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};  
+const literal2D<double> ex_3x8da =
+    {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
+     {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
+     {-9E8, 10E9, -11E10, 12E11, -13E12, 14E13, 15E14, -16E15}};
 
-const literal2D<double> ex_3x8db =      {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, -1E-7, -1E-6, -1E-5},
-                                         {-1E-4, -1E-3, -1E-2, -1E-1, -1E0, 1E0, 1E1, 1E2},
-                                         {1E3, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9, 1E10}};
+const literal2D<double> ex_3x8db =
+    {{-1E-12, -1E-11, -1E-10, -1E-9, -1E-8, -1E-7, -1E-6, -1E-5},
+     {-1E-4, -1E-3, -1E-2, -1E-1, -1E0, 1E0, 1E1, 1E2},
+     {1E3, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9, 1E10}};
 
-const literal2D<double> ex_6x6da = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05},
-                                    {1.06, 1.07, 1.08, 1.09, 1.10, 1.11},
-                                    {1.12, 1.13, 1.14, 1.15, 1.16, 1.17},
-                                    {1.18, 1.19, 1.20, 1.21, 1.22, 1.23},
-                                    {1.24, 1.25, 1.26, 1.27, 1.28, 1.29},
-                                    {1.30, 1.31, 1.32, 1.33, 1.34, 1.35}};
+const literal2D<double> ex_6x6da =
+   {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05},
+    {1.06, 1.07, 1.08, 1.09, 1.10, 1.11},
+    {1.12, 1.13, 1.14, 1.15, 1.16, 1.17},
+    {1.18, 1.19, 1.20, 1.21, 1.22, 1.23},
+    {1.24, 1.25, 1.26, 1.27, 1.28, 1.29},
+    {1.30, 1.31, 1.32, 1.33, 1.34, 1.35}};
 
-const literal2D<double> ex_6x8da  = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
-                                     {1.06, 1.07, 1.08, 1.09, 1.10, 1.11, -2.00, -2.20},
-                                     {1.12, 1.13, 1.14, 1.15, 1.16, 1.17, -3.00, -3.30},
-                                     {1.18, 1.19, 1.20, 1.21, 1.22, 1.23, -4.00, -4.40},
-                                     {1.24, 1.25, 1.26, 1.27, 1.28, 1.29, -5.00, -5.50},
-                                     {1.30, 1.31, 1.32, 1.33, 1.34, 1.35, -6.00, -6.60}};
+const literal2D<double> ex_6x8da  =
+    {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
+     {1.06, 1.07, 1.08, 1.09, 1.10, 1.11, -2.00, -2.20},
+     {1.12, 1.13, 1.14, 1.15, 1.16, 1.17, -3.00, -3.30},
+     {1.18, 1.19, 1.20, 1.21, 1.22, 1.23, -4.00, -4.40},
+     {1.24, 1.25, 1.26, 1.27, 1.28, 1.29, -5.00, -5.50},
+     {1.30, 1.31, 1.32, 1.33, 1.34, 1.35, -6.00, -6.60}};
 
-const literal2D<double> ex_8x6daT = {{1.00, 1.06, 1.12, 1.18, 1.24, 1.30},
-                                     {1.01, 1.07, 1.13, 1.19, 1.25, 1.31},
-                                     {1.02, 1.08, 1.14, 1.20, 1.26, 1.32},
-                                     {1.03, 1.09, 1.15, 1.21, 1.27, 1.33},
-                                     {1.04, 1.10, 1.16, 1.22, 1.28, 1.34},
-                                     {1.05, 1.11, 1.17, 1.23, 1.29, 1.35},
-                                     {-1.00, -2.00, -3.00, -4.00, -5.00, -6.00},
-                                     {-1.10, -2.20, -3.30, -4.40, -5.50, -6.60}};
+const literal2D<double> ex_8x6daT =
+    {{1.00, 1.06, 1.12, 1.18, 1.24, 1.30},
+     {1.01, 1.07, 1.13, 1.19, 1.25, 1.31},
+     {1.02, 1.08, 1.14, 1.20, 1.26, 1.32},
+     {1.03, 1.09, 1.15, 1.21, 1.27, 1.33},
+     {1.04, 1.10, 1.16, 1.22, 1.28, 1.34},
+     {1.05, 1.11, 1.17, 1.23, 1.29, 1.35},
+     {-1.00, -2.00, -3.00, -4.00, -5.00, -6.00},
+     {-1.10, -2.20, -3.30, -4.40, -5.50, -6.60}};
 
-const literal2D<int64_t> ex_6x8ia = {{0, 1, 2, 3, 4, 5, 6, 7},
-                                     {8, 9, 10, 11, 12, 13, 14, 15},
-                                     {16, 17, 18, 19, 20, 21, 22, 23},
-                                     {24, 25, 26, 27, 28, 29, 30, 31},
-                                     {32, 33, 34, 35, 36, 37, 38, 39},
-                                     {40, 41, 42, 43, 44, 45, 46, 47}};
+const literal2D<int64_t> ex_6x8ia =
+    {{0, 1, 2, 3, 4, 5, 6, 7},
+     {8, 9, 10, 11, 12, 13, 14, 15},
+     {16, 17, 18, 19, 20, 21, 22, 23},
+     {24, 25, 26, 27, 28, 29, 30, 31},
+     {32, 33, 34, 35, 36, 37, 38, 39},
+     {40, 41, 42, 43, 44, 45, 46, 47}};
 
 
-const literal2D<double> ex_8x6da = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05},
-                                    {1.06, 1.07, 1.08, 1.09, 1.10, 1.11},
-                                    {1.12, 1.13, 1.14, 1.15, 1.16, 1.17},
-                                    {1.18, 1.19, 1.20, 1.21, 1.22, 1.23},
-                                    {1.24, 1.25, 1.26, 1.27, 1.28, 1.29},
-                                    {1.30, 1.31, 1.32, 1.33, 1.34, 1.35},
-                                    {1.36, 1.37, 1.38, 1.39, 1.40, 1.41},
-                                    {1.42, 1.43, 1.44, 1.45, 1.46, 1.47}};
+const literal2D<double> ex_8x6da =
+   {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05},
+    {1.06, 1.07, 1.08, 1.09, 1.10, 1.11},
+    {1.12, 1.13, 1.14, 1.15, 1.16, 1.17},
+    {1.18, 1.19, 1.20, 1.21, 1.22, 1.23},
+    {1.24, 1.25, 1.26, 1.27, 1.28, 1.29},
+    {1.30, 1.31, 1.32, 1.33, 1.34, 1.35},
+    {1.36, 1.37, 1.38, 1.39, 1.40, 1.41},
+    {1.42, 1.43, 1.44, 1.45, 1.46, 1.47}};
 
-const literal2D<int64_t> ex_8x6ia = {{-48, -46, -44, -42, -40, -38},
-                                    {-36, -34, -32, -30, -28, -24},
-                                    {-22, -20, -18, -16, -14, -12},
-                                    {-10, -8, -6, -4, -2, 0},
-                                    {2, 4, 6, 8, 10, 12},
-                                    {14, 16, 18, 20, 22, 24}};
+const literal2D<int64_t> ex_8x6ia =
+   {{-48, -46, -44, -42, -40, -38},
+    {-36, -34, -32, -30, -28, -24},
+    {-22, -20, -18, -16, -14, -12},
+    {-10, -8, -6, -4, -2, 0},
+    {2, 4, 6, 8, 10, 12},
+    {14, 16, 18, 20, 22, 24}};
 
-const literal2D<double> ex_3x5da = {{ln2, -ln2, ln2, -ln2, ln2},
-                                    {-ln2, ln2, -ln2, ln2, -ln2},
-                                    {ln2, -ln2, ln2, -ln2, ln2}};
+const literal2D<double> ex_3x5da =
+   {{ln2, -ln2, ln2, -ln2, ln2},
+    {-ln2, ln2, -ln2, ln2, -ln2},
+    {ln2, -ln2, ln2, -ln2, ln2}};
 
-const literal2D<double> ex_3x5db = {{sqrt3, -sqrt3, sqrt3, -sqrt3, sqrt3},
-                                    {-sqrt3, sqrt3, -sqrt3, sqrt3, -sqrt3},
-                                    {sqrt3, -sqrt3, sqrt3, -sqrt3, sqrt3}};
+const literal2D<double> ex_3x5db =
+   {{sqrt3, -sqrt3, sqrt3, -sqrt3, sqrt3},
+    {-sqrt3, sqrt3, -sqrt3, sqrt3, -sqrt3},
+    {sqrt3, -sqrt3, sqrt3, -sqrt3, sqrt3}};
 
-const literal2D<double> ex_5x3db = {{sqrt3, -sqrt3, sqrt3},
-                                    {-sqrt3, sqrt3, -sqrt3},
-                                    {sqrt3, -sqrt3, sqrt3},
-                                    {-sqrt3, sqrt3, -sqrt3},
-                                    {sqrt3, -sqrt3, sqrt3}};
+const literal2D<double> ex_5x3db =
+   {{sqrt3, -sqrt3, sqrt3},
+    {-sqrt3, sqrt3, -sqrt3},
+    {sqrt3, -sqrt3, sqrt3},
+    {-sqrt3, sqrt3, -sqrt3},
+    {sqrt3, -sqrt3, sqrt3}};
 
-const literal2D<std::complex<double>> ex_4x4fca = 
-              {{1.0 + 0.5i, 1.5 + 1.0i, 2.0 + 1.5i, 2.5 + 2.0i},
-               {3.0 + 2.5i, 3.5 + 3.0i, 4.0 + 3.5i, 4.5 + 4.0i},
-               {5.0 + 4.5i, 5.5 + 5.0i, 6.0 + 5.5i, 6.5 + 6.0i},
-               {7.0 + 6.5i, 7.5 + 7.0i, 8.0 + 7.5i, 8.5 + 8.0i}};
+const literal2D<std::complex<double>> ex_4x4dca =
+  {{1.0 + 0.5i, 1.5 + 1.0i, 2.0 + 1.5i, 2.5 + 2.0i},
+   {3.0 + 2.5i, 3.5 + 3.0i, 4.0 + 3.5i, 4.5 + 4.0i},
+   {5.0 + 4.5i, 5.5 + 5.0i, 6.0 + 5.5i, 6.5 + 6.0i},
+   {7.0 + 6.5i, 7.5 + 7.0i, 8.0 + 7.5i, 8.5 + 8.0i}};
 
-const literal2D<std::complex<double>> ex_4x4fca_conj = 
-              {{1.0 - 0.5i, 1.5 - 1.0i, 2.0 - 1.5i, 2.5 - 2.0i},
-               {3.0 - 2.5i, 3.5 - 3.0i, 4.0 - 3.5i, 4.5 - 4.0i},
-               {5.0 - 4.5i, 5.5 - 5.0i, 6.0 - 5.5i, 6.5 - 6.0i},
-               {7.0 - 6.5i, 7.5 - 7.0i, 8.0 - 7.5i, 8.5 - 8.0i}};
+const literal2D<std::complex<double>> ex_4x4dca_T =
+ {{1.0 + 0.5i, 3.0 + 2.5i, 5.0 + 4.5i, 7.0 + 6.5i},
+  {1.5 + 1.0i, 3.5 + 3.0i, 5.5 + 5.0i, 7.5 + 7.0i},
+  {2.0 + 1.5i, 4.0 + 3.5i, 6.0 + 5.5i, 8.0 + 7.5i},
+  {2.5 + 2.0i, 4.5 + 4.0i, 6.5 + 6.0i, 8.5 + 8.0i}};
 
-const literal2D<std::complex<double>> ex_6x4fca = 
-              {{1.01i, 1.02i, 1.03i, 1.04i, 1.05i, 1.06i},
-               {1.07i, 1.08i, 1.09i, 1.10i, 1.11i, 1.12i},
-               {1.13i, 1.14i, 1.15i, 1.16i, 1.17i, 1.18i},
-               {1.19i, 1.20i, 1.21i, 1.22i, 1.23i, 1.24i}};
+const literal2D<std::complex<double>> ex_4x4dca_conj =
+  {{1.0 - 0.5i, 1.5 - 1.0i, 2.0 - 1.5i, 2.5 - 2.0i},
+   {3.0 - 2.5i, 3.5 - 3.0i, 4.0 - 3.5i, 4.5 - 4.0i},
+   {5.0 - 4.5i, 5.5 - 5.0i, 6.0 - 5.5i, 6.5 - 6.0i},
+   {7.0 - 6.5i, 7.5 - 7.0i, 8.0 - 7.5i, 8.5 - 8.0i}};
+
+const literal2D<std::complex<double>> ex_4x4dca_H =
+ {{1.0 - 0.5i, 3.0 - 2.5i, 5.0 - 4.5i, 7.0 - 6.5i},
+  {1.5 - 1.0i, 3.5 - 3.0i, 5.5 - 5.0i, 7.5 - 7.0i},
+  {2.0 - 1.5i, 4.0 - 3.5i, 6.0 - 5.5i, 8.0 - 7.5i},
+  {2.5 - 2.0i, 4.5 - 4.0i, 6.5 - 6.0i, 8.5 - 8.0i}};
+
+const literal2D<std::complex<double>> ex_6x4dca =
+  {{1.01i, 1.02i, 1.03i, 1.04i, 1.05i, 1.06i},
+   {1.07i, 1.08i, 1.09i, 1.10i, 1.11i, 1.12i},
+   {1.13i, 1.14i, 1.15i, 1.16i, 1.17i, 1.18i},
+   {1.19i, 1.20i, 1.21i, 1.22i, 1.23i, 1.24i}};
     
-const literal2D<std::complex<double>> ex_6x4fca_conj = 
-              {{-1.01i, -1.02i, -1.03i, -1.04i, -1.05i, -1.06i},
-               {-1.07i, -1.08i, -1.09i, -1.10i, -1.11i, -1.12i},
-               {-1.13i, -1.14i, -1.15i, -1.16i, -1.17i, -1.18i},
-               {-1.19i, -1.20i, -1.21i, -1.22i, -1.23i, -1.24i}};
+const literal2D<std::complex<double>> ex_6x4dca_conj =
+  {{-1.01i, -1.02i, -1.03i, -1.04i, -1.05i, -1.06i},
+   {-1.07i, -1.08i, -1.09i, -1.10i, -1.11i, -1.12i},
+   {-1.13i, -1.14i, -1.15i, -1.16i, -1.17i, -1.18i},
+   {-1.19i, -1.20i, -1.21i, -1.22i, -1.23i, -1.24i}};
+
+const literal2D<std::complex<double>> ex_6x4dca_T =
+   {{1.01i, 1,07i, 1.13i, 1.19i},
+    {1.02i, 1.08i, 1.14i, 1.20i},
+    {1.03i, 1.09i, 1.15i, 1.21i},
+    {1.04i, 1.10i, 1.16i, 1.22i},
+    {1.05i, 1.11i, 1.17i, 1.23i},
+    {1.06i, 1.12i, 1.18i, 1.24i}};
+
+const literal2D<std::complex<double>> ex_6x4dca_H =
+   {{-1.01i, -1,07i, -1.13i, -1.19i},
+    {-1.02i, -1.08i, -1.14i, -1.20i},
+    {-1.03i, -1.09i, -1.15i, -1.21i},
+    {-1.04i, -1.10i, -1.16i, -1.22i},
+    {-1.05i, -1.11i, -1.17i, -1.23i},
+    {-1.06i, -1.12i, -1.18i, -1.24i}};
+
+
 TEST_CASE
 (
     "is_constexpr correctly detects whether input is constexpr."
@@ -455,6 +503,40 @@ TEST_CASE
     REQUIRE(false == has_conjugate<int64_t>);
 }
 
+namespace comparable_types_test_space
+{
+    
+    struct foo {};
+    struct bar {};
+
+    bool operator==(foo const& f, bar const& b)
+    {
+        return true;
+    }
+
+    bool operator==(bar const& b, foo const& f) = delete;
+};
+
+TEST_CASE
+(
+    "comparable types one sided works for one side, but not nessesarily the other\n"
+)
+{
+    using namespace comparable_types_test_space;
+    
+    foo f;
+    bar b;
+    
+    REQUIRE(true == comparable_types_one_sided<foo, bar>);
+    REQUIRE(false == comparable_types_one_sided<bar, foo>);
+    REQUIRE(false == comparable_types<foo, bar>);
+    
+    REQUIRE(true == comparable_types_one_sided<uint32_t, uint64_t>);
+    REQUIRE(true == comparable_types_one_sided<uint64_t, uint32_t>);
+    REQUIRE(true == comparable_types<uint32_t, uint64_t>);
+}
+
+
 /*
  * BEGIN matrix_storage_engine tests
  * NOTES:
@@ -509,6 +591,8 @@ TEST_CASE
 #include "test_const_transparent_view_engine.cpp"
 #include "test_const_negation_view_engine.cpp"
 #include "test_const_conjugate_view_engine.cpp"
+#include "test_transpose_view_engine.cpp"
+#include "test_const_transpose_view_engine.cpp"
 
 
 

@@ -116,3 +116,25 @@ struct view_lookup : public std::false_type
 #include "const_transparent_view_engine.h"
 #include "const_negation_view_engine.h"
 #include "const_conjugate_view_engine.h"
+#include "transpose_view_engine.h"
+#include "const_transpose_view_engine.h"
+
+
+// matrix view engine types will already satisfy this requirement
+// by design, but view expression itself must satisfy its own requirement, being
+// view expressible, meaning it must satisfy the readable engine
+// requirements and cannot own any data.
+template<typename VEgn>
+concept view_expressible = readable_engine<VEgn> and not owning_engine<VEgn>;
+
+template<typename VEgnX, typename VEgnY>
+requires
+    view_expressible<VEgnX> and
+    view_expressible<VEgnY>
+struct view_expression
+{
+    
+};
+
+
+

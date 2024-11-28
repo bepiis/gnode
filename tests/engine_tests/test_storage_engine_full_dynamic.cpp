@@ -33,7 +33,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
 
@@ -71,7 +71,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
 
@@ -107,7 +107,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
 
@@ -140,7 +140,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype1 = matrix_orientation::row_major_t;
+    using ltype1 = matrix_orientation::row_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype1> m1;
 
@@ -153,7 +153,7 @@ TEST_CASE
     REQUIRE(true == m1.is_fully_dynamic);
     REQUIRE(false == m1.is_fully_static);
 
-    using ltype2 = matrix_orientation::col_major_t;
+    using ltype2 = matrix_orientation::col_major;
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype2> m2;
 
@@ -192,7 +192,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -233,7 +233,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -273,7 +273,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -315,7 +315,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -352,7 +352,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -382,7 +382,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m;
 
@@ -427,7 +427,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     size_t nbr_rows = 3;
     size_t nbr_cols = 3;
@@ -483,7 +483,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     size_t nbr_rows = 3;
     size_t nbr_cols = 3;
@@ -539,7 +539,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     size_t nbr_rows = 3;
     size_t nbr_cols = 3;
@@ -596,7 +596,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     size_t nbr_rows = 3;
     size_t nbr_cols = 3;
@@ -652,7 +652,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     size_t nbr_rows = 3;
     size_t nbr_cols = 3;
@@ -709,7 +709,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     size_t nbr_rows = 3;
     size_t nbr_cols = 3;
@@ -770,7 +770,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     size_t nbr_rows = 3;
     size_t nbr_cols = 3;
@@ -837,7 +837,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     size_t nbr_rows = 9;
     size_t nbr_cols = 18;
@@ -901,7 +901,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     size_t nbr_rows = 3;
     size_t nbr_cols = 3;
@@ -965,7 +965,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     size_t nbr_rows = 10;
     size_t nbr_cols = 15;
@@ -1012,7 +1012,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     const literal2D<double> data_in =  {{-1E0, -2E1, -3E2, -4E3, -5E4, -6E5, -7E6, -8E7},
                                           {1E0, 2E1, 3E2, 4E3, 5E4, 6E5, 7E6, 8E7},
@@ -1050,7 +1050,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     const literal2D<double> data_in  = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
                                      {1.06, 1.07, 1.08, 1.09, 1.10, 1.11, -2.00, -2.20},
@@ -1089,7 +1089,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     const literal2D<double> data_in = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05},
                                     {1.06, 1.07, 1.08, 1.09, 1.10, 1.11},
@@ -1140,7 +1140,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
 
     const literal2D<double> data_in = {{1.00, 1.06, 1.12, 1.18, 1.24, 1.30},
                                      {1.01, 1.07, 1.13, 1.19, 1.25, 1.31},

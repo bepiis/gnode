@@ -93,6 +93,7 @@ struct has_owning_engine_type_alias<Egn, std::void_t<typename Egn::owning_engine
     using owning_engine_type = typename Egn::owning_engine_type;
 };
 
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * will extract the nbr of rows and cols of engine 
@@ -147,9 +148,9 @@ public:
 
 struct matrix_orientation
 {
-    struct row_major_t{};
-    struct col_major_t{};
-    struct none_t{};
+    struct row_major {};
+    struct col_major {};
+    struct none {};
 
     template<typename S>
     static constexpr S offset(S major, S minor, S minor_length)
@@ -164,10 +165,11 @@ struct matrix_orientation
  *  to extract the matrix orientation of the supplied engine type
  * 
  */
+
 template<typename Egn, typename = void>
 struct get_engine_orientation
 {
-    using type = matrix_orientation::none_t;
+    using type = matrix_orientation::none;
 };
 
 
@@ -180,27 +182,27 @@ struct get_engine_orientation<Egn, std::void_t<typename Egn::orientation_type>>
 template<typename L>
 struct get_engine_transpose_orientation
 {
-    using type = matrix_orientation::none_t;
+    using type = matrix_orientation::none;
 };
 
 template<>
-struct get_engine_transpose_orientation<matrix_orientation::col_major_t>
+struct get_engine_transpose_orientation<matrix_orientation::col_major>
 {
-    using type = matrix_orientation::row_major_t;
+    using type = matrix_orientation::row_major;
 };
 
 template<>
-struct get_engine_transpose_orientation<matrix_orientation::row_major_t>
+struct get_engine_transpose_orientation<matrix_orientation::row_major>
 {
-    using type = matrix_orientation::col_major_t;
+    using type = matrix_orientation::col_major;
 };
 
 // If engine orientation isnt row, or col major, then the engine cannot be indexed, 
 // and thus cannot be readble and thus cannot be writable. 
 template<typename L>
 concept valid_storage_orientation = 
-    std::is_same_v<L, matrix_orientation::row_major_t> or
-    std::is_same_v<L, matrix_orientation::col_major_t>;
+    std::is_same_v<L, matrix_orientation::row_major> or
+    std::is_same_v<L, matrix_orientation::col_major>;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -240,7 +242,6 @@ concept has_conjugate = requires(X const& x)
 {
     { std::conj(x) } -> std::convertible_to<X>;
 };
-
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -379,6 +380,11 @@ template<typename Egn, typename T>
 concept comparable_engine_and_literal2D = 
     readable_engine<Egn> and
     comparable_types<typename Egn::data_type, T>;
+
+template<typename Egn>
+concept owning_engine =
+    readable_engine<Egn> and
+    has_owning_engine_type_alias<Egn>::is_owning;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *

@@ -22,7 +22,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
     
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
     using M = matrix_view_engine<K, matrix_view::const_transparent>;
@@ -55,7 +55,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
     
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
     
@@ -84,7 +84,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
     
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
     using M = matrix_view_engine<K, matrix_view::const_transparent>;
@@ -124,7 +124,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
     
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
     using M = matrix_view_engine<K, matrix_view::const_transparent>;
@@ -152,7 +152,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
     
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
     using M = matrix_view_engine<K, matrix_view::const_transparent>;
@@ -191,7 +191,7 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
     
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
     using M = matrix_view_engine<K, matrix_view::const_transparent>;
@@ -279,7 +279,7 @@ TEST_CASE
     constexpr size_t nrows = 6;
     constexpr size_t ncols = 6;
     
-    using ltype = matrix_orientation::row_major_t;
+    using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
     using M = matrix_view_engine<K, matrix_view::const_transparent>;
