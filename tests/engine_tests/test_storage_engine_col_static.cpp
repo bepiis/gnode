@@ -718,14 +718,14 @@ TEST_CASE
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2(m1);
 
-    REQUIRE(true == eh::compare_exact(m1, m2));
+    REQUIRE(true == eh::compare2D_exact(m1, m2));
 
     size_t new_nbr_rows = 8;
     size_t new_row_reach = 10;
 
     m2.reshape_rows(new_nbr_rows, new_row_reach);
 
-    REQUIRE(false == eh::compare_exact(m1, m2));
+    REQUIRE(false == eh::compare2D_exact(m1, m2));
 }
 
 
@@ -770,11 +770,11 @@ TEST_CASE
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2(data_in2);
 
-    REQUIRE(false == eh::compare_exact(m1, m2));
+    REQUIRE(false == eh::compare2D_exact(m1, m2));
 
     m2 = m1;
 
-    REQUIRE(true == eh::compare_exact(m1, m2));
+    REQUIRE(true == eh::compare2D_exact(m1, m2));
 }
 
 // if m1 is literal2D constructed and then m2 is move constructed from m1
@@ -811,11 +811,11 @@ TEST_CASE
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2(data_in);
 
-    REQUIRE(true == eh::compare_exact(m1, m2));
+    REQUIRE(true == eh::compare2D_exact(m1, m2));
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m3(std::move(m2));
 
-    REQUIRE(true == eh::compare_exact(m1, m3));
+    REQUIRE(true == eh::compare2D_exact(m1, m3));
 }
 
 // if m1 is literal2D constructed and then m2 is move assigned from m1
@@ -854,7 +854,7 @@ TEST_CASE
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m2(data_in1);
 
-    REQUIRE(true == eh::compare_exact(m1, m2));
+    REQUIRE(true == eh::compare2D_exact(m1, m2));
 
     const literal2D<double> data_in2 = {{e, pi, e}, 
                                          {-e, -pi, -e},
@@ -867,9 +867,9 @@ TEST_CASE
 
     matrix_storage_engine<dtype, atype, nrows, ncols, ltype> m3(data_in2);
 
-    REQUIRE(false == eh::compare_exact(m1, m3));
+    REQUIRE(false == eh::compare2D_exact(m1, m3));
 
     m3 = std::move(m2);
 
-    REQUIRE(true == eh::compare_exact(m1, m3));
+    REQUIRE(true == eh::compare2D_exact(m1, m3));
 }

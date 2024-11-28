@@ -73,13 +73,13 @@ struct matrix_view
     
     struct const_negation {};
     struct const_conjugate {};
+
+    struct transpose {};
+    struct const_transpose {};
     struct const_hermitian {};
 
     struct banded {};
     struct const_banded {};
-
-    struct transpose {};
-    struct const_transpose {};
 
     struct row {};
     struct const_row {};

@@ -20,7 +20,6 @@ struct static_value_caster
 };
 
 // https://stackoverflow.com/questions/31762958/check-if-class-is-a-template-specialization
-// what??? (it works though)
 template<typename T, template<typename ...> typename Tmplte>
 struct is_specialization : std::false_type
 {};
@@ -176,6 +175,24 @@ template<typename Egn>
 struct get_engine_orientation<Egn, std::void_t<typename Egn::orientation_type>>
 {
     using type = Egn::orientation_type;
+};
+
+template<typename L>
+struct get_engine_transpose_orientation
+{
+    using type = matrix_orientation::none_t;
+};
+
+template<>
+struct get_engine_transpose_orientation<matrix_orientation::col_major_t>
+{
+    using type = matrix_orientation::row_major_t;
+};
+
+template<>
+struct get_engine_transpose_orientation<matrix_orientation::row_major_t>
+{
+    using type = matrix_orientation::col_major_t;
 };
 
 // If engine orientation isnt row, or col major, then the engine cannot be indexed, 
@@ -352,6 +369,16 @@ concept writable_engine =
     readable_engine<Egn> and 
     mutable_access<Egn>;
 
+template<typename EgnX, typename EgnY>
+concept comparable_engines = 
+    readable_engine<EgnX> and
+    readable_engine<EgnY> and
+    comparable_types<typename EgnX::data_type, typename EgnY::data_type>;
+
+template<typename Egn, typename T>
+concept comparable_engine_and_literal2D = 
+    readable_engine<Egn> and
+    comparable_types<typename Egn::data_type, T>;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -612,7 +639,7 @@ struct engine_helper
         index_type dst_idx, dst_jdx;
         auto src_idx = src.begin();
 
-        dst_idx = dst_jdx = static_cast<data_type>(0);
+        dst_idx = dst_jdx = static_cast<index_type>(0);
 
         for(; dst_idx < dst.rows(); dst_idx++, src_idx++)
         {
@@ -702,38 +729,38 @@ struct engine_helper
             }
         }
     }
-    
-    template<typename EgnX, typename EgnY>
-    static constexpr bool compare_exact(EgnX const& lhs, EgnY const& rhs)
-    requires 
-        readable_engine<EgnX> and 
-        readable_engine<EgnY> and
-        comparable_types<typename EgnX::data_type, typename EgnY::data_type>
-    {
-        using index_type_lhs = typename EgnX::index_type;
-        using index_type_rhs = typename EgnY::index_type;
 
-        index_type_lhs lhs_rows = lhs.rows();
-        index_type_lhs lhs_cols = lhs.cols();
+    
+
+    template<typename EgnX, typename EgnY>
+    static constexpr bool compare2D_exact(EgnX const& lhs, EgnY const& rhs)
+    requires 
+        comparable_engines<EgnX, EgnY>
+    {
+        using itl = typename EgnX::index_type;
+        using itr = typename EgnY::index_type;
+
+        itl lhs_rows = lhs.rows();
+        itl lhs_cols = lhs.cols();
         
-        index_type_rhs rhs_rows = rhs.rows();
-        index_type_rhs rhs_cols = rhs.cols();
+        itr rhs_rows = rhs.rows();
+        itr rhs_cols = rhs.cols();
 
         if(!sizes_equal(lhs_rows, lhs_cols, rhs_rows, rhs_cols))
         {
             return false;
         }
 
-        index_type_lhs lhs_i, lhs_j;
-        index_type_rhs rhs_i, rhs_j;
+        itl lhs_i, lhs_j;
+        itr rhs_i, rhs_j;
 
-        lhs_i = static_cast<index_type_lhs>(0);
-        rhs_i = static_cast<index_type_rhs>(0);
+        lhs_i = static_cast<itl>(0);
+        rhs_i = static_cast<itr>(0);
 
         for(; lhs_i < lhs_rows; lhs_i++, rhs_i++)
         {
-            lhs_j = static_cast<index_type_lhs>(0);
-            rhs_j = static_cast<index_type_rhs>(0);
+            lhs_j = static_cast<itl>(0);
+            rhs_j = static_cast<itr>(0);
 
             for(; lhs_j < lhs_cols; lhs_j++, rhs_j++)
             {
@@ -746,16 +773,48 @@ struct engine_helper
         return true;
     }
 
-    template<typename Egn, typename T>
-    static constexpr bool compare_exact(Egn const& lhs, literal2D<T> rhs)
+    template<typename EgnX, typename EgnY>
+    static constexpr bool compare1D_exact(EgnX const& lhs, EgnY const& rhs)
     requires
-        readable_engine<Egn> and
-        comparable_types<typename Egn::data_type, T>
+        comparable_engines<EgnX, EgnY>
     {
-        using index_type_lhs = typename Egn::index_type;
+        using itl = typename EgnX::index_type;
+        using itr = typename EgnY::index_type;
 
-        index_type_lhs lhs_cols = lhs.cols();
-        index_type_lhs lhs_rows = lhs.rows();
+        itl lhs_rows = lhs.rows();
+        itl lhs_cols = lhs.cols();
+
+        itr rhs_rows = rhs.rows();
+        itr rhs_cols = rhs.cols();
+
+        if(!sizes_compatible(lhs_rows, lhs_cols, rhs_rows, rhs_cols))
+        {
+            return false;
+        }
+
+        itl lhs_i = static_cast<itl>(0);
+        itr rhs_i = static_cast<itr>(0);
+
+        for(; lhs_i < lhs.size(); lhs_i++, rhs_i++)
+        {
+            if(lhs(lhs_i) != rhs(rhs_i))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    template<typename Egn, typename T>
+    static constexpr bool compare2D_exact(Egn const& lhs, literal2D<T> rhs)
+    requires
+        comparable_engine_and_literal2D<Egn, T>
+    {
+        using itl = typename Egn::index_type;
+
+        itl lhs_cols = lhs.cols();
+        itl lhs_rows = lhs.rows();
 
         size_t rhs_cols = rhs.begin()->size();
         size_t rhs_rows = rhs.size();
@@ -765,13 +824,13 @@ struct engine_helper
             return false;
         }
 
-        index_type_lhs lhs_i, lhs_j;
+        itl lhs_i, lhs_j;
         auto rhs_i = rhs.begin();
 
-        lhs_i = static_cast<index_type_lhs>(0);
+        lhs_i = static_cast<itl>(0);
         for(; lhs_i < lhs_rows; lhs_i++, rhs_i++)
         {
-            lhs_j = static_cast<index_type_lhs>(0);
+            lhs_j = static_cast<itl>(0);
             auto rhs_j = rhs_i->begin();
 
             for(; lhs_j < lhs_cols; lhs_j++, rhs_j++)
@@ -784,7 +843,6 @@ struct engine_helper
         }
         return true;
     }
-
 
     //TODO: 
     //static constexpr bool compare_exact(Egn const& lhs, literal2D<T> rhs);

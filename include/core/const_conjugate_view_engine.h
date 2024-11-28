@@ -19,8 +19,7 @@ struct view_lookup<Egn, matrix_view::const_conjugate> : public std::true_type
     using const_reference = typename Egn::data_type;
     using pointer_type = Egn const*;
     using rhs_type = Egn const&;
-    
-    
+
     using result_type = const_reference;
     
     static constexpr result_type eval(rhs_type d)

@@ -215,8 +215,8 @@ TEST_CASE
     REQUIRE(m.cols() == k.cols());
     REQUIRE(m.size() == k.size());
 
-    REQUIRE(true == eh::compare_exact(k, data_in));
-    REQUIRE(true == eh::compare_exact(m, minus_data_in));
+    REQUIRE(true == eh::compare2D_exact(k, data_in));
+    REQUIRE(true == eh::compare2D_exact(m, minus_data_in));
 
     size_t new_nbr_rows = 20;
     
@@ -234,7 +234,7 @@ TEST_CASE
     REQUIRE(s.cols() == k.cols());
     REQUIRE(s.size() == k.size());
 
-    REQUIRE(true == eh::compare_exact(s, k));
+    REQUIRE(true == eh::compare2D_exact(s, k));
 
     const literal2D<double> data_in_alt = {{sqrt2, sqrt2, sqrt2},
                                          {1/sqrt2, 1/sqrt2, 1/sqrt2},
@@ -255,13 +255,13 @@ TEST_CASE
     REQUIRE(s_alt.cols() == k.cols());
     REQUIRE(s_alt.size() == k.size());
 
-    REQUIRE(true == eh::compare_exact(s_alt, k));
+    REQUIRE(true == eh::compare2D_exact(s_alt, k));
 
     REQUIRE(s.rows() == k_alt.rows());
     REQUIRE(s.cols() == k_alt.cols());
     REQUIRE(s.size() == k_alt.size());
 
-    REQUIRE(true == eh::compare_exact(s, k_alt));
+    REQUIRE(true == eh::compare2D_exact(s, k_alt));
 
     s_alt.swap(s);
 
@@ -269,13 +269,13 @@ TEST_CASE
     REQUIRE(s.cols() == k.cols());
     REQUIRE(s.size() == k.size());
 
-    REQUIRE(true == eh::compare_exact(s, k));
+    REQUIRE(true == eh::compare2D_exact(s, k));
 
     REQUIRE(s_alt.rows() == k_alt.rows());
     REQUIRE(s_alt.cols() == k_alt.cols());
     REQUIRE(s_alt.size() == k_alt.size());
 
-    REQUIRE(true == eh::compare_exact(s_alt, k_alt));
+    REQUIRE(true == eh::compare2D_exact(s_alt, k_alt));
 }
 
 TEST_CASE

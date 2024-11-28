@@ -4,6 +4,7 @@
 //
 
 using namespace std::numbers;
+using namespace std::complex_literals;
 using std::size_t;
 using eh = engine_helper;
 
@@ -142,6 +143,29 @@ const literal2D<double> ex_5x3db = {{sqrt3, -sqrt3, sqrt3},
                                     {-sqrt3, sqrt3, -sqrt3},
                                     {sqrt3, -sqrt3, sqrt3}};
 
+const literal2D<std::complex<double>> ex_4x4fca = 
+              {{1.0 + 0.5i, 1.5 + 1.0i, 2.0 + 1.5i, 2.5 + 2.0i},
+               {3.0 + 2.5i, 3.5 + 3.0i, 4.0 + 3.5i, 4.5 + 4.0i},
+               {5.0 + 4.5i, 5.5 + 5.0i, 6.0 + 5.5i, 6.5 + 6.0i},
+               {7.0 + 6.5i, 7.5 + 7.0i, 8.0 + 7.5i, 8.5 + 8.0i}};
+
+const literal2D<std::complex<double>> ex_4x4fca_conj = 
+              {{1.0 - 0.5i, 1.5 - 1.0i, 2.0 - 1.5i, 2.5 - 2.0i},
+               {3.0 - 2.5i, 3.5 - 3.0i, 4.0 - 3.5i, 4.5 - 4.0i},
+               {5.0 - 4.5i, 5.5 - 5.0i, 6.0 - 5.5i, 6.5 - 6.0i},
+               {7.0 - 6.5i, 7.5 - 7.0i, 8.0 - 7.5i, 8.5 - 8.0i}};
+
+const literal2D<std::complex<double>> ex_6x4fca = 
+              {{1.01i, 1.02i, 1.03i, 1.04i, 1.05i, 1.06i},
+               {1.07i, 1.08i, 1.09i, 1.10i, 1.11i, 1.12i},
+               {1.13i, 1.14i, 1.15i, 1.16i, 1.17i, 1.18i},
+               {1.19i, 1.20i, 1.21i, 1.22i, 1.23i, 1.24i}};
+    
+const literal2D<std::complex<double>> ex_6x4fca_conj = 
+              {{-1.01i, -1.02i, -1.03i, -1.04i, -1.05i, -1.06i},
+               {-1.07i, -1.08i, -1.09i, -1.10i, -1.11i, -1.12i},
+               {-1.13i, -1.14i, -1.15i, -1.16i, -1.17i, -1.18i},
+               {-1.19i, -1.20i, -1.21i, -1.22i, -1.23i, -1.24i}};
 TEST_CASE
 (
     "is_constexpr correctly detects whether input is constexpr."
