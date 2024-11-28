@@ -6,6 +6,38 @@
 #pragma once
 
 template<typename Egn>
+requires
+    writable_engine<Egn>
+struct view_lookup<Egn, matrix_view::transparent> : public std::true_type
+{
+    using type = matrix_view::transparent;
+    
+    using data_type = typename Egn::data_type;
+    using index_type = typename Egn::index_type;
+    using reference = typename Egn::reference;
+    using const_reference = typename Egn::const_reference;
+    using pointer_type = Egn*;
+    using rhs_type = Egn &;
+    
+    using result_type = reference;
+    
+    static constexpr result_type eval(rhs_type d)
+    {
+        return d;
+    }
+    
+    static constexpr result_type eval2D(pointer_type p, index_type i, index_type j)
+    {
+        return eval((*p)(i, j));
+    }
+    
+    static constexpr result_type eval1D(pointer_type p, index_type i)
+    {
+        return eval((*p)(i));
+    }
+};
+
+template<typename Egn>
 requires 
     writable_engine<Egn>
 struct matrix_view_engine<Egn, matrix_view::transparent>

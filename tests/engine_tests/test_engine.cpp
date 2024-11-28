@@ -359,6 +359,7 @@ TEST_CASE
 
 namespace has_unary_operator_test_space
 {
+
     struct foo
     {
         foo operator-() const
@@ -376,6 +377,7 @@ namespace has_unary_operator_test_space
     }
 
     struct foobar {};
+
 };
 
 TEST_CASE
@@ -417,6 +419,16 @@ TEST_CASE
     REQUIRE(true == is_specialization<std::complex<float>, std::complex>::value);
 
     REQUIRE(false == is_specialization<std::array<float, 5>, std::vector>::value);
+}
+
+
+TEST_CASE
+(
+    "has conjugate concept correctly predicates conjugacy of the given type"
+)
+{
+    REQUIRE(true == has_conjugate<std::complex<double>>);
+    REQUIRE(false == has_conjugate<int64_t>);
 }
 
 /*
@@ -472,6 +484,7 @@ TEST_CASE
 #include "test_transparent_view_engine.cpp"
 #include "test_const_transparent_view_engine.cpp"
 #include "test_const_negation_view_engine.cpp"
+#include "test_const_conjugate_view_engine.cpp"
 
 
 

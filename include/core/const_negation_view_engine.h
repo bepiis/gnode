@@ -9,6 +9,39 @@ template<typename Egn>
 requires
     readable_engine<Egn> and
     valid_unary_minus_operator<typename Egn::data_type>
+struct view_lookup<Egn, matrix_view::const_negation> : public std::true_type
+{
+    using type = matrix_view::const_negation;
+    
+    using data_type = typename Egn::data_type;
+    using index_type = typename Egn::index_type;
+    using reference = typename Egn::data_type;
+    using const_reference = typename Egn::data_type;
+    using pointer_type = Egn const*;
+    using rhs_type = Egn const&;
+    
+    using result_type = const_reference;
+    
+    static constexpr result_type eval(rhs_type d)
+    {
+        return -d;
+    }
+    
+    static constexpr result_type eval2D(pointer_type p, index_type i, index_type j)
+    {
+        return eval((*p)(i, j));
+    }
+    
+    static constexpr result_type eval1D(pointer_type p, index_type i)
+    {
+        return eval((*p)(i));
+    }
+};
+
+template<typename Egn>
+requires
+    readable_engine<Egn> and
+    valid_unary_minus_operator<typename Egn::data_type>
 struct matrix_view_engine<Egn, matrix_view::const_negation>
 {
     

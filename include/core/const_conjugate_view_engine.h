@@ -9,6 +9,40 @@ template<typename Egn>
 requires
     readable_engine<Egn> and
     has_conjugate<typename Egn::data_type>
+struct view_lookup<Egn, matrix_view::const_conjugate> : public std::true_type
+{
+    using type = matrix_view::const_conjugate;
+    
+    using data_type = typename Egn::data_type;
+    using index_type = typename Egn::index_type;
+    using reference = typename Egn::data_type;
+    using const_reference = typename Egn::data_type;
+    using pointer_type = Egn const*;
+    using rhs_type = Egn const&;
+    
+    
+    using result_type = const_reference;
+    
+    static constexpr result_type eval(rhs_type d)
+    {
+        return std::conj(d);
+    }
+    
+    static constexpr result_type eval2D(pointer_type p, index_type i, index_type j)
+    {
+        return eval((*p)(i, j));
+    }
+    
+    static constexpr result_type eval1D(pointer_type p, index_type i)
+    {
+        return eval((*p)(i));
+    }
+};
+
+template<typename Egn>
+requires
+    readable_engine<Egn> and
+    has_conjugate<typename Egn::data_type>
 struct matrix_view_engine<Egn, matrix_view::const_conjugate>
 {
     
@@ -47,8 +81,8 @@ public:
     // Egn must have these by readable_engine requirement:
     using data_type = typename engine_type::data_type;
     using index_type = typename engine_type::index_type;
-    using reference = typename engine_type::const_reference;
-    using const_reference = typename engine_type::const_reference;
+    using reference = typename engine_type::data_type;
+    using const_reference = typename engine_type::data_type;
     // using mdspan_type = ...
     // using const_mdspan_type = ...
     
