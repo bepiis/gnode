@@ -128,13 +128,59 @@ struct view_lookup : public std::false_type
 template<typename VEgn>
 concept view_expressible = readable_engine<VEgn> and not owning_engine<VEgn>;
 
+template<typename EgnX, typename EgnY>
+concept valid_view_expression = 
+    view_expressible<EgnX> and 
+    view_expressible<EgnY> and
+    same_owning_engine<EgnX, EgnY>;
+
 template<typename VEgnLHS, typename VEgnRHS>
 requires
-    view_expressible<VEgnLHS> and
-    view_expressible<VEgnRHS>
+    valid_view_expression<VEgnLHS, VEgnRHS>
 struct view_expression
 {
+private:
+
+    // owning engine types must be the same
+    using owning_engine_type = typename VEgnLHS::owning_engine_type;
+
+    // same owning engine requirement guarentees that owning engine type alias is defined
+    using owning_reference = typename owning_engine_type::reference;
+    using owning_const_reference = typename owning_engine_type::const_reference;
+
+    static constexpr bool left_ref_is_owning_ref = std::same_as<typename VEgnLHS::reference, owning_reference>;
+    static constexpr bool right_ref_is_owning_ref = std::same_as<typename VEgnRHS::reference, owning_reference>;
+    static constexpr bool ref_inherits_owning_ref = left_ref_is_owning_ref and right_ref_is_owning_ref;
+
+    static constexpr bool left_ref_is_owning_data_type = std::same_as<typename VEgnLHS::reference, typename VEgnLHS::data_type>;
+    static constexpr bool right_ref_is_owning_data_type = std::same_as<typename VEgnRHS::reference, typename VEgnLHS::data_type>;
+
+    static constexpr bool ref_inherits_data_type = left_ref_is_owning_data_type or right_ref_is_owning_data_type;
+
+public:
+
+    // WARNING: matrix::orientation::none is not handled...
+    // expression will always inherit RHS orientation 
+    using orientation_type = typename get_engine_orientation<VEgnRHS>::type;
+
+    using data_type = typename VEgnLHS::data_type;
+    using index_type = std::common_type<typename VEgnLHS::index_type, typename VEgnRHS::index_type, size_t>;
     
+    // since if const ref is data type, then ref will inherit data type also
+    // see reference alias below.
+    using const_reference = std::conditional_t<ref_inherits_data_type, 
+                                               data_type, 
+                                               owning_const_reference>;
+                                               
+    // if left AND right ref are owning refs, then ref is owning ref
+    // else if left OR right ref is an owning data type then ref is owning data type
+    // else ref is an owning const reference
+    using reference = std::conditional_t<ref_inherits_owning_ref, 
+                                         owning_reference,
+                                         const_reference>;
+
+    
+
 };
 
 

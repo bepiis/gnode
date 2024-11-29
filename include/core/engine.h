@@ -340,6 +340,27 @@ concept mutable_access = requires(Egn & eng, typename Egn::index_type x)
     { eng(x) } -> valid_mutable_access_return_type<Egn>;
 };
 
+template<typename Egn>
+concept base_engine = 
+    base_types<Egn> and
+    convertible_refs<Egn> and
+    consistent_return_sizes<Egn> and
+    consistent_return_lengths<Egn>;
+
+template<typename Egn>
+concept owning_engine =
+    base_engine<Egn> and
+    has_owning_engine_type_alias<Egn>::is_owning;
+
+template<typename Egn>
+concept non_owning_engine = base_engine<Egn> and not owning_engine<Egn>;
+
+template<typename EgnX, typename EgnY>
+concept same_owning_engine =
+    non_owning_engine<EgnX> and
+    non_owning_engine<EgnY> and
+    std::same_as<typename EgnX::owning_engine_type, typename EgnY::owning_engine_type>;
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *  States the baseline requirements for an engine to
@@ -348,15 +369,11 @@ concept mutable_access = requires(Egn & eng, typename Egn::index_type x)
  */
 template<typename Egn>
 concept readable_engine = 
-    base_types<Egn> and 
-    convertible_refs<Egn> and 
-    //consistent_mutable_ref_type<Egn> and
-    //consistent_immutable_ref_type<Egn> and
-    consistent_return_sizes<Egn> and
-    consistent_return_lengths<Egn> and
+    base_engine<Egn> and
     //(immutable_access<Egn> or mutable_access<Egn>);
     immutable_access<Egn>;
     // TODO: maybe swappable?
+
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -380,20 +397,6 @@ template<typename Egn, typename T>
 concept comparable_engine_and_literal2D = 
     readable_engine<Egn> and
     comparable_types<typename Egn::data_type, T>;
-
-template<typename Egn>
-concept owning_engine =
-    readable_engine<Egn> and
-    has_owning_engine_type_alias<Egn>::is_owning;
-
-template<typename Egn>
-concept non_owning_engine = readable_engine<Egn> and not owning_engine<Egn>;
-
-template<typename EgnX, typename EgnY>
-concept same_owning_engine =
-    non_owning_engine<EgnX> and
-    non_owning_engine<EgnY> and
-    std::same_as<typename EgnX::owning_engine_type, typename EgnY::owning_engine_type>;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
