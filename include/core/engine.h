@@ -386,6 +386,15 @@ concept owning_engine =
     readable_engine<Egn> and
     has_owning_engine_type_alias<Egn>::is_owning;
 
+template<typename Egn>
+concept non_owning_engine = readable_engine<Egn> and not owning_engine<Egn>;
+
+template<typename EgnX, typename EgnY>
+concept same_owning_engine =
+    non_owning_engine<EgnX> and
+    non_owning_engine<EgnY> and
+    std::same_as<typename EgnX::owning_engine_type, typename EgnY::owning_engine_type>;
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *  Checks the supplied type for reshaping methods
