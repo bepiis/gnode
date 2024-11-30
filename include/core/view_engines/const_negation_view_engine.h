@@ -46,13 +46,9 @@ struct matrix_view_engine<Egn, matrix_view::const_negation>
 {
     
 /* view engine private type alias requirements */
-private:
-    using engine_ptr = Egn const*;
-    
-/* view engine private data requirements */
-private:
-    engine_ptr m_eng_ptr;
-    
+//private:
+
+        
 /* engine private type alias requirements */
 private:
     
@@ -70,6 +66,7 @@ public:
 
     using owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
     using engine_type = Egn;
+    using pointer_type = Egn const*;
     using ctor_type = engine_type const&;
 
 /* engine public type alias requirements */
@@ -86,7 +83,11 @@ public:
     using const_reference = typename engine_type::data_type;
     // using mdspan_type = ...
     // using const_mdspan_type = ...
-    
+
+/* view engine private data requirements */
+private:
+    pointer_type m_eng_ptr;
+
 /* view engine public method requirements */
 public:
     

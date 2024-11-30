@@ -343,3 +343,143 @@ TEST_CASE("test")
     }
 
  }*/
+/*
+template<typename VEgnLHS, typename VEgnRHS>
+requires
+    valid_view_expression<VEgnLHS, VEgnRHS>
+struct view_expression
+{
+private:
+
+    using self_type = view_expression<VEgnLHS, VEgnRHS>;
+
+    // owning engine types must be the same
+    using owning_engine_type = typename VEgnLHS::owning_engine_type;
+
+    // same owning engine requirement guarentees that owning engine type alias is defined
+    using owning_reference = typename owning_engine_type::reference;
+    using owning_const_reference = typename owning_engine_type::const_reference;
+
+    static constexpr bool left_ref_is_owning_ref = std::same_as<typename VEgnLHS::reference, owning_reference>;
+    static constexpr bool right_ref_is_owning_ref = std::same_as<typename VEgnRHS::reference, owning_reference>;
+    static constexpr bool ref_inherits_owning_ref = left_ref_is_owning_ref and right_ref_is_owning_ref;
+
+    static constexpr bool left_ref_is_owning_data_type = std::same_as<typename VEgnLHS::reference, typename VEgnLHS::data_type>;
+    static constexpr bool right_ref_is_owning_data_type = std::same_as<typename VEgnRHS::reference, typename VEgnLHS::data_type>;
+
+    static constexpr bool ref_inherits_data_type = left_ref_is_owning_data_type or right_ref_is_owning_data_type;
+
+    using lhs_ctor_type = VEgnLHS::ctor_type;
+    using rhs_ctor_type = VEgnRHS::ctor_type;
+    
+    using lhs_engine_type = VEgnLHS::engine_type;
+    using rhs_engine_type = VEgnRHS::engine_type;
+
+
+private:
+
+    using lhs_engine_ptr = std::conditional_t<ref_inherits_owning_ref,
+                                              VEgnLHS *,
+                                              VEgnLHS const*>;
+
+    using rhs_engine_ptr = std::conditional_t<right_ref_is_owning_ref,
+                                              VEgnRHS *,
+                                              VEgnRHS const*>;
+
+
+private:
+
+    lhs_engine_ptr m_left_eng_ptr;
+    rhs_engine_ptr m_right_eng_ptr;
+    
+
+public:
+
+    using ctor_type = std::conditional_t<ref_inherits_owning_ref,
+                                         self_type &,
+                                         self_type const&>;
+
+public:
+    // WARNING: matrix::orientation::none is not handled...
+    // expression will always inherit RHS orientation 
+    using orientation_type = typename get_engine_orientation<VEgnRHS>::type;
+
+    using data_type = typename VEgnLHS::data_type;
+    using index_type = std::common_type<typename VEgnLHS::index_type, typename VEgnRHS::index_type, size_t>;
+    
+    // since if const ref is data type, then ref will inherit data type also
+    // see reference alias below.
+    using const_reference = std::conditional_t<ref_inherits_data_type, 
+                                               data_type, 
+                                               owning_const_reference>;
+
+    // if left AND right ref are owning refs, then ref is owning ref
+    // else if left OR right ref is an owning data type then ref is owning data type
+    // else ref is an owning const reference
+    using reference = std::conditional_t<ref_inherits_owning_ref, 
+                                         owning_reference,
+                                         const_reference>;
+
+public:
+
+    constexpr view_expression() noexcept
+    : m_left_eng_ptr(nullptr), m_right_eng_ptr(nullptr)
+    {}
+
+    
+    explicit
+    constexpr view_expression(ctor_type rhs)
+    : m_left_eng_ptr(&lhs), m_right_eng_ptr(&rhs)
+    {}
+
+    constexpr bool has_view() const
+    {
+        return m_left_eng_ptr->has_view() && m_right_eng_ptr->has_view();
+    }
+
+public:
+
+    constexpr index_type rows() const noexcept
+    {
+        return m_right_eng_ptr->rows();
+    }
+
+    constexpr index_type cols() const noexcept
+    {
+        return m_right_eng_ptr->cols();
+    }
+
+    constexpr index_type size() const noexcept
+    {
+        return m_right_eng_ptr->size();
+    }
+
+        // required or readable_engine (immutable_access):
+    //      (*this)(i, j) -> reference or const_reference or data_type
+    // required for writable_engine (mutable_access):
+    //      (*this)(i, j) -> reference
+    constexpr reference operator()(index_type i, index_type j) const
+    {
+        return (*m_eng_ptr)(j, i);
+    }
+    
+    // required or readable_engine (immutable_access):
+    //      (*this)(i) -> reference or const_reference or data_type
+    // required for writable_engine (mutable_access):
+    //      (*this)(i) -> reference
+    constexpr reference operator()(index_type i) const
+    {
+        reference t = (*m_left_eng_ptr)(i);
+
+    }
+
+    constexpr void swap(view_expression & rhs) noexcept
+    {
+        helper::swap(*this, rhs);
+    }
+
+
+};*/
+
+
+

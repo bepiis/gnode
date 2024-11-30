@@ -1,60 +1,23 @@
 //
-//  transparent_view_engine.h
-//  Created by Ben Westcott on 11/24/24.
+//  row_view_engine.h
+//  Created by Ben Westcott on 11/30/24.
 //
 
 #pragma once
 
 template<typename Egn>
-requires
-    writable_engine<Egn>
-struct view_lookup<Egn, matrix_view::transparent> : public std::true_type
-{
-    using type = matrix_view::transparent;
-    
-    using data_type = typename Egn::data_type;
-    using index_type = typename Egn::index_type;
-    using reference = typename Egn::reference;
-    using const_reference = typename Egn::const_reference;
-    using pointer_type = Egn*;
-    using rhs_type = Egn &;
-    
-    using result_type = reference;
-    
-    static constexpr result_type eval(rhs_type d)
-    {
-        return d;
-    }
-    
-    static constexpr result_type eval2D(pointer_type p, index_type i, index_type j)
-    {
-        return eval((*p)(i, j));
-    }
-    
-    static constexpr result_type eval1D(pointer_type p, index_type i)
-    {
-        return eval((*p)(i));
-    }
-};
-
-template<typename Egn>
 requires 
     writable_engine<Egn>
-struct matrix_view_engine<Egn, matrix_view::transparent>
+struct matrix_view_engine<Egn, matrix_view::row>
 {
 
 /* view engine private type alias requirements */
-private: 
-    using engine_ptr = Egn*;
-
-/* view engine private data requirements */
-private:
-    engine_ptr m_eng_ptr;
+//private: 
 
 /* engine private type alias requirements */
 private:
 
-    using self_type = matrix_view_engine<Egn, matrix_view::transparent>;
+    using self_type = matrix_view_engine<Egn, matrix_view::row>;
     using orient = matrix_orientation;
     using helper = engine_helper;
     // using mdspan_stuff = ...
@@ -67,6 +30,7 @@ private:
 public:
     using owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
     using engine_type = Egn;
+    using pointer_type = Egn*;
     using ctor_type = engine_type &;
 
 /* engine public type alias requirements */
@@ -85,16 +49,21 @@ public:
     // using mdspan_type = ...
     // using const_mdspan_type = ...
 
+/* view engine private data requirements */
+private:
+    pointer_type m_eng_ptr;
+    index_type m_row;
+
 /* view engine public method requirements */
 public:
 
     constexpr matrix_view_engine() noexcept
-    : m_eng_ptr(nullptr)
+    : m_eng_ptr(nullptr), m_row(0)
     {}
 
     explicit
-    constexpr matrix_view_engine(engine_type & rhs)
-    : m_eng_ptr(&rhs)
+    constexpr matrix_view_engine(engine_type & rhs, index_type row = 0)
+    : m_eng_ptr(&rhs), m_row(row)
     {}
 
     constexpr bool has_view() const
@@ -120,7 +89,7 @@ public:
         {
             return m_eng_ptr->rows();
         }*/
-        return m_eng_ptr->rows();
+        return 1;
     }
 
     // required for readable_engine (consistant_return_lengths): 
@@ -152,7 +121,7 @@ public:
         {
             return m_eng_ptr->size();
         }*/
-        return m_eng_ptr->size();
+        return cols();
     }
 
     // required or readable_engine (immutable_access):
@@ -161,16 +130,16 @@ public:
     //      (*this)(i, j) -> reference
     constexpr reference operator()(index_type i, index_type j) const
     {
-        return (*m_eng_ptr)(i, j);
+        return (*m_eng_ptr)(m_row, j);
     }
 
     // required or readable_engine (immutable_access):
     //      (*this)(i) -> reference or const_reference or data_type
     // required for writable_engine (mutable_access):
     //      (*this)(i) -> reference
-    constexpr reference operator()(index_type i) const
+    constexpr reference operator()(index_type j) const
     {
-        return (*m_eng_ptr)(i);
+        return (*m_eng_ptr)(m_row, j);
     }
 
     constexpr void swap(matrix_view_engine & rhs) noexcept
@@ -178,3 +147,4 @@ public:
         helper::swap(*this, rhs);
     }
 };
+

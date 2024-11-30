@@ -593,7 +593,9 @@ TEST_CASE
 #include "test_const_conjugate_view_engine.cpp"
 #include "test_transpose_view_engine.cpp"
 #include "test_const_transpose_view_engine.cpp"
-
-
+#include "test_row_view_engine.cpp"
+#include "test_const_row_view_engine.cpp"
+#include "test_col_view_engine.cpp"
+//#include "test_view_expressions.cpp"
 
  

@@ -67,7 +67,6 @@ struct matrix_view_engine;
 // valid view types
 struct matrix_view
 {
-    
     struct transparent {};
     struct const_transparent {};
     
@@ -112,12 +111,27 @@ struct view_lookup : public std::false_type
     }
 };
 
-#include "transparent_view_engine.h"
-#include "const_transparent_view_engine.h"
-#include "const_negation_view_engine.h"
-#include "const_conjugate_view_engine.h"
-#include "transpose_view_engine.h"
-#include "const_transpose_view_engine.h"
+#include "view_engines/transparent_view_engine.h"
+#include "view_engines/const_transparent_view_engine.h"
+#include "view_engines/const_negation_view_engine.h"
+#include "view_engines/const_conjugate_view_engine.h"
+#include "view_engines/transpose_view_engine.h"
+#include "view_engines/const_transpose_view_engine.h"
+
+#include "view_engines/row_view_engine.h"
+#include "view_engines/const_row_view_engine.h"
+#include "view_engines/col_view_engine.h"
+#include "view_engines/const_col_view_engine.h"
+
+
+template<typename VEgn>
+concept expression_basics = 
+requires
+{
+    typename VEgn::engine_type;
+    typename VEgn::engine_ptr;
+    typename VEgn::ctor_type;
+};
 
 // matrix view engine types will already satisfy this requirement by design,
 // but view expression itself must satisfy its own requirement, being
@@ -126,7 +140,10 @@ struct view_lookup : public std::false_type
 // The V prepending Egn denotes that the type can be included in expressions
 // with view engine types, which this concept enforces.
 template<typename VEgn>
-concept view_expressible = readable_engine<VEgn> and not owning_engine<VEgn>;
+concept view_expressible = 
+    expression_basics<VEgn> and
+    readable_engine<VEgn> and
+    not owning_engine<VEgn>;
 
 template<typename EgnX, typename EgnY>
 concept valid_view_expression = 
@@ -134,54 +151,15 @@ concept valid_view_expression =
     view_expressible<EgnY> and
     same_owning_engine<EgnX, EgnY>;
 
-template<typename VEgnLHS, typename VEgnRHS>
-requires
-    valid_view_expression<VEgnLHS, VEgnRHS>
-struct view_expression
+
+template<typename Egn, typename Vw, typename... Vws>
+struct view_combiner
 {
-private:
-
-    // owning engine types must be the same
-    using owning_engine_type = typename VEgnLHS::owning_engine_type;
-
-    // same owning engine requirement guarentees that owning engine type alias is defined
-    using owning_reference = typename owning_engine_type::reference;
-    using owning_const_reference = typename owning_engine_type::const_reference;
-
-    static constexpr bool left_ref_is_owning_ref = std::same_as<typename VEgnLHS::reference, owning_reference>;
-    static constexpr bool right_ref_is_owning_ref = std::same_as<typename VEgnRHS::reference, owning_reference>;
-    static constexpr bool ref_inherits_owning_ref = left_ref_is_owning_ref and right_ref_is_owning_ref;
-
-    static constexpr bool left_ref_is_owning_data_type = std::same_as<typename VEgnLHS::reference, typename VEgnLHS::data_type>;
-    static constexpr bool right_ref_is_owning_data_type = std::same_as<typename VEgnRHS::reference, typename VEgnLHS::data_type>;
-
-    static constexpr bool ref_inherits_data_type = left_ref_is_owning_data_type or right_ref_is_owning_data_type;
-
-public:
-
-    // WARNING: matrix::orientation::none is not handled...
-    // expression will always inherit RHS orientation 
-    using orientation_type = typename get_engine_orientation<VEgnRHS>::type;
-
-    using data_type = typename VEgnLHS::data_type;
-    using index_type = std::common_type<typename VEgnLHS::index_type, typename VEgnRHS::index_type, size_t>;
-    
-    // since if const ref is data type, then ref will inherit data type also
-    // see reference alias below.
-    using const_reference = std::conditional_t<ref_inherits_data_type, 
-                                               data_type, 
-                                               owning_const_reference>;
-                                               
-    // if left AND right ref are owning refs, then ref is owning ref
-    // else if left OR right ref is an owning data type then ref is owning data type
-    // else ref is an owning const reference
-    using reference = std::conditional_t<ref_inherits_owning_ref, 
-                                         owning_reference,
-                                         const_reference>;
-
-    
-
+    using type = view_combiner<matrix_view_engine<Egn, Vw>, Vws...>::type;
 };
 
-
-
+template<typename Egn, typename Vw>
+struct view_combiner<Egn, Vw>
+{
+    using type = matrix_view_engine<Egn, Vw>;
+};

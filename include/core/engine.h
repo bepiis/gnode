@@ -66,7 +66,7 @@ constexpr inline bool is_size_ct_v = is_constexpr([]{Egn().size();});
  * see:
  * [2] https://en.cppreference.com/w/cpp/types/void_t
  * 
- * Detecting whether a type contains a nested type can be done by
+ *  Detecting whether a type contains a nested type can be done by
  *  having a primary template which handles any type (inherits std::false_type)
  * 
  *  but then a template specialization which void casts the nested type in question will be chosen 
