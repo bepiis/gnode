@@ -5,16 +5,16 @@
 
 TEST_CASE
 (
-    "IF M is a col view engine\n"
+    "IF M is a row view engine\n"
     "THEN it has an owning engine type alias whose is_owning member is false\n"
-    "THEN it is NOT an owning engine\n"
+    "THEN it is NOT an owning engine\n"  
     "THEN M has mutable access\n"
     "THEN M has immutable access\n"
     "THEN M has a consistent mutable reference type\n"
     "THEN M has a consistent immutable reference type\n"
     "THEN M has consistent return sizes\n"
     "THEN M has consistent return lenghts\n"
-    "THEN M is NOT reshapeable or row_reshapeable or col_reshapeable.\n"
+    "THEN M is not reshapeable or row_reshapeable or col_reshapeable.\n"
 )
 {
     using dtype = int64_t;
@@ -23,10 +23,10 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::col_major;
+    using ltype = matrix_orientation::row_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::col>;
+    using M = engine_view<K, inport_views::row>;
 
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
     REQUIRE(false == owning_engine<M>);
@@ -44,11 +44,13 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF M is a type col view engine\n"
+    "IF M is a type row view engine\n"
     "THEN it is a base engine\n"
     "THEN it is a readable engine\n"
     "THEN it is a writable engine.\n"
     "THEN it is a valid mutable view engine\n"
+    "THEN it does not have an immutable view.\n"
+
 )
 {
     using dtype = int64_t;
@@ -57,27 +59,28 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::col_major;
+    using ltype = matrix_orientation::row_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
 
     REQUIRE(true == writable_engine<K>);
 
-    using M = matrix_view_engine<K, matrix_view::col>;
+    using M = engine_view<K, inport_views::row>;
 
     REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
     REQUIRE(true == writable_engine<M>);
-    REQUIRE(true == mutable_view_engine<M>);
+    REQUIRE(true == mutable_view<M>);
+    REQUIRE(false == immutable_view<M>);
 }
 
 TEST_CASE
 (
-    "IF M is a col view engine AND K is its owning engine\n"
+    "IF M is a row view engine AND K is its owning engine\n"
     "THEN M and K have the same base types\n"
     "THEN M's owning engine type is K\n"
     "THEN M's engine type is K.\n"
-    "THEN IF S is a col view engine and M is its owning engine\n"
+    "THEN IF S is a row view engine and M is its owning engine\n"
     "THEN S's owning engine is K\n"
     "THEN S's engine type is M\n"
 )
@@ -88,10 +91,10 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::col_major;
+    using ltype = matrix_orientation::row_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::col>;
+    using M = engine_view<K, inport_views::row>;
 
     REQUIRE(true == std::is_same_v<M::data_type, K::data_type>);
     REQUIRE(true == std::is_same_v<M::index_type, K::index_type>);
@@ -102,7 +105,7 @@ TEST_CASE
     REQUIRE(true == std::is_same_v<M::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<M::engine_type, K>);
 
-    using S = matrix_view_engine<M, matrix_view::row>;
+    using S = engine_view<M, inport_views::row>;
 
     REQUIRE(true == std::is_same_v<S::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<S::engine_type, M>);
@@ -111,7 +114,7 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF M is a col view engine\n"
+    "IF M is a row view engine\n"
     "THEN it is trivially copyable\n"
     "THEN it is trivially copy constructible\n"
     "THEN it is trivially move constructible\n"
@@ -128,10 +131,10 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::col_major;
+    using ltype = matrix_orientation::row_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::col>;
+    using M = engine_view<K, inport_views::row>;
 
     REQUIRE(true == std::is_trivially_copyable_v<M>);
     REQUIRE(true == std::is_trivially_copy_constructible_v<M>);
@@ -145,7 +148,7 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF m is a col view engine\n"
+    "IF m is a row view engine\n"
     "THEN IF it is default constructed\n"
     "THEN m's engine ptr is nullptr.\n"
 )
@@ -156,38 +159,37 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
     
-    using ltype = matrix_orientation::col_major;
+    using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::col>;
+    using M = engine_view<K, inport_views::row>;
     
     M m;
     
     REQUIRE(false == m.has_view());
 }
 
-
 TEST_CASE
 (
     "IF k is a matrix storage engine which is literal2D constructed\n"
-    "THEN IF m is a col view engine and is constructed with k\n"
-    "THEN m's rows equals k's rows\n"
-    "THEN m's cols equals k's 1\n"
-    "THEN m's size equals k's rows\n"
-    "THEN compare exact m, data in's first col returns true\n"
+    "THEN IF m is a row view engine and is constructed with k\n"
+    "THEN m's rows equals 1\n"
+    "THEN m's cols equals k's cols\n"
+    "THEN m's size equals k's cols\n"
+    "THEN compare exact m, data in's first row returns true\n"
     "THEN IF k is reshaped\n"
-    "THEN m's rows equals k's rows\n"
-    "THEN m's cols equals k's 1\n"
-    "THEN m's size equals k's rows\n"
-    "THEN compare exact m, data in's first col returns true\n"
+    "THEN m's rows equals 1\n"
+    "THEN m's cols equals k's cols\n"
+    "THEN m's size equals k's cols\n"
+    "THEN compare exact m, data in's first row returns true\n"
     "THEN IF k_alt is literal2D constructed\n"
-    "THEN IF m_alt is constructed with k_alt and col != 0\n"
+    "THEN IF m_alt is constructed with k_alt and row != 0\n"
     "THEN IF m_alt and m are swapped\n"
-    "THEN m_alt's rows equals k's rows AND m's rows equals k_alt's rows \n"
-    "THEN m_alt's cols equals 1 AND m's cols 1\n"
-    "THEN m_alt's size equals k's rows AND m's size equals k_alt's rows\n"
-    "THEN compare exact m_alt, data in's first col returns true\n"
-    "THEN compare exact m, and data in alt's pth col returns true\n"
+    "THEN m_alt's rows AND m's rows equal 1\n"
+    "THEN m_alt's cols equals k's cols AND m's cols equals k_alt's cols\n"
+    "THEN m_alt's size equals k's cols AND m's size equals k_alt's cols\n"
+    "THEN compare exact m_alt, data in's first row returns true\n"
+    "THEN compare exact m, and data in alt's pth row returns true\n"
 )
 {
     using dtype = double;
@@ -196,10 +198,10 @@ TEST_CASE
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
 
-    using ltype = matrix_orientation::col_major;
+    using ltype = matrix_orientation::row_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::col>;
+    using M = engine_view<K, inport_views::row>;
 
     const literal2D<double> data_in =
         {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05},
@@ -211,8 +213,8 @@ TEST_CASE
          {1.36, 1.37, 1.38, 1.39, 1.40, 1.41},
          {1.42, 1.43, 1.44, 1.45, 1.46, 1.47}};
 
-    const literal2D<double> data_in_col_zero = 
-        {{1.00}, {1.06}, {1.12}, {1.18}, {1.24}, {1.30}, {1.36}, {1.42}};
+    const literal2D<double> data_in_row_zero = 
+        {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05}};
 
     const literal2D<double> data_in_alt =
         {{1.00, 1.06, 1.12, 1.18, 1.24, 1.30},
@@ -226,17 +228,17 @@ TEST_CASE
 
     size_t p = 5;
 
-    const literal2D<double> data_in_alt_pth_col = 
-        {{1.30}, {1.31}, {1.32}, {1.33}, {1.34}, {1.35}, {-6.00}, {-6.60}};
+    const literal2D<double> data_in_alt_pth_row = 
+        {{1.05, 1.11, 1.17, 1.23, 1.29, 1.35}};
 
     K k(data_in);
     M m(k);
     
-    REQUIRE(m.rows() == k.rows());
-    REQUIRE(m.cols() == 1);
-    REQUIRE(m.size() == k.rows());
+    REQUIRE(m.rows() == 1);
+    REQUIRE(m.cols() == k.cols());
+    REQUIRE(m.size() == k.cols());
 
-    REQUIRE(true == eh::compare2D_exact(m, data_in_col_zero));
+    REQUIRE(true == eh::compare2D_exact(m, data_in_row_zero));
 
     size_t new_nbr_rows = 50;
     size_t new_row_reach = 400;
@@ -245,9 +247,9 @@ TEST_CASE
 
     k.reshape(new_nbr_rows, new_row_reach, new_nbr_cols, new_col_reach);
 
-    REQUIRE(m.rows() == k.rows());
-    REQUIRE(m.cols() == 1);
-    REQUIRE(m.size() == k.rows());
+    REQUIRE(m.rows() == 1);
+    REQUIRE(m.cols() == k.cols());
+    REQUIRE(m.size() == k.cols());
 
     M mv(k);
     REQUIRE(true == eh::compare2D_exact(m, mv));
@@ -257,31 +259,31 @@ TEST_CASE
 
     m.swap(m_alt);
 
-    REQUIRE(m.rows() == k_alt.rows());
-    REQUIRE(m.cols() == 1);
-    REQUIRE(m.size() == k_alt.rows());
+    REQUIRE(m.rows() == 1);
+    REQUIRE(m.cols() == k_alt.cols());
+    REQUIRE(m.size() == k_alt.cols());
 
-    REQUIRE(true == eh::compare2D_exact(m, data_in_alt_pth_col));
+    REQUIRE(true == eh::compare2D_exact(m, data_in_alt_pth_row));
 
-    REQUIRE(m_alt.rows() == k.rows());
-    REQUIRE(m_alt.cols() == 1);
-    REQUIRE(m_alt.size() == k.rows());
+    REQUIRE(m_alt.rows() == 1);
+    REQUIRE(m_alt.cols() == k.cols());
+    REQUIRE(m_alt.size() == k.cols());
 
     REQUIRE(true == eh::compare2D_exact(m_alt, mv));
 
     m_alt.swap(m);
 
-    REQUIRE(m.rows() == k.rows());
-    REQUIRE(m.cols() == 1);
-    REQUIRE(m.size() == k.rows());
+    REQUIRE(m.rows() == 1);
+    REQUIRE(m.cols() == k.cols());
+    REQUIRE(m.size() == k.cols());
 
     REQUIRE(true == eh::compare2D_exact(m, mv));
 
-    REQUIRE(m_alt.rows() == k_alt.rows());
-    REQUIRE(m_alt.cols() == 1);
-    REQUIRE(m_alt.size() == k_alt.rows());
+    REQUIRE(m_alt.rows() == 1);
+    REQUIRE(m_alt.cols() == k_alt.cols());
+    REQUIRE(m_alt.size() == k_alt.cols());
 
-    REQUIRE(true == eh::compare2D_exact(m_alt, data_in_alt_pth_col));
+    REQUIRE(true == eh::compare2D_exact(m_alt, data_in_alt_pth_row));
 }
 
 

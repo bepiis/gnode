@@ -7,8 +7,8 @@
 
 template<typename Egn>
 requires 
-    readable_engine<Egn>
-struct matrix_view_engine<Egn, matrix_view::const_row>
+    exportable<Egn>
+struct engine_view<Egn, export_views::row>
 {
 
 /* view engine private type alias requirements */
@@ -17,7 +17,7 @@ struct matrix_view_engine<Egn, matrix_view::const_row>
 /* engine private type alias requirements */
 private:
 
-    using self_type = matrix_view_engine<Egn, matrix_view::const_row>;
+    using self_type = engine_view<Egn, export_views::row>;
     using orient = matrix_orientation;
     using helper = engine_helper;
     // using mdspan_stuff = ...
@@ -57,12 +57,12 @@ private:
 /* view engine public method requirements */
 public:
 
-    constexpr matrix_view_engine() noexcept
+    constexpr engine_view() noexcept
     : m_eng_ptr(nullptr), m_row(0)
     {}
 
     explicit
-    constexpr matrix_view_engine(engine_type const& rhs, index_type row = 0)
+    constexpr engine_view(engine_type const& rhs, index_type row = 0)
     : m_eng_ptr(&rhs), m_row(row)
     {}
 
@@ -142,7 +142,7 @@ public:
         return (*m_eng_ptr)(m_row, j);
     }
 
-    constexpr void swap(matrix_view_engine & rhs) noexcept
+    constexpr void swap(engine_view & rhs) noexcept
     {
         helper::swap(*this, rhs);
     }

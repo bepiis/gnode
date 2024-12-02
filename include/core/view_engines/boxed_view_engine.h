@@ -5,8 +5,8 @@
 
 template<typename Egn>
 requires
-    writable_engine<Egn>
-struct matrix_view_engine<Egn, matrix_view::box>
+    inportable<Egn>
+struct engine_view<Egn, inport_views::box>
 {
     
 /* view engine private type alias requirements */
@@ -15,7 +15,7 @@ struct matrix_view_engine<Egn, matrix_view::box>
 /* engine private type alias requirements */
 private:
     
-    using self_type = matrix_view_engine<Egn, matrix_view::box>;
+    using self_type = engine_view<Egn, inport_views::box>;
     using orient = matrix_orientation;
     using helper = engine_helper;
     // using mdspan_stuff = ...
@@ -59,12 +59,12 @@ private:
 /* view engine public method requirements */
 public:
     
-    constexpr matrix_view_engine() noexcept
+    constexpr engine_view() noexcept
     : m_eng_ptr(nullptr), start_row(0), nbr_rows(0), start_col(0), nbr_cols(0)
     {}
     
     explicit
-    constexpr matrix_view_engine
+    constexpr engine_view
     (
         engine_type & rhs,
         index_type sr,
@@ -124,7 +124,7 @@ public:
         return (*m_eng_ptr)(i);
     }
     
-    constexpr void swap(matrix_view_engine & rhs) noexcept
+    constexpr void swap(engine_view & rhs) noexcept
     {
         helper::swap(*this, rhs);
     }

@@ -579,7 +579,7 @@ TEST_CASE
  *      using ltype = ...;      // engine orientation
  *      
  *      // owning engine type
- *      using K = matrix_storage_engine<dtype, atype, ROWS, COLS, ltype> 
+ *      using K = (in/ex)port_view<dtype, atype, ROWS, COLS, ltype> 
  *      K m(...)
  * 
  *      
@@ -587,17 +587,18 @@ TEST_CASE
  * }
  */
 
-#include "test_transparent_view_engine.cpp"
-#include "test_const_transparent_view_engine.cpp"
-#include "test_const_negation_view_engine.cpp"
-#include "test_const_conjugate_view_engine.cpp"
-#include "test_transpose_view_engine.cpp"
-#include "test_const_transpose_view_engine.cpp"
-#include "test_row_view_engine.cpp"
-#include "test_const_row_view_engine.cpp"
-#include "test_col_view_engine.cpp"
-#include "test_const_col_view_engine.cpp"
-#include "test_boxed_view_engine.cpp"
+#include "test_inport_transparent_view.cpp"
+#include "test_export_transparent_view.cpp"
+
+#include "test_export_negation_view.cpp"
+#include "test_export_conjugate_view.cpp"
+#include "test_inport_transpose_view.cpp"
+#include "test_export_transpose_view.cpp"
+#include "test_inport_row_view.cpp"
+#include "test_export_row_view.cpp"
+#include "test_inport_col_view.cpp"
+#include "test_export_col_view.cpp"
+#include "test_inport_boxed_view.cpp"
 //#include "test_view_expressions.cpp"
 
  

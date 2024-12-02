@@ -1,20 +1,20 @@
 //
-//  test_transpose_view_engine.cpp
+//  test_export_transpose_view_engine.cpp
 //  Created by Ben Westcott on 11/28/24.
 //
 
 TEST_CASE
 (
-  "IF M is a transpose view engine\n"
+  "IF M is the type of a a const transpose view engine\n"
   "THEN it has an owning engine type alias whose is_owning member is false\n"
-  "THEN it is NOT an owning engine\n"   
-  "THEN it has mutable access\n"
-  "THEN it has immutable access\n"
-  "THEN it has a consistent mutable reference type\n"
-  "THEN it has a consistent immutable reference type\n"
-  "THEN it has consistent return sizes\n"
-  "THEN it has consistent return lenghts\n"
-  "THEN it is not reshapeable or row_reshapeable or col_reshapeable.\n"
+  "THEN it is NOT an owning engine\n"  
+  "THEN M does not have mutable access\n"
+  "THEN M has immutable access\n"
+  "THEN M does not have a consistent mutable reference type\n"
+  "THEN M has a consistent immutable reference type\n"
+  "THEN M has consistent return sizes\n"
+  "THEN M has consistent return lenghts\n"
+  "THEN M is not reshapeable or row_reshapeable or col_reshapeable.\n"
 )
 {
     using dtype = int64_t;
@@ -26,13 +26,13 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::transpose>;
+    using M = engine_view<K, export_views::transpose>;
     
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
     REQUIRE(false == owning_engine<M>);
-    REQUIRE(true == mutable_access<M>);
+    REQUIRE(false == mutable_access<M>);
     REQUIRE(true == immutable_access<M>);
-    REQUIRE(true == consistent_mutable_ref_type<M>);
+    REQUIRE(false == consistent_mutable_ref_type<M>);
     REQUIRE(true == consistent_immutable_ref_type<M>);
     REQUIRE(true == consistent_return_sizes<M>);
     REQUIRE(true == consistent_return_lengths<M>);
@@ -40,44 +40,48 @@ TEST_CASE
     REQUIRE(false == reshapeable_engine<M>);
     REQUIRE(false == row_reshapeable_engine<M>);
     REQUIRE(false == col_reshapeable_engine<M>);
+    
+    
 }
 
 TEST_CASE
 (
-    "IF M is a type transpose view engine\n"
-    "THEN it is a base engine\n"
-    "THEN it is a readable engine\n"
-    "THEN it is a writable engine.\n"
-    "THEN it is a valid mutable view engine\n"
+  "IF M is a type const transpose view engine\n"
+  "THEN it is a base engine\n"
+  "THEN it is a readable engine\n"
+  "THEN it is NOT a writable engine\n"
+  "THEN it is a basic view engine\n"
+  "THEN it is NOT a mutable view engine\n"
+  "THEN it has a immutable view.\n"
+
 )
 {
-    using dtype = int64_t;
+    using dtype = std::complex<int64_t>;
     using atype = std::allocator<dtype>;
-
+    
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
-
-    using ltype = matrix_orientation::row_major;
-
+    
+    using ltype = matrix_orientation::col_major;
+    
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-
-    REQUIRE(true == writable_engine<K>);
-
-    using M = matrix_view_engine<K, matrix_view::transpose>;
-
+    using M = engine_view<K, export_views::transpose>;
+    
     REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
-    REQUIRE(true == writable_engine<M>);
-    REQUIRE(true == mutable_view_engine<M>);
+    REQUIRE(false == writable_engine<M>);
+    REQUIRE(true == view_basics<M>);
+    REQUIRE(false == mutable_view<M>);
+    REQUIRE(true == immutable_view<M>);
 }
 
 TEST_CASE
 (
-  "IF M is a transpose view engine AND K is its owning engine\n"
+  "IF M is a type const transpose view engine AND K is its owning engine\n"
   "THEN M and K have the same base types\n"
   "THEN M's owning engine type is K\n"
   "THEN M's engine type is K.\n"
-  "THEN IF S is a transpose view engine and M is its owning engine\n"
+  "THEN IF S is a const transpose view engine and M is its owning engine\n"
   "THEN S's owning engine is K\n"
   "THEN S's engine type is M\n"
 )
@@ -91,18 +95,18 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::transpose>;
+    using M = engine_view<K, export_views::transpose>;
     
     REQUIRE(true == std::is_same_v<M::data_type, K::data_type>);
     REQUIRE(true == std::is_same_v<M::index_type, K::index_type>);
-    REQUIRE(true == std::is_same_v<M::reference, K::reference>);
+    REQUIRE(true == std::is_same_v<M::reference, K::const_reference>);
     REQUIRE(true == std::is_same_v<M::const_reference, K::const_reference>);
     REQUIRE(true == std::is_same_v<M::orientation_type, matrix_orientation::col_major>);
     
     REQUIRE(true == std::is_same_v<M::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<M::engine_type, K>);
     
-    using S = matrix_view_engine<M, matrix_view::transpose>;
+    using S = engine_view<M, export_views::transpose>;
     
     REQUIRE(true == std::is_same_v<S::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<S::engine_type, M>);
@@ -111,7 +115,7 @@ TEST_CASE
 
 TEST_CASE
 (
-  "IF M is a transpose view engine\n"
+  "IF M is a type const transpose view engine\n"
   "THEN it is trivially copyable\n"
   "THEN it is trivially copy constructible\n"
   "THEN it is trivially move constructible\n"
@@ -131,7 +135,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::transpose>;
+    using M = engine_view<K, export_views::transpose>;
     
     REQUIRE(true == std::is_trivially_copyable_v<M>);
     REQUIRE(true == std::is_trivially_copy_constructible_v<M>);
@@ -139,13 +143,13 @@ TEST_CASE
     REQUIRE(true == std::is_default_constructible_v<M>);
     REQUIRE(true == std::is_nothrow_default_constructible_v<M>);
     REQUIRE(false == std::is_trivially_default_constructible_v<M>);
-    REQUIRE(true == std::constructible_from<M, K &>);
+    REQUIRE(true == std::constructible_from<M, K const&>);
     REQUIRE(true == std::is_nothrow_swappable_v<M&>);
 }
 
 TEST_CASE
 (
-  "IF m is a transpose view engine\n"
+  "IF m is a const transpose view engine\n"
   "THEN IF it is default constructed\n"
   "THEN m's engine ptr is nullptr.\n"
 )
@@ -159,25 +163,24 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::transpose>;
+    using M = engine_view<K, export_views::transpose>;
     
     M m;
     
     REQUIRE(false == m.has_view());
 }
 
-
 TEST_CASE
 (
   "IF k is a matrix storage engine which is literal2D constructed\n"
-  "THEN IF m is a transpose view engine and is constructed with k\n"
+  "THEN IF m is a const transpose view engine and is constructed with k\n"
   "THEN m has a view\n"
   "THEN m's rows equals k's cols\n"
   "THEN m's cols equals k's rows\n"
   "THEN m's size equals k's size\n"
   "THEN compare exact m, data_in_T returns true\n"
   "THEN IF k is reshaped\n"
-  "THRN IF s is a transpose view engine constructed with m"
+  "THRN IF s is a const transpose view engine constructed with m"
   "THEN m's rows equals k's cols\n"
   "THEN m's cols equals k's rows\n"
   "THEN m's size equals k's size\n"
@@ -201,8 +204,8 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::transpose>;
-    using S = matrix_view_engine<M, matrix_view::transpose>;
+    using M = engine_view<K, export_views::transpose>;
+    using S = engine_view<M, export_views::transpose>;
     
     const literal2D<double> data_in  =
        {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
@@ -296,10 +299,8 @@ TEST_CASE
 TEST_CASE
 (
   "IF k and kT are matrix storage engines which are literal2D constructed\n"
-  "THEN IF m is a transpose view engine and is constructed with k\n"
+  "THEN IF m is a const transpose view engine and is constructed with k\n"
   "THEN m_ij == kT_ij AND m_i = k_i\n"
-  "THEN if m set to NUM for all i and j\n"
-  "THEN k is set to NUM for all i and j.\n"
 )
 {
     using dtype = std::complex<double>;
@@ -311,7 +312,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::transpose>;
+    using M = engine_view<K, export_views::transpose>;
     
     const literal2D<std::complex<double>> data_in =
        {{1.0 + 0.5i, 1.5 + 1.0i, 2.0 + 1.5i, 2.5 + 2.0i},
@@ -325,7 +326,7 @@ TEST_CASE
         {2.0 + 1.5i, 4.0 + 3.5i, 6.0 + 5.5i, 8.0 + 7.5i},
         {2.5 + 2.0i, 4.5 + 4.0i, 6.5 + 6.0i, 8.5 + 8.0i}};
     
-
+    
     K k(data_in);
     K kT(data_in_T);
     M m(k);
@@ -346,34 +347,8 @@ TEST_CASE
     for(; i < m.size(); i++)
     {
         REQUIRE(m(i) == k(i));
-        m(i) = 0.0;
-        REQUIRE(0.0 == m(i));
     }
     
-    i = 0;
-    for(; i < m.rows(); i++)
-    {
-        j = 0;
-        for(; j < m.cols(); j++)
-        {
-            m(i, j) = 30.0;
-            REQUIRE(30.0 == m(i, j));
-        }
-    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

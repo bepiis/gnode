@@ -1,5 +1,5 @@
 //
-//  test_const_conjugate_view_engine.cpp
+//  test_export_conjugate_view_engine.cpp
 //  Created by Ben Westcott on 11/27/24.
 //
 
@@ -26,7 +26,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_conjugate>;
+    using M = engine_view<K, export_views::conjugate>;
     
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
     REQUIRE(false == owning_engine<M>);
@@ -50,6 +50,7 @@ TEST_CASE
   "THEN it is NOT a writable engine\n"
   "THEN it is a basic view engine\n"
   "THEN it is NOT a mutable view engine\n"
+  "THEN it has a immutable view.\n"
 )
 {
     using dtype = std::complex<int64_t>;
@@ -61,13 +62,14 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_conjugate>;
+    using M = engine_view<K, export_views::conjugate>;
     
     REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
     REQUIRE(false == writable_engine<M>);
-    REQUIRE(true == view_engine_basics<M>);
-    REQUIRE(false == mutable_view_engine<M>);
+    REQUIRE(true == view_basics<M>);
+    REQUIRE(false == mutable_view<M>);
+    REQUIRE(true == immutable_view<M>);
 }
 
 TEST_CASE
@@ -90,7 +92,7 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_conjugate>;
+    using M = engine_view<K, export_views::conjugate>;
     
     REQUIRE(true == std::is_same_v<M::data_type, K::data_type>);
     REQUIRE(true == std::is_same_v<M::index_type, K::index_type>);
@@ -101,7 +103,7 @@ TEST_CASE
     REQUIRE(true == std::is_same_v<M::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<M::engine_type, K>);
     
-    using S = matrix_view_engine<M, matrix_view::const_transparent>;
+    using S = engine_view<M, export_views::transparent>;
     
     REQUIRE(true == std::is_same_v<S::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<S::engine_type, M>);
@@ -130,7 +132,7 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_conjugate>;
+    using M = engine_view<K, export_views::conjugate>;
     
     REQUIRE(true == std::is_trivially_copyable_v<M>);
     REQUIRE(true == std::is_trivially_copy_constructible_v<M>);
@@ -158,7 +160,7 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_conjugate>;
+    using M = engine_view<K, export_views::conjugate>;
     
     M m;
     
@@ -199,8 +201,8 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_conjugate>;
-    using S = matrix_view_engine<M, matrix_view::const_conjugate>;
+    using M = engine_view<K, export_views::conjugate>;
+    using S = engine_view<M, export_views::conjugate>;
 
     const literal2D<std::complex<double>> data_in = 
               {{1.0 + 0.5i, 1.5 + 1.0i, 2.0 + 1.5i, 2.5 + 2.0i},
@@ -307,8 +309,8 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_conjugate>;
-    using S = matrix_view_engine<M, matrix_view::const_conjugate>;
+    using M = engine_view<K, export_views::conjugate>;
+    using S = engine_view<M, export_views::conjugate>;
 
     const literal2D<std::complex<double>> data_in = 
               {{1.01i, 1.02i, 1.03i, 1.04i, 1.05i, 1.06i},

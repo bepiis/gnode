@@ -1,5 +1,5 @@
 //
-//  test_const_negation_view_engine.cpp
+//  test_export_negation_view_engine.cpp
 //  Created by Ben Westcott on 11/26/24.
 //
 
@@ -26,7 +26,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_negation>;
+    using M = engine_view<K, export_views::negation>;
 
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
     REQUIRE(false == owning_engine<M>);
@@ -50,6 +50,8 @@ TEST_CASE
   "THEN it is NOT a writable engine\n"
   "THEN it is a basic view engine\n"
   "THEN it is NOT a mutable view engine\n"
+  "THEN it has a immutable view.\n"
+
 )
 {
     using dtype = std::complex<int64_t>;
@@ -61,13 +63,14 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_negation>;
+    using M = engine_view<K, export_views::negation>;
     
     REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
     REQUIRE(false == writable_engine<M>);
-    REQUIRE(true == view_engine_basics<M>);
-    REQUIRE(false == mutable_view_engine<M>);
+    REQUIRE(true == view_basics<M>);
+    REQUIRE(false == mutable_view<M>);
+    REQUIRE(true == immutable_view<M>);
 }
 
 TEST_CASE
@@ -90,7 +93,7 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_negation>;
+    using M = engine_view<K, export_views::negation>;
 
     REQUIRE(true == std::is_same_v<M::data_type, K::data_type>);
     REQUIRE(true == std::is_same_v<M::index_type, K::index_type>);
@@ -101,7 +104,7 @@ TEST_CASE
     REQUIRE(true == std::is_same_v<M::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<M::engine_type, K>);
     
-    using S = matrix_view_engine<M, matrix_view::const_transparent>;
+    using S = engine_view<M, export_views::transparent>;
     
     REQUIRE(true == std::is_same_v<S::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<S::engine_type, M>);
@@ -130,7 +133,7 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_negation>;
+    using M = engine_view<K, export_views::negation>;
 
     REQUIRE(true == std::is_trivially_copyable_v<M>);
     REQUIRE(true == std::is_trivially_copy_constructible_v<M>);
@@ -158,7 +161,7 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_negation>;
+    using M = engine_view<K, export_views::negation>;
 
     M m;
 
@@ -200,7 +203,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
 
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_negation>;
+    using M = engine_view<K, export_views::negation>;
 
     const literal2D<double> data_in = {{sqrt3, -sqrt3, sqrt3},
                                     {-sqrt3, sqrt3, -sqrt3},
@@ -234,7 +237,7 @@ TEST_CASE
     REQUIRE(m.cols() == k.cols());
     REQUIRE(m.size() == k.size());
 
-    using S = matrix_view_engine<M, matrix_view::const_negation>;
+    using S = engine_view<M, export_views::negation>;
 
     S s(m);
 
@@ -302,7 +305,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = matrix_view_engine<K, matrix_view::const_negation>;
+    using M = engine_view<K, export_views::negation>;
     
     const literal2D<double> data_in = {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05},
                                         {1.06, 1.07, 1.08, 1.09, 1.10, 1.11},

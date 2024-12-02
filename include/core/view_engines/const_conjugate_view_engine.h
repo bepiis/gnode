@@ -7,42 +7,9 @@
 
 template<typename Egn>
 requires
-    readable_engine<Egn> and
+    exportable<Egn> and
     has_conjugate<typename Egn::data_type>
-struct view_lookup<Egn, matrix_view::const_conjugate> : public std::true_type
-{
-    using type = matrix_view::const_conjugate;
-    
-    using data_type = typename Egn::data_type;
-    using index_type = typename Egn::index_type;
-    using reference = typename Egn::data_type;
-    using const_reference = typename Egn::data_type;
-    using pointer_type = Egn const*;
-    using rhs_type = Egn const&;
-
-    using result_type = const_reference;
-    
-    static constexpr result_type eval(rhs_type d)
-    {
-        return std::conj(d);
-    }
-    
-    static constexpr result_type eval2D(pointer_type p, index_type i, index_type j)
-    {
-        return eval((*p)(i, j));
-    }
-    
-    static constexpr result_type eval1D(pointer_type p, index_type i)
-    {
-        return eval((*p)(i));
-    }
-};
-
-template<typename Egn>
-requires
-    readable_engine<Egn> and
-    has_conjugate<typename Egn::data_type>
-struct matrix_view_engine<Egn, matrix_view::const_conjugate>
+struct engine_view<Egn, export_views::conjugate>
 {
     
 /* view engine private type alias requirements */
@@ -51,7 +18,7 @@ struct matrix_view_engine<Egn, matrix_view::const_conjugate>
 /* engine private type alias requirements */
 private:
     
-    using self_type = matrix_view_engine<Egn, matrix_view::const_conjugate>;
+    using self_type = engine_view<Egn, export_views::conjugate>;
     using orient = matrix_orientation;
     using helper = engine_helper;
     // using mdspan_stuff = ...
@@ -89,12 +56,12 @@ private:
 /* view engine public method requirements */
 public:
     
-    constexpr matrix_view_engine() noexcept
+    constexpr engine_view() noexcept
     : m_eng_ptr(nullptr)
     {}
     
     explicit
-    constexpr matrix_view_engine(engine_type const& rhs)
+    constexpr engine_view(engine_type const& rhs)
     : m_eng_ptr(&rhs)
     {}
     
@@ -170,7 +137,7 @@ public:
         return std::conj((*m_eng_ptr)(i));
     }
     
-    constexpr void swap(matrix_view_engine & rhs) noexcept
+    constexpr void swap(engine_view & rhs) noexcept
     {
         helper::swap(*this, rhs);
     }

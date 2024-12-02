@@ -61,6 +61,35 @@
  * }
  */
 
+
+template<typename Egn, typename Vw>
+struct matrix_view_engine;
+
+// valid view types
+struct export_views
+{
+    struct transparent {};
+    struct negation {};
+    struct conjugate {};
+    struct transpose {};
+    struct hermitian {};
+    struct banded {};
+    struct row {};
+    struct col {};
+    struct box {};
+};
+
+struct inport_views
+{
+    struct transparent {};
+    struct transpose {};
+    struct banded {};
+    struct row {};
+    struct col {};
+    struct box {};
+};
+
+
 /*
  * view engine named requirements:
  *     - Must at the least satisfy readable engine 
@@ -69,16 +98,27 @@
  */
 
 template<typename VEgn>
-concept view_engine_basics = 
+concept view_basics = 
     readable_engine<VEgn> and
     std::is_nothrow_swappable_v<VEgn&> and
     not owning_engine<VEgn>;
 
 template<typename VEgn>
-concept mutable_view_engine = 
-    view_engine_basics<VEgn> and
-    writable_engine<VEgn>;
+concept has_immutable_view_ref =
+    std::same_as<typename VEgn::reference, typename VEgn::data_type> or
+    std::same_as<typename VEgn::reference, typename VEgn::const_reference>;
 
+template<typename VEgn>
+concept mutable_view = 
+    view_basics<VEgn> and
+    writable_engine<VEgn>
+    and not has_immutable_view_ref<VEgn>;
+
+template<typename VEgn>
+concept immutable_view = 
+    view_basics<VEgn> and
+    has_immutable_view_ref<VEgn>;
+    
 /*
  * virtual expansion:
  *      a view engine which extends the indexing range of a view via
@@ -131,7 +171,30 @@ concept mutable_view_engine =
  * or the ExVws are virtually expanded)
  */
 
+template<typename Egn, typename Vw>
+struct engine_view;
 
+template<typename Egn>
+concept exportable = 
+    immutable_view<Egn> or 
+    (readable_engine<Egn> and owning_engine<Egn>);
+
+template<typename Egn>
+concept inportable = 
+    mutable_view<Egn> or
+    (writable_engine<Egn> and owning_engine<Egn>);
+
+/*
+ * view composer root template
+ * 
+ * Any view composition must satisfy this requirement
+ * If there is a mutable view, it must be on the LHS, i.e. VEgnY
+ */ 
+template<typename VEgnY, typename VEgnX, typename OP>
+requires 
+    (immutable_view<VEgnY> or mutable_view<VEgnY>) and
+    immutable_view<VEgnX>
+struct view_composer;
 
 /*
  * Dual view engine:
@@ -143,56 +206,6 @@ concept mutable_view_engine =
  *      virtual resize rule(s) can be passed to modify percieved sizes
  * 
  */
-
-template<typename Egn, typename Vw>
-struct matrix_view_engine;
-
-// valid view types
-struct matrix_view
-{
-    struct transparent {};
-    struct const_transparent {};
-    
-    struct const_negation {};
-    struct const_conjugate {};
-
-    struct transpose {};
-    struct const_transpose {};
-    struct const_hermitian {};
-
-    struct banded {};
-    struct const_banded {};
-
-    struct row {};
-    struct const_row {};
-    struct col {};
-    struct const_col {};
-
-    struct box {};
-    struct const_box {};
-};
-
-template<typename Egn, typename Vw>
-requires
-    readable_engine<Egn>
-struct view_lookup : public std::false_type
-{
-    using type = matrix_view::transparent;
-
-    using data_type = typename Egn::data_type;
-    using index_type = typename Egn::index_type;
-    using reference = typename Egn::reference;
-    using const_reference = typename Egn::const_reference;
-    using pointer_type = Egn*;
-    using rhs_type = Egn &;
-    
-    using result_type = reference;
-
-    static constexpr result_type eval(data_type & d)
-    {
-        return d;
-    }
-};
 
 #include "view_engines/transparent_view_engine.h"
 #include "view_engines/const_transparent_view_engine.h"
@@ -207,6 +220,7 @@ struct view_lookup : public std::false_type
 #include "view_engines/const_col_view_engine.h"
 #include "view_engines/boxed_view_engine.h"
 
+/*
 template<typename Egn, typename Vw, typename... Vws>
 struct view_combiner
 {
@@ -217,4 +231,4 @@ template<typename Egn, typename Vw>
 struct view_combiner<Egn, Vw>
 {
     using type = matrix_view_engine<Egn, Vw>;
-};
+};*/
