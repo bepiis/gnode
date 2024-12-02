@@ -690,7 +690,7 @@ struct engine_helper
         {
             for(index_type j = jstart; j < jend; j++)
             {
-                src(i, j) = std::move(dst(i, j));
+                dst(i, j) = std::move(src(i, j));
             }
         }
     }
@@ -861,6 +861,22 @@ struct engine_helper
         }
         return true;
     }
+    
+    template<typename Egn>
+    static constexpr void print(Egn const& rhs)
+    requires
+        readable_engine<Egn>
+    {
+        for(size_t r=0; r < rhs.rows(); r++)
+        {
+            for(size_t c=0; c < rhs.cols(); c++)
+            {
+                 std::cout << std::setprecision(2) << std::scientific << rhs(r, c) << "\t";
+            }
+            std::cout << "\n";
+        }
+    }
+
 
     //TODO: 
     //static constexpr bool compare_exact(Egn const& lhs, literal2D<T> rhs);

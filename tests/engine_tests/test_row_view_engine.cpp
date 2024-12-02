@@ -6,7 +6,8 @@
 TEST_CASE
 (
     "IF M is a row view engine\n"
-    "THEN M is not an owning engine\n"
+    "THEN it has an owning engine type alias whose is_owning member is false\n"
+    "THEN it is NOT an owning engine\n"  
     "THEN M has mutable access\n"
     "THEN M has immutable access\n"
     "THEN M has a consistent mutable reference type\n"
@@ -28,6 +29,7 @@ TEST_CASE
     using M = matrix_view_engine<K, matrix_view::row>;
 
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
+    REQUIRE(false == owning_engine<M>);
     REQUIRE(true == mutable_access<M>);
     REQUIRE(true == immutable_access<M>);
     REQUIRE(true == consistent_mutable_ref_type<M>);
@@ -43,8 +45,10 @@ TEST_CASE
 TEST_CASE
 (
     "IF M is a type row view engine\n"
-    "THEN M is a readable_engine\n"
-    "THEN M is a writable_engine.\n"
+    "THEN it is a base engine\n"
+    "THEN it is a readable engine\n"
+    "THEN it is a writable engine.\n"
+    "THEN it is a valid mutable view engine\n"
 )
 {
     using dtype = int64_t;
@@ -61,8 +65,10 @@ TEST_CASE
 
     using M = matrix_view_engine<K, matrix_view::row>;
 
+    REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
     REQUIRE(true == writable_engine<M>);
+    REQUIRE(true == mutable_view_engine<M>);
 }
 
 TEST_CASE

@@ -724,8 +724,8 @@ TEST_CASE
     size_t new_row_reach = 10;
 
     m2.reshape_rows(new_nbr_rows, new_row_reach);
-
-    REQUIRE(false == eh::compare2D_exact(m1, m2));
+    
+    REQUIRE(true == eh::compare2D_exact(m1, m2));
 }
 
 

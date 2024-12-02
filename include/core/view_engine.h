@@ -61,6 +61,88 @@
  * }
  */
 
+/*
+ * view engine named requirements:
+ *     - Must at the least satisfy readable engine 
+ *     - Must not own data, meaning it has an owning engine type alias
+ *     - It must be noexcept swappable with others of the same view type and owning engine type
+ */
+
+template<typename VEgn>
+concept view_engine_basics = 
+    readable_engine<VEgn> and
+    std::is_nothrow_swappable_v<VEgn&> and
+    not owning_engine<VEgn>;
+
+template<typename VEgn>
+concept mutable_view_engine = 
+    view_engine_basics<VEgn> and
+    writable_engine<VEgn>;
+
+/*
+ * virtual expansion:
+ *      a view engine which extends the indexing range of a view via
+ *      some rule for representing the "virtual elements" which are
+ *      actually outside the physical range of the owning engine's dimensions.
+ * 
+ *      mutable views cannot be virtually resized. 
+ * 
+ *      virtual expansion can only increase the percieved size, not decrease it 
+ */
+
+/*
+ * import and export views (mutable vs not mutable)
+ * 
+ *      any mutable view or composition of mutable views
+ *      are considered to be an import view
+ * 
+ *      any immutable view of commpoisition of immutable views
+ *      are considered an export view
+ * 
+ *      an export view can have virtually expanded, however import
+ *      views cannot.
+ * 
+ * an import view and an export view come together with a function object
+ * to form an operation:
+ * 
+ * template<typename LVw, typename ExVw, typename OP>
+ * 
+ * A LVw can be an import or export view. ExVw must be a export view:
+ * 
+ *      template<typename ImVw, typename ExVw, typename OP>
+ *          The result of preforming OP(ImVw x, ExVw y) -> x
+ * 
+ *      template<typename ExVw, typename ExVw, typename OP>
+ *          The result of preforming OP(ExVw x, ExVw y) is 
+ *          another export view, which stores the intermediate 
+ *          action of OP, ExVw and ExVw on that element
+ * 
+ *      template<typename ExVw, typename ImVw, typename OP> 
+ *          is invalid.
+ * 
+ * IF ExVw views an engine whose elements are function objects, then the element
+ * type of ImVw must be valid inputs to those objects. This OP will be named ExApply, and the
+ * return value of the ExVw function objects must be the type of ImVw
+ * 
+ * IF the element types of the Vws are both arithmetic, the OP will be an arithmetic
+ * operation on the two. Type promotions will need to occur here. 
+ * 
+ * If the two Vws are the same dimensions, then 
+ */
+
+
+
+/*
+ * Dual view engine:
+ *      two view engines (satisfy view engine basics): V1, V2
+ * 
+ *      they are not required to have the same owning engine, as 
+ *      long as both are both readable (satisfied above)
+ * 
+ *      virtual resize rule(s) can be passed to modify percieved sizes
+ * 
+ */
+
 template<typename Egn, typename Vw>
 struct matrix_view_engine;
 
@@ -85,8 +167,8 @@ struct matrix_view
     struct col {};
     struct const_col {};
 
-    struct block {};
-    struct const_block {};
+    struct box {};
+    struct const_box {};
 };
 
 template<typename Egn, typename Vw>
@@ -122,35 +204,7 @@ struct view_lookup : public std::false_type
 #include "view_engines/const_row_view_engine.h"
 #include "view_engines/col_view_engine.h"
 #include "view_engines/const_col_view_engine.h"
-
-
-template<typename VEgn>
-concept expression_basics = 
-requires
-{
-    typename VEgn::engine_type;
-    typename VEgn::engine_ptr;
-    typename VEgn::ctor_type;
-};
-
-// matrix view engine types will already satisfy this requirement by design,
-// but view expression itself must satisfy its own requirement, being
-// view expressible, meaning it must satisfy the readable engine
-// requirements and cannot own any data.
-// The V prepending Egn denotes that the type can be included in expressions
-// with view engine types, which this concept enforces.
-template<typename VEgn>
-concept view_expressible = 
-    expression_basics<VEgn> and
-    readable_engine<VEgn> and
-    not owning_engine<VEgn>;
-
-template<typename EgnX, typename EgnY>
-concept valid_view_expression = 
-    view_expressible<EgnX> and 
-    view_expressible<EgnY> and
-    same_owning_engine<EgnX, EgnY>;
-
+#include "view_engines/boxed_view_engine.h"
 
 template<typename Egn, typename Vw, typename... Vws>
 struct view_combiner

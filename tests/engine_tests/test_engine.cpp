@@ -596,6 +596,8 @@ TEST_CASE
 #include "test_row_view_engine.cpp"
 #include "test_const_row_view_engine.cpp"
 #include "test_col_view_engine.cpp"
+#include "test_const_col_view_engine.cpp"
+#include "test_boxed_view_engine.cpp"
 //#include "test_view_expressions.cpp"
 
  

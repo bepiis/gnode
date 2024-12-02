@@ -6,14 +6,15 @@
 TEST_CASE
 (
   "IF M is a transpose view engine\n"
-  "THEN M is not an owning engine\n"
-  "THEN M has mutable access\n"
-  "THEN M has immutable access\n"
-  "THEN M has a consistent mutable reference type\n"
-  "THEN M has a consistent immutable reference type\n"
-  "THEN M has consistent return sizes\n"
-  "THEN M has consistent return lenghts\n"
-  "THEN M is not reshapeable or row_reshapeable or col_reshapeable.\n"
+  "THEN it has an owning engine type alias whose is_owning member is false\n"
+  "THEN it is NOT an owning engine\n"   
+  "THEN it has mutable access\n"
+  "THEN it has immutable access\n"
+  "THEN it has a consistent mutable reference type\n"
+  "THEN it has a consistent immutable reference type\n"
+  "THEN it has consistent return sizes\n"
+  "THEN it has consistent return lenghts\n"
+  "THEN it is not reshapeable or row_reshapeable or col_reshapeable.\n"
 )
 {
     using dtype = int64_t;
@@ -28,6 +29,7 @@ TEST_CASE
     using M = matrix_view_engine<K, matrix_view::transpose>;
     
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
+    REQUIRE(false == owning_engine<M>);
     REQUIRE(true == mutable_access<M>);
     REQUIRE(true == immutable_access<M>);
     REQUIRE(true == consistent_mutable_ref_type<M>);
@@ -42,27 +44,31 @@ TEST_CASE
 
 TEST_CASE
 (
-  "IF M is a type transpose view engine\n"
-  "THEN M is a readable_engine\n"
-  "THEN M is a writable_engine.\n"
+    "IF M is a type transpose view engine\n"
+    "THEN it is a base engine\n"
+    "THEN it is a readable engine\n"
+    "THEN it is a writable engine.\n"
+    "THEN it is a valid mutable view engine\n"
 )
 {
     using dtype = int64_t;
     using atype = std::allocator<dtype>;
-    
+
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
-    
+
     using ltype = matrix_orientation::row_major;
-    
+
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    
+
     REQUIRE(true == writable_engine<K>);
-    
+
     using M = matrix_view_engine<K, matrix_view::transpose>;
-    
+
+    REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
     REQUIRE(true == writable_engine<M>);
+    REQUIRE(true == mutable_view_engine<M>);
 }
 
 TEST_CASE

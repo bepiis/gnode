@@ -6,7 +6,8 @@
 TEST_CASE
 (
     "IF M is the type of a a const transparent view engine\n"
-    "THEN M is not an owning engine\n"
+    "THEN it has an owning engine type alias whose is_owning member is false\n"
+    "THEN it is NOT an owning engine\n"  
     "THEN M does not have mutable access\n"
     "THEN M has immutable access\n"
     "THEN M does not have a consistent mutable reference type\n"
@@ -28,6 +29,7 @@ TEST_CASE
     using M = matrix_view_engine<K, matrix_view::const_transparent>;
         
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
+    REQUIRE(false == owning_engine<M>);
     REQUIRE(false == mutable_access<M>);
     REQUIRE(true == immutable_access<M>);
     REQUIRE(false == consistent_mutable_ref_type<M>);
@@ -44,27 +46,30 @@ TEST_CASE
 
 TEST_CASE
 (
-    "IF M is a type const transparent view engine\n"
-    "THEN M is a readable_engine\n"
-    "THEN M is NOT a writable_engine.\n"
+  "IF M is a type const transparent view engine\n"
+  "THEN it is a base engine\n"
+  "THEN it is a readable engine\n"
+  "THEN it is NOT a writable engine\n"
+  "THEN it is a basic view engine\n"
+  "THEN it is NOT a mutable view engine\n"
 )
 {
-    using dtype = int64_t;
+    using dtype = std::complex<int64_t>;
     using atype = std::allocator<dtype>;
     
     constexpr size_t nrows = std::dynamic_extent;
     constexpr size_t ncols = std::dynamic_extent;
     
-    using ltype = matrix_orientation::row_major;
+    using ltype = matrix_orientation::col_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    
-    REQUIRE(true == writable_engine<K>);
-    
     using M = matrix_view_engine<K, matrix_view::const_transparent>;
     
+    REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
     REQUIRE(false == writable_engine<M>);
+    REQUIRE(true == view_engine_basics<M>);
+    REQUIRE(false == mutable_view_engine<M>);
 }
 
 TEST_CASE
