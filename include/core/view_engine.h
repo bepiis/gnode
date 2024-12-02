@@ -127,7 +127,8 @@ concept mutable_view_engine =
  * IF the element types of the Vws are both arithmetic, the OP will be an arithmetic
  * operation on the two. Type promotions will need to occur here. 
  * 
- * If the two Vws are the same dimensions, then 
+ * If the two Vws are the same the percieved dimension (either the two owning engines have the same shape
+ * or the ExVws are virtually expanded)
  */
 
 
