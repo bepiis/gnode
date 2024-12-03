@@ -61,7 +61,6 @@
  * }
  */
 
-
 template<typename Egn, typename Vw>
 struct matrix_view_engine;
 
@@ -96,7 +95,6 @@ struct inport_views
  *     - Must not own data, meaning it has an owning engine type alias
  *     - It must be noexcept swappable with others of the same view type and owning engine type
  */
-
 template<typename VEgn>
 concept view_basics = 
     readable_engine<VEgn> and
@@ -129,6 +127,94 @@ concept immutable_view =
  * 
  *      virtual expansion can only increase the percieved size, not decrease it 
  */
+template<typename VEgn, typename OP, typename ...Args>
+concept expandable = 
+    immutable_view<VEgn> and
+    std::invocable<OP, Args...> and
+    std::same_as<OP(Args...), typename VEgn::const_reference>;
+
+template<typename VEgn, typename OP, typename ...Args>
+requires 
+    expandable<VEgn, OP, Args...>
+struct expand_view
+{
+
+    using engine_type = VEgn;
+    using pointer_type = VEgn*;
+    // Egn must have these by writable_engine (which requires readable_engine) requirement:
+    using data_type = typename engine_type::data_type;
+    using index_type = typename engine_type::index_type;
+    using reference = typename engine_type::reference;
+    using const_reference = typename engine_type::const_reference;
+
+    /* view engine private data requirements */
+private:
+    pointer_type m_eng_ptr;
+    
+    index_type nbr_rows;
+    index_type nbr_cols;
+    index_type eng_rows;
+    index_type eng_cols;
+
+    OP op;
+    
+public:
+
+    constexpr expand_view() noexcept
+    : m_eng_ptr(nullptr), nbr_rows(0), nbr_cols(0), eng_rows(0), eng_cols(0), 
+      op([]() -> const_reference {return static_cast<const_reference>(0);})
+    {}
+
+    explicit 
+    constexpr expand_view
+    (
+        engine_type & rhs,
+        index_type nr,
+        index_type nc,
+        index_type er,
+        index_type ec,
+        OP fun
+    ) //$ [NG]
+    : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc), eng_rows(er), eng_cols(ec), op(fun)
+    {}
+
+    constexpr bool has_view() const
+    {
+        return m_eng_ptr != nullptr;
+    }
+
+public:
+
+    /* rule of zero */
+    
+    // required for readable_engine (consistant_return_lengths):
+    //      rows() -> index_type
+    constexpr index_type rows() const noexcept
+    {
+        return nbr_rows;
+    }
+    
+    // required for readable_engine (consistant_return_lengths):
+    //      cols() -> index_type
+    constexpr index_type cols() const noexcept
+    {
+        return nbr_cols;
+    }
+    
+    // required for readable_engine (consistant_return_lengths):
+    //      size() -> index_type
+    constexpr index_type size() const noexcept
+    {
+        return nbr_rows * nbr_cols;
+    }
+
+    constexpr const_reference operator()(index_type i, index_type j) const
+    {
+        return std::invoke(op, m_eng_ptr, i, j, nbr_rows, nbr_cols, eng_rows, eng_cols);
+    }
+
+    
+};
 
 /*
  * import and export views (mutable vs not mutable)
@@ -136,7 +222,7 @@ concept immutable_view =
  *      any mutable view or composition of mutable views
  *      are considered to be an import view
  * 
- *      any immutable view of commpoisition of immutable views
+ *      any immutable view or compoisition of immutable views
  *      are considered an export view
  * 
  *      an export view can have virtually expanded, however import
@@ -195,6 +281,18 @@ requires
     (immutable_view<VEgnY> or mutable_view<VEgnY>) and
     immutable_view<VEgnX>
 struct view_composer;
+
+/*
+ * view composer partial specialization
+ * 
+ * enabled if VEgnX's elements are invocable with
+ * VEgnY's element type
+ */ 
+template<typename VEgnY, typename VEgnX>
+requires
+    std::invocable<typename VEgnX::data_type, typename VEgnY::data_type>
+struct view_composer<VEgnY, VEgnX, void>
+{};
 
 /*
  * Dual view engine:
