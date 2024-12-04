@@ -8,29 +8,16 @@ requires
     inportable<Egn>
 struct engine_view<Egn, inport_views::box>
 {
-    
-/* view engine private type alias requirements */
-    //private:
-    
-/* engine private type alias requirements */
-private:
-    
-    using self_type = engine_view<Egn, inport_views::box>;
-    using orient = matrix_orientation;
-    using helper = engine_helper;
-    // using mdspan_stuff = ...
-    
-/* view engine specific type aliases */
-    //private:
-    // ...
-    
+
 /* view engine public type alias requirements */
 public:
     using owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
     using engine_type = Egn;
-    using pointer_type = Egn*;
+
+private:
+    using pointer_type = engine_type*;
     using ctor_type = engine_type &;
-    
+
 /* engine public type alias requirements */
 public:
     
@@ -126,7 +113,7 @@ public:
     
     constexpr void swap(engine_view & rhs) noexcept
     {
-        helper::swap(*this, rhs);
+        engine_helper::swap(*this, rhs);
     }
 };
 

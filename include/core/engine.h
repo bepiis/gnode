@@ -5,7 +5,7 @@
 
 #include <cstdint>
 #include <mdspan>
-//#include <type_traits>
+#include <type_traits>
 #include <concepts>
 #include <algorithm>
 #include <complex>
@@ -747,8 +747,6 @@ struct engine_helper
             }
         }
     }
-
-    
 
     template<typename EgnX, typename EgnY>
     static constexpr bool compare2D_exact(EgnX const& lhs, EgnY const& rhs)

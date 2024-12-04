@@ -10,19 +10,11 @@
 #endif
 
 /*
- * A view engine must have the following at the minimum:
+ * A engine view must have the following at the minimum:
  *  requires readable_engine for const view types
  *  else requires writable engine for view types
  * {
- *  private type aliases (required for general engine):
- *      using self_type = ...
- *      using orient = matrix_orientation;
- *      using helper = engine_helper;
- *      // using mdhelper = ...     // not implemented yet
- * 
- *      // bool has_mdspan          // not implemented yet
- *  
- *  private type aliases (required for view engine): 
+ *  private type aliases (required for engine view): 
  *      using engine_pointer = ...
  * 
  *  public type aliases (required for general engine): 
@@ -34,7 +26,7 @@
  *      // using mdspan_type = ...      // not implemented yet
  *      // using const_mdspan_type = ...    // not implemented yet
  * 
- *  public type aliases (required for view engine):
+ *  public type aliases (required for engine view):
  *       using engine_type = ...
  *       using owning_engine_type = ...
  *       
@@ -42,29 +34,40 @@
  *      default destructor
  *      default copy, move constructors
  *      default copy, move assignment
+ *      (rule of none)
  * 
  *      atleast one element access operator 
- *      (for mutable view engine, returns reference, immutable view engine returns const_reference)
+ *      (for mutable engine view, returns reference, immutable engine view returns const_reference)
  * 
- *      rows, row_reach, cols, col_reach, size and reach methods
+ *      rows and cols
  * 
  *      A swap specialization
  * 
- *  public methods (required for view engine):
+ *  public methods (required for engine view):
  *      default constructor noexcept, initializes engine_ptr to nullptr
  *      engine_type constructor: intializes engine_ptr to address of supplied engine_type reference
  *      has_view: returns whether engine points to a valid engine
  * 
- *  private data (required for view engine):
+ *  private data (required for engine view):
  *      engine_ptr ptr;
  *      
  * }
  */
-
 template<typename Egn, typename Vw>
-struct matrix_view_engine;
+struct engine_view;
 
-// valid view types
+/*
+ * import and export views (mutable vs not mutable)
+ * 
+ *      any mutable view or composition of mutable views
+ *      are considered to be an import view
+ * 
+ *      any immutable view or composition of immutable views
+ *      are considered an export view
+ * 
+ *      an export view can be virtually expanded, however import
+ *      views cannot.
+ */
 struct export_views
 {
     struct transparent {};
@@ -88,10 +91,9 @@ struct inport_views
     struct box {};
 };
 
-
 /*
- * view engine named requirements:
- *     - Must at the least satisfy readable engine 
+ * view engine basic requirements:
+ *     - Must at the least satisfy readable engine type
  *     - Must not own data, meaning it has an owning engine type alias
  *     - It must be noexcept swappable with others of the same view type and owning engine type
  */
@@ -116,6 +118,29 @@ template<typename VEgn>
 concept immutable_view = 
     view_basics<VEgn> and
     has_immutable_view_ref<VEgn>;
+
+template<typename Egn>
+concept exportable = 
+    immutable_view<Egn> or 
+    (readable_engine<Egn> and owning_engine<Egn>);
+
+template<typename Egn>
+concept inportable = 
+    mutable_view<Egn> or
+    (writable_engine<Egn> and owning_engine<Egn>);
+
+#include "view_engines/transparent_view_engine.h"
+#include "view_engines/const_transparent_view_engine.h"
+#include "view_engines/const_negation_view_engine.h"
+#include "view_engines/const_conjugate_view_engine.h"
+#include "view_engines/transpose_view_engine.h"
+#include "view_engines/const_transpose_view_engine.h"
+
+#include "view_engines/row_view_engine.h"
+#include "view_engines/const_row_view_engine.h"
+#include "view_engines/col_view_engine.h"
+#include "view_engines/const_col_view_engine.h"
+#include "view_engines/boxed_view_engine.h"
     
 /*
  * virtual expansion:
@@ -131,52 +156,69 @@ template<typename VEgn, typename OP, typename ...Args>
 concept expandable = 
     immutable_view<VEgn> and
     std::invocable<OP, Args...> and
-    std::same_as<OP(Args...), typename VEgn::const_reference>;
+    requires(OP && op, Args && ...args)
+    {
+        {std::invoke(std::forward<OP>(op), std::forward<Args>(args)...)} 
+            -> std::same_as<typename VEgn::const_reference>;
+    };
 
-template<typename VEgn, typename OP, typename ...Args>
+template<typename VEgn, typename OP>
 requires 
-    expandable<VEgn, OP, Args...>
+    expandable<VEgn, OP, VEgn const&, typename VEgn::index_type, typename VEgn::index_type>
 struct expand_view
 {
 
+public:
     using engine_type = VEgn;
-    using pointer_type = VEgn*;
+
+private:
+    using pointer_type = engine_type const*;
+
+
+public:
+    using owning_engine_type = typename has_owning_engine_type_alias<VEgn>::owning_engine_type;
     // Egn must have these by writable_engine (which requires readable_engine) requirement:
     using data_type = typename engine_type::data_type;
     using index_type = typename engine_type::index_type;
     using reference = typename engine_type::reference;
     using const_reference = typename engine_type::const_reference;
 
-    /* view engine private data requirements */
+/* view engine private data requirements */
 private:
     pointer_type m_eng_ptr;
     
     index_type nbr_rows;
     index_type nbr_cols;
-    index_type eng_rows;
-    index_type eng_cols;
 
-    OP op;
+    using fun_type = const_reference(engine_type const&, index_type, index_type);
+    std::function<fun_type> op;
     
 public:
 
     constexpr expand_view() noexcept
-    : m_eng_ptr(nullptr), nbr_rows(0), nbr_cols(0), eng_rows(0), eng_cols(0), 
+    : m_eng_ptr(nullptr), nbr_rows(0), nbr_cols(0),
       op([]() -> const_reference {return static_cast<const_reference>(0);})
     {}
 
     explicit 
     constexpr expand_view
     (
-        engine_type & rhs,
+        engine_type const& rhs,
         index_type nr,
         index_type nc,
-        index_type er,
-        index_type ec,
         OP fun
     ) //$ [NG]
-    : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc), eng_rows(er), eng_cols(ec), op(fun)
-    {}
+    : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc)
+    {
+        op = std::bind
+        (
+            &OP::operator(),
+            fun,
+            std::placeholders::_1,
+            std::placeholders::_2,
+            std::placeholders::_3
+        );
+    }
 
     constexpr bool has_view() const
     {
@@ -210,24 +252,23 @@ public:
 
     constexpr const_reference operator()(index_type i, index_type j) const
     {
-        return std::invoke(op, m_eng_ptr, i, j, nbr_rows, nbr_cols, eng_rows, eng_cols);
+        //return std::invoke(&OP::operator(), op)(m_eng_ptr, i, j);
+        return op(*m_eng_ptr, i, j);
     }
 
-    
+    constexpr const_reference operator()(index_type i) const
+    {
+        return (*m_eng_ptr)(i);
+    }
+
+    constexpr void swap(expand_view & rhs) noexcept
+    {
+        engine_helper::swap(rhs, *this);
+    }
+
 };
 
 /*
- * import and export views (mutable vs not mutable)
- * 
- *      any mutable view or composition of mutable views
- *      are considered to be an import view
- * 
- *      any immutable view or compoisition of immutable views
- *      are considered an export view
- * 
- *      an export view can have virtually expanded, however import
- *      views cannot.
- * 
  * an import view and an export view come together with a function object
  * to form an operation:
  * 
@@ -257,18 +298,6 @@ public:
  * or the ExVws are virtually expanded)
  */
 
-template<typename Egn, typename Vw>
-struct engine_view;
-
-template<typename Egn>
-concept exportable = 
-    immutable_view<Egn> or 
-    (readable_engine<Egn> and owning_engine<Egn>);
-
-template<typename Egn>
-concept inportable = 
-    mutable_view<Egn> or
-    (writable_engine<Egn> and owning_engine<Egn>);
 
 /*
  * view composer root template
@@ -304,19 +333,6 @@ struct view_composer<VEgnY, VEgnX, void>
  *      virtual resize rule(s) can be passed to modify percieved sizes
  * 
  */
-
-#include "view_engines/transparent_view_engine.h"
-#include "view_engines/const_transparent_view_engine.h"
-#include "view_engines/const_negation_view_engine.h"
-#include "view_engines/const_conjugate_view_engine.h"
-#include "view_engines/transpose_view_engine.h"
-#include "view_engines/const_transpose_view_engine.h"
-
-#include "view_engines/row_view_engine.h"
-#include "view_engines/const_row_view_engine.h"
-#include "view_engines/col_view_engine.h"
-#include "view_engines/const_col_view_engine.h"
-#include "view_engines/boxed_view_engine.h"
 
 /*
 template<typename Egn, typename Vw, typename... Vws>
