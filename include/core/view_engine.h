@@ -103,10 +103,10 @@ concept view_basics =
     std::is_nothrow_swappable_v<VEgn&> and
     not owning_engine<VEgn>;
 
-template<typename VEgn>
+template<typename X>
 concept has_immutable_view_ref =
-    std::same_as<typename VEgn::reference, typename VEgn::data_type> or
-    std::same_as<typename VEgn::reference, typename VEgn::const_reference>;
+    std::same_as<typename X::reference, typename X::data_type> or
+    std::same_as<typename X::reference, typename X::const_reference>;
 
 template<typename VEgn>
 concept mutable_view = 
@@ -141,6 +141,19 @@ concept inportable =
 #include "view_engines/col_view_engine.h"
 #include "view_engines/const_col_view_engine.h"
 #include "view_engines/boxed_view_engine.h"
+
+template<typename OP, typename ...Args>
+concept valid_expander = 
+    std::invocable<OP, Args...> and
+    requires(OP && op, Args && ...args)
+    {
+        typename OP::index_type;
+        typename OP::const_reference;
+        typename OP::engine_type;
+
+        {std::invoke(std::forward<OP>(op), std::forward<Args>(args)...)} 
+                -> std::same_as<typename OP::const_reference>;
+    };
     
 /*
  * virtual expansion:
@@ -152,19 +165,20 @@ concept inportable =
  * 
  *      virtual expansion can only increase the percieved size, not decrease it 
  */
-template<typename VEgn, typename OP, typename ...Args>
+template<typename VEgn, typename OP>
 concept expandable = 
     immutable_view<VEgn> and
-    std::invocable<OP, Args...> and
-    requires(OP && op, Args && ...args)
-    {
-        {std::invoke(std::forward<OP>(op), std::forward<Args>(args)...)} 
-            -> std::same_as<typename VEgn::const_reference>;
-    };
+    valid_expander<OP, VEgn const&, typename VEgn::index_type, typename VEgn::index_type> and
+    std::same_as<VEgn const&, typename OP::engine_type> and
+    (
+        std::same_as<typename OP::const_reference, typename VEgn::const_reference> or
+        std::same_as<typename OP::const_reference, typename VEgn::data_type>
+    );
+    
 
-template<typename VEgn, typename OP>
+template<typename VEgn, template<typename...> typename TmOP, typename ...Args>
 requires 
-    expandable<VEgn, OP, VEgn const&, typename VEgn::index_type, typename VEgn::index_type>
+    expandable<VEgn, TmOP<VEgn, Args...>>
 struct expand_view
 {
 
@@ -173,14 +187,14 @@ public:
 
 private:
     using pointer_type = engine_type const*;
-
+    using op_type = TmOP<VEgn, Args...>;
 
 public:
     using owning_engine_type = typename has_owning_engine_type_alias<VEgn>::owning_engine_type;
     // Egn must have these by writable_engine (which requires readable_engine) requirement:
     using data_type = typename engine_type::data_type;
     using index_type = typename engine_type::index_type;
-    using reference = typename engine_type::reference;
+    using reference = typename engine_type::const_reference;
     using const_reference = typename engine_type::const_reference;
 
 /* view engine private data requirements */
@@ -192,7 +206,9 @@ private:
 
     using fun_type = const_reference(engine_type const&, index_type, index_type);
     std::function<fun_type> op;
-    
+
+    static constexpr bool is_rc_constructible = std::constructible_from<op_type, index_type, index_type>;
+
 public:
 
     constexpr expand_view() noexcept
@@ -206,18 +222,27 @@ public:
         engine_type const& rhs,
         index_type nr,
         index_type nc,
-        OP fun
+        op_type fun
     ) //$ [NG]
     : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc)
     {
-        op = std::bind
-        (
-            &OP::operator(),
-            fun,
-            std::placeholders::_1,
-            std::placeholders::_2,
-            std::placeholders::_3
-        );
+        bind_fun(fun);
+    }
+
+    explicit 
+    constexpr expand_view
+    (
+        engine_type const& rhs,
+        index_type nr,
+        index_type nc
+    ) //$ [NG]
+    : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc)
+    {
+        if constexpr(is_rc_constructible)
+        {
+            bind_fun(op_type(nbr_rows, nbr_cols));
+        }
+        else bind_fun();
     }
 
     constexpr bool has_view() const
@@ -264,6 +289,31 @@ public:
     constexpr void swap(expand_view & rhs) noexcept
     {
         engine_helper::swap(rhs, *this);
+    }
+
+private:
+    
+    constexpr void bind_fun(op_type & fun)
+    {
+        op = std::bind
+        (
+            &op_type::operator(),
+            fun,
+            std::placeholders::_1,
+            std::placeholders::_2,
+            std::placeholders::_3
+        );
+    }
+
+    constexpr void bind_fun()
+    {
+        op = std::bind
+        (
+            &op_type::operator(),
+            std::placeholders::_1,
+            std::placeholders::_2,
+            std::placeholders::_3
+        );
     }
 
 };
