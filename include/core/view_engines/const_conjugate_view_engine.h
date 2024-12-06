@@ -114,7 +114,8 @@ public:
     //      (*this)(i, j) -> reference or const_reference or data_type
     constexpr const_reference operator()(index_type i, index_type j) const
     {
-        return std::conj((*m_eng_ptr)(i, j));
+        return vfuns::conjugate<Egn>::eval(*m_eng_ptr, i, j);
+        //return std::conj((*m_eng_ptr)(i, j));
     }
     
     // required or readable_engine (immutable_access):

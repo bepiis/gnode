@@ -117,7 +117,8 @@ public:
     //      (*this)(i, j) -> reference
     constexpr reference operator()(index_type i, index_type j) const
     {
-        return (*m_eng_ptr)(j, i);
+        //return (*m_eng_ptr)(j, i);
+        return vfuns::transpose<Egn>::eval(*m_eng_ptr, i, j); 
     }
     
     // required or readable_engine (immutable_access):

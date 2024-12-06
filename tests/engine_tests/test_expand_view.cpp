@@ -80,6 +80,16 @@ namespace expand_view_test_space
         using const_reference = typename VEgn::const_reference;
         using engine_type = VEgn const&;
 
+        static constexpr auto rows(engine_type eng) -> index_type
+        {
+            return eng.cols();
+        }
+
+        static constexpr auto cols(engine_type eng) -> index_type
+        {
+            return eng.rows();
+        }
+
         static constexpr auto operator()(engine_type eng, index_type i, index_type j)
         -> const_reference
         {
@@ -224,9 +234,9 @@ TEST_CASE
     size_t prows = 20;
     size_t pcols = 20;
 
-    const literal2D<int64_t> data_in = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    const literal2D<int64_t> data_in = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}};
 
-    const band_repeater<TR> mr(nr, nc);
+    //const band_repeater<TR> mr(nr, nc);
     
 
     K k(data_in);
@@ -234,9 +244,10 @@ TEST_CASE
     TR tr(t);
 
 
-    EV e(tr, nc, nr);
+    EV e(tr);
 
     eh::print(e);
+    std::cout << e.rows() << "\t" << e.cols() << "\n";
 }
 
 TEST_CASE
@@ -264,13 +275,13 @@ TEST_CASE
     size_t nc = 6;
     size_t nr = 6;
 
-    const row_repeater<T> rr(nc);
-
+    //const row_repeater<T> rr(nc);
+/*
     K k(data_in);
     T t(k);
     EV e(t, nr, nc, rr);
 
-    eh::print(e);
+    eh::print(e);*/
 }
 
 TEST_CASE

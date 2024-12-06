@@ -10,7 +10,7 @@
 #endif
 
 /*
- * A engine view must have the following at the minimum:
+ * An engine view must have the following at the minimum:
  *  requires readable_engine for const view types
  *  else requires writable engine for view types
  * {
@@ -129,18 +129,30 @@ concept inportable =
     mutable_view<Egn> or
     (writable_engine<Egn> and owning_engine<Egn>);
 
+#include "view_funs.h"
+
 #include "view_engines/transparent_view_engine.h"
 #include "view_engines/const_transparent_view_engine.h"
 #include "view_engines/const_negation_view_engine.h"
 #include "view_engines/const_conjugate_view_engine.h"
 #include "view_engines/transpose_view_engine.h"
 #include "view_engines/const_transpose_view_engine.h"
-
 #include "view_engines/row_view_engine.h"
 #include "view_engines/const_row_view_engine.h"
 #include "view_engines/col_view_engine.h"
 #include "view_engines/const_col_view_engine.h"
 #include "view_engines/boxed_view_engine.h"
+
+/*
+ * virtual expansion:
+ *      a view engine which extends the indexing range of a view via
+ *      some rule for representing the "virtual elements" which are
+ *      actually outside the physical range of the owning engine's dimensions.
+ * 
+ *      mutable views cannot be virtually resized. 
+ * 
+ *      virtual expansion can only increase the percieved size, not decrease it 
+ */
 
 template<typename OP, typename ...Args>
 concept valid_expander = 
@@ -154,17 +166,7 @@ concept valid_expander =
         {std::invoke(std::forward<OP>(op), std::forward<Args>(args)...)} 
                 -> std::same_as<typename OP::const_reference>;
     };
-    
-/*
- * virtual expansion:
- *      a view engine which extends the indexing range of a view via
- *      some rule for representing the "virtual elements" which are
- *      actually outside the physical range of the owning engine's dimensions.
- * 
- *      mutable views cannot be virtually resized. 
- * 
- *      virtual expansion can only increase the percieved size, not decrease it 
- */
+
 template<typename VEgn, typename OP>
 concept expandable = 
     immutable_view<VEgn> and
@@ -174,20 +176,35 @@ concept expandable =
         std::same_as<typename OP::const_reference, typename VEgn::const_reference> or
         std::same_as<typename OP::const_reference, typename VEgn::data_type>
     );
-    
 
+/*
+ * view expander ctor types:
+ *  - OP will have static rc and access operator, no constructor.
+ *      * only engine type parameter
+ *      * ctor type binds to both rc and access operator
+ *      * example: transposer
+ *  - OP will NOT have rc methods but has a static access operator
+ *      * engine type and rows/cols as parameters
+ *      * if OP has an rc constructor, then op is constructed with nbr_rows, nbr_cols
+ *      * example: row/col repeater
+ * 
+ * 
+ *
+ *
+ */
+    
 template<typename VEgn, template<typename...> typename TmOP, typename ...Args>
 requires 
     expandable<VEgn, TmOP<VEgn, Args...>>
 struct expand_view
 {
-
 public:
     using engine_type = VEgn;
 
 private:
     using pointer_type = engine_type const*;
     using op_type = TmOP<VEgn, Args...>;
+    using ctor_type = engine_type const&;
 
 public:
     using owning_engine_type = typename has_owning_engine_type_alias<VEgn>::owning_engine_type;
@@ -204,10 +221,17 @@ private:
     index_type nbr_rows;
     index_type nbr_cols;
 
-    using fun_type = const_reference(engine_type const&, index_type, index_type);
-    std::function<fun_type> op;
+    using op_fun = std::function<const_reference(ctor_type, index_type, index_type)>;
+    op_fun op;
 
-    static constexpr bool is_rc_constructible = std::constructible_from<op_type, index_type, index_type>;
+    using rc_fun = std::conditional_t<has_static_rc_methods<op_type, index_type>, 
+                                      std::function<index_type(ctor_type)>, 
+                                      std::function<index_type(void)>>;
+
+    rc_fun rows_fun;
+    rc_fun cols_fun;
+
+    static constexpr bool op_is_rc_constructible = std::constructible_from<op_type, index_type, index_type>;
 
 public:
 
@@ -224,9 +248,24 @@ public:
         index_type nc,
         op_type fun
     ) //$ [NG]
+    requires (not has_rc_methods<op_type, index_type>)
     : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc)
     {
-        bind_fun(fun);
+        bind_rc_funs();
+        bind_op_fun(fun);
+    }
+
+    explicit
+    constexpr expand_view
+    (
+        engine_type const& rhs,
+        op_type fun
+    )
+    requires (has_rc_methods<op_type, index_type>)
+    : m_eng_ptr(&rhs), nbr_rows(0), nbr_cols(0)
+    {
+        bind_rc_fun(fun);
+        bind_op_fun(fun);
     }
 
     explicit 
@@ -238,11 +277,24 @@ public:
     ) //$ [NG]
     : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc)
     {
-        if constexpr(is_rc_constructible)
+        bind_rc_funs();
+
+        if constexpr(op_is_rc_constructible)
         {
-            bind_fun(op_type(nbr_rows, nbr_cols));
+            bind_op_fun(op_type(nbr_rows, nbr_cols));
         }
-        else bind_fun();
+        else bind_op_fun();
+    }
+
+    explicit
+    constexpr expand_view
+    (
+        engine_type const& rhs
+    )
+    : m_eng_ptr(&rhs), nbr_rows(rhs.rows()), nbr_cols(rhs.cols())
+    {
+        bind_rc_funs();
+        bind_op_fun();
     }
 
     constexpr bool has_view() const
@@ -258,21 +310,21 @@ public:
     //      rows() -> index_type
     constexpr index_type rows() const noexcept
     {
-        return nbr_rows;
+        return rows_fun();
     }
     
     // required for readable_engine (consistant_return_lengths):
     //      cols() -> index_type
     constexpr index_type cols() const noexcept
     {
-        return nbr_cols;
+        return cols_fun();
     }
     
     // required for readable_engine (consistant_return_lengths):
     //      size() -> index_type
     constexpr index_type size() const noexcept
     {
-        return nbr_rows * nbr_cols;
+        return rows_fun() * cols_fun();
     }
 
     constexpr const_reference operator()(index_type i, index_type j) const
@@ -293,7 +345,7 @@ public:
 
 private:
     
-    constexpr void bind_fun(op_type & fun)
+    constexpr void bind_op_fun(op_type fun)
     {
         op = std::bind
         (
@@ -305,7 +357,7 @@ private:
         );
     }
 
-    constexpr void bind_fun()
+    constexpr void bind_op_fun()
     {
         op = std::bind
         (
@@ -316,6 +368,34 @@ private:
         );
     }
 
+    constexpr void bind_rc_funs(op_type fun)
+    requires has_static_rc_methods<op_type, index_type>
+    {
+        rows_fun = std::bind(&op_type::rows, fun, *m_eng_ptr);
+        cols_fun = std::bind(&op_type::cols, fun, *m_eng_ptr);
+    }
+
+    constexpr void bind_rc_funs(op_type fun)
+    requires has_nonstatic_rc_methods<op_type, index_type>
+    {
+        rows_fun = std::bind(&op_type::rows, fun);
+        cols_fun = std::bind(&op_type::cols, fun);
+    }
+
+    /*
+    constexpr void bind_rc_funs()
+    requires (not has_static_rc_methods<op_type, index_type>)
+    {
+        rows_fun = [=]() -> index_type { return nbr_rows; };
+        cols_fun = [=]() -> index_type { return nbr_cols; };
+    }*/
+
+    constexpr void bind_rc_funs()
+    requires has_static_rc_methods<op_type, index_type>
+    {
+        rows_fun = std::bind(&op_type::rows, *m_eng_ptr);
+        cols_fun = std::bind(&op_type::cols, *m_eng_ptr);
+    }
 };
 
 /*

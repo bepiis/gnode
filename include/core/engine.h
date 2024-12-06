@@ -9,6 +9,7 @@
 #include <concepts>
 #include <algorithm>
 #include <complex>
+#include <tuple>
 
 template<typename From, typename To>
 struct static_value_caster
@@ -153,9 +154,22 @@ struct matrix_orientation
     struct none {};
 
     template<typename S>
+    requires
+        std::integral<S>
     static constexpr S offset(S major, S minor, S minor_length)
     {
         return minor + major * minor_length;
+    }
+
+    template<typename S>
+    requires
+        std::integral<S>
+    static constexpr std::tuple<S, S> offset(S index, S minor_length)
+    {
+        S major = index/minor_length;
+        S minor = index - major * minor_length;
+
+        return std::make_tuple(major, minor);
     }
 };
 
@@ -285,18 +299,40 @@ concept convertible_refs =
  *  methods are consistent with the stated indexing type
  * 
  */
+template<typename X, typename I>
+concept has_nonstatic_rc_methods = requires (X && x)
+{
+    { x.rows() } -> std::same_as<I>;
+    { x.cols() } -> std::same_as<I>;
+};
+
+template<typename X, typename I, typename C>
+concept has_static_rc_methods = requires (C && c)
+{
+    { X::rows(c) } -> std::same_as<I>;
+    { X::cols(c) } -> std::same_as<I>;
+};
+
+template<typename X, typename I>
+concept has_rc_methods = 
+    has_nonstatic_rc_methods<X, I> or
+    has_static_rc_methods<X, I, void> or
+    has_static_rc_methods<X, I, typename X::ctor_type>;
+
 template<typename Egn>
-concept consistent_return_sizes = requires (Egn const& eng)
+concept consistent_return_sizes = requires (Egn && eng)
 {
     { eng.size() } -> std::same_as<typename Egn::index_type>;
 };
 
 template<typename Egn>
-concept consistent_return_lengths = requires (Egn const& eng)
+concept consistent_return_lengths = 
+    has_nonstatic_rc_methods<Egn, typename Egn::index_type>;
+ /*requires (X && x)
 {
-    { eng.rows() } -> std::same_as<typename Egn::index_type>;
-    { eng.cols() } -> std::same_as<typename Egn::index_type>;
-};
+    { x.rows() } -> std::same_as<typename Egn::index_type>;
+    { x.cols() } -> std::same_as<typename Egn::index_type>;
+};*/
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
