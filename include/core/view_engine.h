@@ -179,32 +179,27 @@ concept expandable =
 
 /*
  * view expander ctor types:
- *  - OP will have static rc and access operator, no constructor.
- *      * only engine type parameter
- *      * ctor type binds to both rc and access operator
- *      * example: transposer
- *  - OP will NOT have rc methods but has a static access operator
- *      * engine type and rows/cols as parameters
- *      * if OP has an rc constructor, then op is constructed with nbr_rows, nbr_cols
- *      * example: row/col repeater
  * 
+ * We would like to strive for OPs to have static RC methods and a static access operator
+ * General idea is that rows/cols and access operator take ctor_type as its first argument.
+ *  - rows/cols will have one param being the ctor type
+ *  - access operator needs ctor type and i, and j
+ *  - transpose, conjugate, negation, row/col view can all be fully static
+ *  - In this case with no OP constructor, expand view must inherit rows/cols from its own
+ *    constructor, preferred that rows/cols get pulled from the constructing engine
  * 
- *
- *
+ * The following template overload (by constraints) only accepts OPs which have only
+ * static callables
  */
     
 template<typename VEgn, template<typename...> typename TmOP, typename ...Args>
 requires 
-    expandable<VEgn, TmOP<VEgn, Args...>>
+    expandable<VEgn, TmOP<VEgn, Args...>> and
+    has_static_rc_methods<TmOP<VEgn, Args...>, typename VEgn::index_type, VEgn const&>
 struct expand_view
 {
 public:
     using engine_type = VEgn;
-
-private:
-    using pointer_type = engine_type const*;
-    using op_type = TmOP<VEgn, Args...>;
-    using ctor_type = engine_type const&;
 
 public:
     using owning_engine_type = typename has_owning_engine_type_alias<VEgn>::owning_engine_type;
@@ -214,76 +209,32 @@ public:
     using reference = typename engine_type::const_reference;
     using const_reference = typename engine_type::const_reference;
 
+private:
+    using pointer_type = engine_type const*;
+    using op_type = TmOP<VEgn, Args...>;
+    using ctor_type = engine_type const&;
+    using op_fun = std::function<const_reference(ctor_type, index_type, index_type)>;
+    using rc_fun = std::function<index_type(ctor_type)>;
+
+    static constexpr bool op_is_rc_constructible = 
+        std::constructible_from<op_type, index_type, index_type>;
+
 /* view engine private data requirements */
 private:
     pointer_type m_eng_ptr;
-    
-    index_type nbr_rows;
-    index_type nbr_cols;
 
-    using op_fun = std::function<const_reference(ctor_type, index_type, index_type)>;
     op_fun op;
-
-    using rc_fun = std::conditional_t<has_static_rc_methods<op_type, index_type>, 
-                                      std::function<index_type(ctor_type)>, 
-                                      std::function<index_type(void)>>;
 
     rc_fun rows_fun;
     rc_fun cols_fun;
 
-    static constexpr bool op_is_rc_constructible = std::constructible_from<op_type, index_type, index_type>;
-
 public:
 
     constexpr expand_view() noexcept
-    : m_eng_ptr(nullptr), nbr_rows(0), nbr_cols(0),
-      op([]() -> const_reference {return static_cast<const_reference>(0);})
-    {}
-
-    explicit 
-    constexpr expand_view
-    (
-        engine_type const& rhs,
-        index_type nr,
-        index_type nc,
-        op_type fun
-    ) //$ [NG]
-    requires (not has_rc_methods<op_type, index_type>)
-    : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc)
+    : m_eng_ptr(nullptr)
     {
         bind_rc_funs();
-        bind_op_fun(fun);
-    }
-
-    explicit
-    constexpr expand_view
-    (
-        engine_type const& rhs,
-        op_type fun
-    )
-    requires (has_rc_methods<op_type, index_type>)
-    : m_eng_ptr(&rhs), nbr_rows(0), nbr_cols(0)
-    {
-        bind_rc_fun(fun);
-        bind_op_fun(fun);
-    }
-
-    explicit 
-    constexpr expand_view
-    (
-        engine_type const& rhs,
-        index_type nr,
-        index_type nc
-    ) //$ [NG]
-    : m_eng_ptr(&rhs), nbr_rows(nr), nbr_cols(nc)
-    {
-        bind_rc_funs();
-
-        if constexpr(op_is_rc_constructible)
-        {
-            bind_op_fun(op_type(nbr_rows, nbr_cols));
-        }
-        else bind_op_fun();
+        bind_op_fun();  
     }
 
     explicit
@@ -291,7 +242,7 @@ public:
     (
         engine_type const& rhs
     )
-    : m_eng_ptr(&rhs), nbr_rows(rhs.rows()), nbr_cols(rhs.cols())
+    : m_eng_ptr(&rhs)
     {
         bind_rc_funs();
         bind_op_fun();
@@ -310,14 +261,14 @@ public:
     //      rows() -> index_type
     constexpr index_type rows() const noexcept
     {
-        return rows_fun();
+        return rows_fun(*m_eng_ptr);
     }
     
     // required for readable_engine (consistant_return_lengths):
     //      cols() -> index_type
     constexpr index_type cols() const noexcept
     {
-        return cols_fun();
+        return cols_fun(*m_eng_ptr);
     }
     
     // required for readable_engine (consistant_return_lengths):
@@ -329,7 +280,6 @@ public:
 
     constexpr const_reference operator()(index_type i, index_type j) const
     {
-        //return std::invoke(&OP::operator(), op)(m_eng_ptr, i, j);
         return op(*m_eng_ptr, i, j);
     }
 
@@ -344,18 +294,6 @@ public:
     }
 
 private:
-    
-    constexpr void bind_op_fun(op_type fun)
-    {
-        op = std::bind
-        (
-            &op_type::operator(),
-            fun,
-            std::placeholders::_1,
-            std::placeholders::_2,
-            std::placeholders::_3
-        );
-    }
 
     constexpr void bind_op_fun()
     {
@@ -368,30 +306,7 @@ private:
         );
     }
 
-    constexpr void bind_rc_funs(op_type fun)
-    requires has_static_rc_methods<op_type, index_type>
-    {
-        rows_fun = std::bind(&op_type::rows, fun, *m_eng_ptr);
-        cols_fun = std::bind(&op_type::cols, fun, *m_eng_ptr);
-    }
-
-    constexpr void bind_rc_funs(op_type fun)
-    requires has_nonstatic_rc_methods<op_type, index_type>
-    {
-        rows_fun = std::bind(&op_type::rows, fun);
-        cols_fun = std::bind(&op_type::cols, fun);
-    }
-
-    /*
     constexpr void bind_rc_funs()
-    requires (not has_static_rc_methods<op_type, index_type>)
-    {
-        rows_fun = [=]() -> index_type { return nbr_rows; };
-        cols_fun = [=]() -> index_type { return nbr_cols; };
-    }*/
-
-    constexpr void bind_rc_funs()
-    requires has_static_rc_methods<op_type, index_type>
     {
         rows_fun = std::bind(&op_type::rows, *m_eng_ptr);
         cols_fun = std::bind(&op_type::cols, *m_eng_ptr);

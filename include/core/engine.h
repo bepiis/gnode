@@ -313,11 +313,11 @@ concept has_static_rc_methods = requires (C && c)
     { X::cols(c) } -> std::same_as<I>;
 };
 
-template<typename X, typename I>
+template<typename X, typename I, typename C>
 concept has_rc_methods = 
     has_nonstatic_rc_methods<X, I> or
     has_static_rc_methods<X, I, void> or
-    has_static_rc_methods<X, I, typename X::ctor_type>;
+    has_static_rc_methods<X, I, C>;
 
 template<typename Egn>
 concept consistent_return_sizes = requires (Egn && eng)

@@ -249,7 +249,7 @@ TEST_CASE
     eh::print(e);
     std::cout << e.rows() << "\t" << e.cols() << "\n";
 }
-
+/*
 TEST_CASE
 (
     "test"
@@ -276,13 +276,14 @@ TEST_CASE
     size_t nr = 6;
 
     //const row_repeater<T> rr(nc);
-/*
+
     K k(data_in);
     T t(k);
     EV e(t, nr, nc, rr);
 
-    eh::print(e);*/
+    eh::print(e);
 }
+*/
 
 TEST_CASE
 (

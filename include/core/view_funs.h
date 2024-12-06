@@ -5,6 +5,9 @@
 
 #pragma once
 
+// NOTE: these are NOT engine types although they may seem like they might be
+//       and thus, they intentionally do not satisfy the base engine type
+
 namespace vfuns
 {
 
@@ -17,17 +20,29 @@ struct transparent
     using reference = typename Egn::reference;
     using const_reference = typename Egn::const_reference;
     using engine_type = Egn;
-    
-    static constexpr auto eval(engine_type & eng, index_type i, index_type j)
-    -> reference
-    requires writable_engine<Egn>
+
+    static constexpr auto rows(engine_type const& eng)
+    -> index_type
     {
-        return eng(i, j);
+        return eng.rows();
+    }
+
+    static constexpr auto cols(engine_type const& eng) 
+    -> index_type
+    {
+        return eng.cols();
     }
 
     static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
     -> const_reference
     requires readable_engine<Egn>
+    {
+        return eng(i, j);
+    }
+
+    static constexpr auto eval(engine_type & eng, index_type i, index_type j)
+    -> reference
+    requires writable_engine<Egn>
     {
         return eng(i, j);
     }
@@ -44,16 +59,28 @@ struct transpose
     using const_reference = typename Egn::const_reference;
     using engine_type = Egn;
 
-    static constexpr auto eval(engine_type & eng, index_type i, index_type j)
-    -> reference
-    requires writable_engine<Egn>
+    static constexpr auto rows(engine_type const& eng) 
+    -> index_type
     {
-        return eng(j, i);
+        return eng.cols();
+    }
+
+    static constexpr auto cols(engine_type const& eng) 
+    -> index_type
+    {
+        return eng.rows();
     }
     
     static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
     -> const_reference
     requires readable_engine<Egn>
+    {
+        return eng(j, i);
+    }
+
+    static constexpr auto eval(engine_type & eng, index_type i, index_type j)
+    -> reference
+    requires writable_engine<Egn>
     {
         return eng(j, i);
     }
@@ -69,6 +96,18 @@ struct negation
     using reference = typename Egn::data_type;
     using const_reference = typename Egn::data_type;
     using engine_type = Egn;
+
+    static constexpr auto rows(engine_type const& eng) 
+    -> index_type
+    {
+        return eng.rows();
+    }
+
+    static constexpr auto cols(engine_type const& eng) 
+    -> index_type
+    {
+        return eng.cols();
+    }
     
     static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
     -> const_reference
@@ -89,6 +128,18 @@ struct conjugate
     using const_reference = typename Egn::data_type;
     using engine_type = Egn;
 
+    static constexpr auto rows(engine_type const& eng) 
+    -> index_type
+    {
+        return eng.rows();
+    }
+
+    static constexpr auto cols(engine_type const& eng) 
+    -> index_type
+    {
+        return eng.cols();
+    }
+    
     static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
     -> const_reference
     requires readable_engine<Egn>
