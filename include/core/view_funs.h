@@ -78,6 +78,13 @@ struct transpose
         return eng(j, i);
     }
 
+    static constexpr auto operator()(engine_type const& eng, index_type i, index_type j)
+    -> const_reference
+    requires readable_engine<Egn>
+    {
+        return eval(eng, i, j);
+    }
+
     static constexpr auto eval(engine_type & eng, index_type i, index_type j)
     -> reference
     requires writable_engine<Egn>
@@ -107,6 +114,12 @@ struct negation
     -> index_type
     {
         return eng.cols();
+    }
+
+    static constexpr auto operator()(engine_type const& eng, index_type i, index_type j)
+    requires readable_engine<Egn>
+    {
+        return eval(eng, i, j);
     }
     
     static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
@@ -138,6 +151,13 @@ struct conjugate
     -> index_type
     {
         return eng.cols();
+    }
+
+    static constexpr auto operator()(engine_type const& eng, index_type i, index_type j)
+    -> const_reference
+    requires readable_engine<Egn>
+    {
+        return eval(eng, i, j);
     }
     
     static constexpr auto eval(engine_type const& eng, index_type i, index_type j)

@@ -163,7 +163,7 @@ concept valid_expander =
         typename OP::const_reference;
         typename OP::engine_type;
 
-        {std::invoke(std::forward<OP>(op), std::forward<Args>(args)...)} 
+        {std::invoke(std::forward<OP>(op), std::forward<Args>(args)...)};
                 -> std::same_as<typename OP::const_reference>;
     };
 
@@ -171,14 +171,14 @@ template<typename VEgn, typename OP>
 concept expandable = 
     immutable_view<VEgn> and
     valid_expander<OP, VEgn const&, typename VEgn::index_type, typename VEgn::index_type> and
-    std::same_as<VEgn const&, typename OP::engine_type> and
+    std::same_as<VEgn, typename OP::engine_type> and
     (
         std::same_as<typename OP::const_reference, typename VEgn::const_reference> or
         std::same_as<typename OP::const_reference, typename VEgn::data_type>
     );
 
 /*
- * view expander ctor types:
+ * view expander ctor type I (static, no OP requires no initialization)
  * 
  * We would like to strive for OPs to have static RC methods and a static access operator
  * General idea is that rows/cols and access operator take ctor_type as its first argument.
@@ -195,7 +195,8 @@ concept expandable =
 template<typename VEgn, template<typename...> typename TmOP, typename ...Args>
 requires 
     expandable<VEgn, TmOP<VEgn, Args...>> and
-    has_static_rc_methods<TmOP<VEgn, Args...>, typename VEgn::index_type, VEgn const&>
+    static_dimensions<TmOP<VEgn, Args...>, typename VEgn::index_type, VEgn const&> and
+    static_evaluation<TmOP<VEgn, Args...>, VEgn const&, typename VEgn::index_type, typename VEgn::const_reference>
 struct expand_view
 {
 public:
@@ -312,6 +313,19 @@ private:
         cols_fun = std::bind(&op_type::cols, *m_eng_ptr);
     }
 };
+
+
+/*
+ * view expander ctor type II (op_type is a parameter)
+ *
+ * If the OP needs to be constructed, we have two options:
+ *  1. The constructor takes an additional parameter of type op_type which is the constructed
+ *     object. It is bound to op, and rc_funs. 
+ *          - op gets three placeholders in the binding process
+ *          - rc funs each get one
+ */
+
+
 
 /*
  * an import view and an export view come together with a function object

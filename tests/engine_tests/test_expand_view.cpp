@@ -226,7 +226,7 @@ TEST_CASE
     using T = engine_view<K, export_views::transparent>;
     using TR = engine_view<T, export_views::transpose>;
 
-    using EV = expand_view<TR, transposer>;
+    using EV = expand_view<TR, vfuns::transpose>;
 
     size_t nr = 3;
     size_t nc = 3;

@@ -299,25 +299,33 @@ concept convertible_refs =
  *  methods are consistent with the stated indexing type
  * 
  */
-template<typename X, typename I>
-concept has_nonstatic_rc_methods = requires (X && x)
+template<typename X, typename IT>
+concept non_static_dimensions = requires (X && x)
 {
-    { x.rows() } -> std::same_as<I>;
-    { x.cols() } -> std::same_as<I>;
+    { x.rows() } -> std::same_as<IT>;
+    { x.cols() } -> std::same_as<IT>;
 };
 
-template<typename X, typename I, typename C>
-concept has_static_rc_methods = requires (C && c)
+template<typename X, typename IT, typename C>
+concept static_dimensions = requires (C && c)
 {
-    { X::rows(c) } -> std::same_as<I>;
-    { X::cols(c) } -> std::same_as<I>;
+    { X::rows(c) } -> std::same_as<IT>;
+    { X::cols(c) } -> std::same_as<IT>;
 };
 
-template<typename X, typename I, typename C>
-concept has_rc_methods = 
-    has_nonstatic_rc_methods<X, I> or
-    has_static_rc_methods<X, I, void> or
-    has_static_rc_methods<X, I, C>;
+template<typename X, typename IT, typename C>
+concept dimensions = 
+    non_static_dimensions<X, IT> or
+    static_dimensions<X, IT, void> or
+    static_dimensions<X, IT, C>;
+
+
+template<typename X, typename CT, typename IT, typename C>
+concept static_evaluation = requires(CT && ct, IT && it)
+{
+    { X::eval(ct, it, it) } -> std::same_as<C>;
+};
+
 
 template<typename Egn>
 concept consistent_return_sizes = requires (Egn && eng)
@@ -327,7 +335,7 @@ concept consistent_return_sizes = requires (Egn && eng)
 
 template<typename Egn>
 concept consistent_return_lengths = 
-    has_nonstatic_rc_methods<Egn, typename Egn::index_type>;
+    non_static_dimensions<Egn, typename Egn::index_type>;
  /*requires (X && x)
 {
     { x.rows() } -> std::same_as<typename Egn::index_type>;
