@@ -173,6 +173,9 @@ struct matrix_data<T, Alloc, std::dynamic_extent, std::dynamic_extent, L>
  * 
  */
 template<typename T, typename Alloc, std::size_t R, std::size_t C, typename L>
+requires
+    valid_storage_orientation<L> and
+    engine_allocator<T, R, C, Alloc>
 struct matrix_storage_engine
 {
 

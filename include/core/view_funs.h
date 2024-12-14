@@ -5,179 +5,62 @@
 
 #pragma once
 
-// NOTE: these are NOT engine types although they may seem like they might be
-//       and thus, they intentionally do not satisfy the base engine type
+#include <string>
 
-namespace vfuns
+namespace pfuns
 {
 
-template<typename Egn>
-requires 
-    base_engine<Egn>
-struct transparent
+template<typename ...Ts>
+struct consumer : std::function<void(Ts...)>
 {
-    using index_type = typename Egn::index_type;
-    using reference = typename Egn::reference;
-    using const_reference = typename Egn::const_reference;
-    using engine_type = Egn;
-
-    static constexpr auto rows(engine_type const& eng)
-    -> index_type
-    {
-        return eng.rows();
-    }
-
-    static constexpr auto cols(engine_type const& eng) 
-    -> index_type
-    {
-        return eng.cols();
-    }
-
-    static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
-    -> const_reference
-    requires readable_engine<Egn>
-    {
-        return eng(i, j);
-    }
-
-    static constexpr auto eval(engine_type & eng, index_type i, index_type j)
-    -> reference
-    requires writable_engine<Egn>
-    {
-        return eng(i, j);
-    }
-
+    using std::function<void(Ts...)>::function;
 };
 
-template<typename Egn>
-requires 
-    base_engine<Egn>
-struct transpose
+template<typename ...Ts>
+using producer = consumer<consumer<Ts...>>;
+
+template<typename In, typename Out>
+using process = consumer<producer<In>, consumer<Out>>;
+
+template<typename In, typename Out>
+constexpr auto operator|(process<In, Out> proc, consumer<Out> cons)
+-> consumer<In>
 {
-    using index_type = typename Egn::index_type;
-    using reference = typename Egn::reference;
-    using const_reference = typename Egn::const_reference;
-    using engine_type = Egn;
+    return [proc, cons](In in)
+    { 
+        proc([&in](consumer<In> snk) mutable { snk(std::forward<In>(in)); }, cons); 
+    };
+}
 
-    static constexpr auto rows(engine_type const& eng) 
-    -> index_type
-    {
-        return eng.cols();
-    }
-
-    static constexpr auto cols(engine_type const& eng) 
-    -> index_type
-    {
-        return eng.rows();
-    }
-    
-    static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
-    -> const_reference
-    requires readable_engine<Egn>
-    {
-        return eng(j, i);
-    }
-
-    static constexpr auto operator()(engine_type const& eng, index_type i, index_type j)
-    -> const_reference
-    requires readable_engine<Egn>
-    {
-        return eval(eng, i, j);
-    }
-
-    static constexpr auto eval(engine_type & eng, index_type i, index_type j)
-    -> reference
-    requires writable_engine<Egn>
-    {
-        return eng(j, i);
-    }
-};
-
-template<typename Egn>
-requires 
-    base_engine<Egn> and
-    valid_unary_minus_operator<typename Egn::data_type>
-struct negation
+template<typename In, typename Out>
+constexpr auto operator|(producer<In> prod, process<In, Out> proc)
+-> producer<Out> 
 {
-    using index_type = typename Egn::index_type;
-    using reference = typename Egn::data_type;
-    using const_reference = typename Egn::data_type;
-    using engine_type = Egn;
-
-    static constexpr auto rows(engine_type const& eng) 
-    -> index_type
+    return [prod, proc](consumer<Out> out)
     {
-        return eng.rows();
-    }
+        proc(prod, out);
+    };
+}
 
-    static constexpr auto cols(engine_type const& eng) 
-    -> index_type
-    {
-        return eng.cols();
-    }
-
-    static constexpr auto operator()(engine_type const& eng, index_type i, index_type j)
-    requires readable_engine<Egn>
-    {
-        return eval(eng, i, j);
-    }
-    
-    static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
-    -> const_reference
-    requires readable_engine<Egn>
-    {
-        return -eng(i, j);
-    }
-};
-
-template<typename Egn>
-requires
-    base_engine<Egn> and
-    has_conjugate<typename Egn::data_type>
-struct conjugate
+template<typename In, typename Inter, typename Out>
+constexpr auto operator|(process<In, Inter> aproc, process<Inter, Out> bproc)
+-> process<In, Out> 
 {
-    using index_type = typename Egn::index_type;
-    using reference = typename Egn::data_type;
-    using const_reference = typename Egn::data_type;
-    using engine_type = Egn;
-
-    static constexpr auto rows(engine_type const& eng) 
-    -> index_type
+    return [aproc, bproc](producer<In> in, consumer<Out> out)
     {
-        return eng.rows();
-    }
+        aproc(in, bproc | out);
+    };
+}
 
-    static constexpr auto cols(engine_type const& eng) 
-    -> index_type
+template<typename ...Ts>
+auto operator|(producer<Ts...> src, consumer<Ts...> snk)
+-> consumer<>
+{
+    return [src, snk]
     {
-        return eng.cols();
-    }
-
-    static constexpr auto operator()(engine_type const& eng, index_type i, index_type j)
-    -> const_reference
-    requires readable_engine<Egn>
-    {
-        return eval(eng, i, j);
-    }
-    
-    static constexpr auto eval(engine_type const& eng, index_type i, index_type j)
-    -> const_reference
-    requires readable_engine<Egn>
-    {
-        return std::conj(eng(i, j));
-    }
-
-};
-
-
-
-
-
-
+        src(snk);
+    };
+}
 
 
 };
-
-
-
-

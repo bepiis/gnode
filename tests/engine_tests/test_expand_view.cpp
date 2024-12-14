@@ -161,7 +161,9 @@ namespace expand_view_test_space
     requires readable_engine<VEgn>
     struct test_repeater_no_t
     {
+        using data_type = typename VEgn::data_type;
         using index_type = typename VEgn::index_type;
+        using reference = typename VEgn::reference;
         using const_reference = typename VEgn::const_reference;
         using engine_type = VEgn const&;
 
@@ -205,6 +207,28 @@ TEST_CASE
 
 TEST_CASE
 (
+    "view expander is:\n"
+    "a base engine\n"
+    "a readable engine\n"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+    using T = expand_view<K, vfuns::transparent>;
+
+    REQUIRE(true == base_engine<T>);
+    REQUIRE(true == readable_engine<T>);
+}
+
+TEST_CASE
+(
     "IF expand view type satisfies:\n"
     "readable engine\n"
     "nothrow swappable\n"
@@ -240,14 +264,39 @@ TEST_CASE
     
 
     K k(data_in);
-    T t(k);
-    TR tr(t);
-
+    //T t(k);
+    //TR tr(t);
+    TR tr = TR(T(k));
 
     EV e(tr);
 
     eh::print(e);
     std::cout << e.rows() << "\t" << e.cols() << "\n";
+}
+
+TEST_CASE
+(
+    "new attempt"
+)
+{
+    using namespace pfuns;
+
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+    using D = transpose<pipe_entry<K>>;
+    
+    const literal2D<int64_t> data_in = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}};
+
+    K k(data_in);
+    std::cout << D::operator()(&k, 2, 2) << "\n";
+
 }
 /*
 TEST_CASE

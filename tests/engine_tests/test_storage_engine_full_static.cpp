@@ -156,8 +156,8 @@ TEST_CASE
     "THEN rows() == nrows AND cols() == ncols.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
-    "[GIVEN ST nrows 0]"
-    "[GIVEN ST ncols 0]"
+    "[GIVEN ST nrows 4]"
+    "[GIVEN ST ncols 5]"
     "[GIVEN ST ltype row_major STRONG]"
     "[core/storage_engine::matrix_storage_engine]"
 )
@@ -165,8 +165,8 @@ TEST_CASE
     using dtype = int64_t;
     using atype = std::allocator<dtype>;
 
-    constexpr size_t nrows = 0;
-    constexpr size_t ncols = 0;
+    constexpr size_t nrows = 4;
+    constexpr size_t ncols = 5;
 
     using ltype = matrix_orientation::row_major;
 
@@ -206,8 +206,8 @@ TEST_CASE
     "THEN rows() == nrows AND cols() == ncols.\n",
     "[GIVEN ST dtype int64_t]"
     "[GIVEN ST atype std]"
-    "[GIVEN ST nrows 0]"
-    "[GIVEN ST ncols 0]"
+    "[GIVEN ST nrows 5]"
+    "[GIVEN ST ncols 4]"
     "[GIVEN ST ltype col_major STRONG]"
     "[core/storage_engine::matrix_storage_engine]"
 )
@@ -215,8 +215,8 @@ TEST_CASE
     using dtype = int64_t;
     using atype = std::allocator<dtype>;
 
-    constexpr size_t nrows = 0;
-    constexpr size_t ncols = 0;
+    constexpr size_t nrows = 5;
+    constexpr size_t ncols = 4;
 
     using ltype = matrix_orientation::col_major;
 

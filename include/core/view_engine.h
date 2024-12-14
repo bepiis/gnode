@@ -131,17 +131,294 @@ concept inportable =
 
 #include "view_funs.h"
 
-#include "view_engines/transparent_view_engine.h"
-#include "view_engines/const_transparent_view_engine.h"
-#include "view_engines/const_negation_view_engine.h"
-#include "view_engines/const_conjugate_view_engine.h"
-#include "view_engines/transpose_view_engine.h"
-#include "view_engines/const_transpose_view_engine.h"
-#include "view_engines/row_view_engine.h"
-#include "view_engines/const_row_view_engine.h"
-#include "view_engines/col_view_engine.h"
-#include "view_engines/const_col_view_engine.h"
-#include "view_engines/boxed_view_engine.h"
+#include "view_engines/transparent_view.h"
+#include "view_engines/negation_view.h"
+#include "view_engines/conjugate_view.h"
+#include "view_engines/transpose_view.h"
+#include "view_engines/row_view.h"
+#include "view_engines/col_view.h"
+#include "view_engines/boxed_view.h"
+
+struct product_views
+{
+    struct inner {};
+    struct outer {};
+    struct scalar {};
+};
+
+template<typename TLHS, typename TRHS, typename Prod>
+struct product_view;
+
+struct engine_traits_promoter
+{
+    template<typename From, typename To, bool>
+    struct promote_to
+    {}; 
+
+    template<typename From, typename To>
+    struct promote_to<From, To, true>
+    {
+        using orientation_type = typename get_engine_orientation<To>::owning_engine_type;
+        using data_type = typename To::data_type;
+        using index_type = typename To::index_type;
+        using reference = typename To::reference;
+        using const_reference = typename To::const_reference;
+    };
+
+};
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * inner product view:
+ *     If TLHS and TRHS are both exportable and either TLHS is explicitly a row vector type
+ *     or TRHS is explicitly a col vector type then the 'inner' tag specializes product_view under 
+ *     the following additional constraints:
+ *          - TLHS cannot satisfy colvec_dimensions
+ *          - TRHS cannot satisfy rowvec_dimensions
+ *          - The element type of TLHS and TRHS must share a common type
+ *          - IF compatible dimensions can be gaurenteed at compile time, then incompatible
+ *            dimensions dont pass constraints. If not, then a runtime error must be generated
+ *            upon construction of the product view if the dimensions are incompatible.
+ * 
+ * local storage:
+ *      - TLHS engine pointer
+ *      - TRHS engine pointer
+ * IF dimensions are totally guarenteed at compile time
+ *      - THEN a std::array with resulting dimensions. (idk if I like this, it feels like this should also be std::vector)
+ * IF dimensions are totally guarenteed at CT and indicate a scalar result type
+ *      - THEN data_type to store scalar result
+ * ELSE:
+ *      - A std::vector which grows as needed to store the reductions as
+ *        the indexing access operator is called.
+ *     
+ * The inner product view should itself satisfy the exportable constraint inorder to
+ * be considered an engine view. However, this view may own data (depending on the logic in the local storage section) 
+ * although this data should be considered to have a limited lifetime given that this is a view type.
+ * and thus may define the quasi_owner_type, indicating that the type owns indexable data which may be subject to deallocation.
+ *
+ * This view MUST satisfy (row/col)vec_dimensions concept for TLHS/TRHS being the explicit vector type
+ * respectively
+ * 
+ * IF TLHS is explicit row vector type:
+ * 
+ * rows() { return 1 }
+ * cols() { return rhs->cols() }
+ * 
+ * ELIF TRHS is explicit col vector type:
+ * 
+ * rows() { return lhs->rows() }
+ * cols() { return 1 }
+ * 
+ * NOTE: y <- <x|A is the same as y^T <- (A^T)|x>
+ *      In other words, the inner product operation is symmetric under the
+ *      transpose operation, and COULD be exploited to reduce code size,
+ *      but I am not entirely convinced that the preformance benefit of
+ *      reduced code size in this instance outweighs the preformance cost
+ *      of constructing extra views to handle the more general scenario.
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * inner product functional operator:
+ *      All of the constraints which apply to the inner product as a view
+ *      also apply to the functional operator. The only difference here is
+ *      that in the case where the inner product is in a functional pipeline,
+ *      then it is important that the operator consumes lhs and rhs and produces
+ *      the expected product dimensions depending on the explicit vector type:
+ *              
+ * IF TLHS is an explicit row vector type:
+ *      process<Ins<TLHS, TRHS>, Outs< // satisfies rowvec_dimensions // > inner_product
+ * 
+ * IF TRHS is an explicit col vector type:
+ *      process<Ins<TLHS, TRHS>, Outs< // satisfies colvec_dimensions // > inner_product
+ * 
+ * In the case of a functional operator, then we compute either a rowwise or colwise 
+ * inner product at each step, so unlike the view type (where random access is assumed)
+ * we do not have to store any internal state (which it ideally shouldnt anyways since its
+ * a functional operator)
+ * 
+ */
+
+template<typename TLHS, typename TRHS, bool SizeGuard = true>
+requires
+    exportable<TLHS> and 
+    exportable<TRHS> and
+    std::convertible_to<typename TLHS::data_type, typename TRHS::data_type> and
+    rowvec_dimensions<TLHS> and
+    colvec_dimensions<TRHS>
+static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
+-> typename TLHS::data_type
+{
+    using lhs_it = typename TLHS::index_type;
+    using rhs_it = typename TRHS::index_type;
+
+    using dtype = typename TLHS::data_type;
+
+    lhs_it j = 0;
+    rhs_it i = 0;
+    dtype sum = 0;
+
+    /*
+       specifying the size guard adds a call to min to find
+       the stop index in the case where lhs and rhs were not 
+       previously checked for their size. Note that by default,
+       this branch is taken, and the caller must explicitly disable the 
+       size guard in the case where they're certain that
+       the two have the right dimensions.
+    */
+    if constexpr(SizeGuard)
+    {
+        using it = std::common_type_t<lhs_it, rhs_it, std::size_t>;
+
+        it k = 0;
+        it stop = std::min(static_cast<it>(lhs.cols()), 
+                           static_cast<it>(rhs.rows()));
+
+        for(; k < stop; i++, j++)
+        {
+            sum += lhs(0, j) * static_cast<dtype>(rhs(i, 0));
+        }
+    }
+    else
+    {
+        for(; j < lhs.cols(); i++, j++)
+        {
+            sum += lhs(0, j) * static_cast<dtype>(rhs(i, 0));
+        }
+    }
+
+    return sum;
+}
+
+template<typename TLHS, typename TRHS>
+requires
+    exportable<TLHS> and 
+    exportable<TRHS> and
+    std::convertible_to<typename TLHS::data_type, typename TRHS::data_type> and
+    rowvec_dimensions<TLHS> and (not rowvec_dimensions<TRHS>)
+struct product_view<TLHS, TRHS, product_views::inner>
+{
+
+public:
+    using owning_engine_type = typename has_owning_engine_type_alias<TLHS>::owning_engine_type;
+    using engine_type = TLHS;
+
+    static constexpr bool quasi_owner_type = true;
+
+private:
+    using lhs_pointer = engine_type const*;
+    using rhs_pointer = TRHS const*;
+
+    using rhs_sz_extract = engine_ct_extents<TRHS>;
+    using rhs_col_view_type = engine_view<TRHS, export_views::col>;
+
+public:
+
+    using orientation_type = typename get_engine_orientation<engine_type>::type;
+    using data_type = typename engine_type::data_type;
+    using index_type = typename engine_type::index_type;
+    using reference = typename engine_type::data_type;
+    using const_reference = typename engine_type::data_type;
+
+private:
+
+    lhs_pointer m_lhs_eng_ptr;
+    rhs_pointer m_rhs_eng_ptr;
+
+    std::vector<data_type> m_data;
+    std::vector<bool> m_inner_computed;
+
+public:
+
+    constexpr product_view() noexcept
+    : m_lhs_eng_ptr(nullptr), m_rhs_eng_ptr(nullptr), m_data(), m_inner_computed()
+    {}
+
+    explicit
+    constexpr product_view(TLHS const& lhs, TRHS const& rhs)
+    : m_lhs_eng_ptr(&lhs), m_rhs_eng_ptr(&rhs), m_data(rhs.cols()), m_inner_computed(rhs.cols())
+    {
+        if(lhs.cols() != rhs.rows())
+        {
+            throw std::runtime_error("incompatible dimensions for inner product.");
+        }
+    }
+
+    constexpr bool has_view() const
+    {
+        return (m_lhs_eng_ptr != nullptr) && (m_rhs_eng_ptr != nullptr);
+    }
+
+public:
+
+    constexpr index_type rows() const noexcept
+    {
+        return 1;
+    }
+
+    constexpr index_type cols() const noexcept
+    {
+        if constexpr(rhs_sz_extract::is_constexpr_cols())
+        {
+            return rhs_sz_extract::cols();
+        }
+        else
+        {
+            return m_data.size();
+        }
+    }
+
+    constexpr index_type size() const noexcept
+    {
+        return cols();
+    }
+
+    constexpr const_reference operator()(index_type i, index_type j) const
+    {
+        return (*this)(j);
+    }
+
+    constexpr const_reference operator()(index_type j) const
+    {
+        if(!m_inner_computed[j])
+        {
+            m_data[j] = inner_product<TLHS, rhs_col_view_type, false>
+            (
+                *m_lhs_eng_ptr,
+                rhs_col_view_type(*m_rhs_eng_ptr, j)
+            );
+
+            m_inner_computed[j] = true;
+        }
+
+        return m_data[j];
+    }
+
+    constexpr void swap(product_view & rhs) noexcept
+    {
+        engine_helper::swap(*this, rhs);
+    }
+};
+
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * outer product view:
+ *      IF TLHS and TRHS are both exportable and TLHS is explicitly a col vector, and
+ *      TRHS is explicitly a row vector, then the 'outer' tag specializes product view under
+ *      the following additional constraints:
+ *          - IF compatible dimensions can be gaurenteed at compile time, then incompatible
+ *            dimensions dont pass constraints. If not, then a runtime error must be generated
+ *            upon construction of the product view if the dimensions are incompatible.
+ *
+ * local storage:
+ *      - TLHS engine pointer
+ *      - TRHS engine pointer
+ * 
+ * rows() { return lhs->rows() }
+ * cols() { return rhs->cols() }
+ * operator(i, j) { return lhs(i, 0) * rhs(0, j) }
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ */
 
 /*
  * virtual expansion:
@@ -157,19 +434,20 @@ concept inportable =
 template<typename OP, typename ...Args>
 concept valid_expander = 
     std::invocable<OP, Args...> and
+    base_types<OP> and
     requires(OP && op, Args && ...args)
     {
         typename OP::index_type;
         typename OP::const_reference;
         typename OP::engine_type;
 
-        {std::invoke(std::forward<OP>(op), std::forward<Args>(args)...)};
+        {std::invoke(std::forward<OP>(op), std::forward<Args>(args)...)}
                 -> std::same_as<typename OP::const_reference>;
     };
 
 template<typename VEgn, typename OP>
 concept expandable = 
-    immutable_view<VEgn> and
+    exportable<VEgn> or
     valid_expander<OP, VEgn const&, typename VEgn::index_type, typename VEgn::index_type> and
     std::same_as<VEgn, typename OP::engine_type> and
     (
@@ -207,10 +485,11 @@ public:
     // Egn must have these by writable_engine (which requires readable_engine) requirement:
     using data_type = typename engine_type::data_type;
     using index_type = typename engine_type::index_type;
-    using reference = typename engine_type::const_reference;
+    using reference = typename engine_type::reference;
     using const_reference = typename engine_type::const_reference;
 
 private:
+
     using pointer_type = engine_type const*;
     using op_type = TmOP<VEgn, Args...>;
     using ctor_type = engine_type const&;
@@ -327,6 +606,7 @@ private:
 
 
 
+
 /*
  * an import view and an export view come together with a function object
  * to form an operation:
@@ -397,11 +677,12 @@ struct view_composer<VEgnY, VEgnX, void>
 template<typename Egn, typename Vw, typename... Vws>
 struct view_combiner
 {
-    using type = view_combiner<matrix_view_engine<Egn, Vw>, Vws...>::type;
+    using type = view_combiner<engine_view<Egn, Vw>, Vws...>::type;
+    using constructor = engine_view<Egn, Vw>(typename type::constructor);
 };
 
 template<typename Egn, typename Vw>
 struct view_combiner<Egn, Vw>
 {
-    using type = matrix_view_engine<Egn, Vw>;
+    using type = engine_view<Egn, Vw>;
 };*/

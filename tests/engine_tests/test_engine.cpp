@@ -532,10 +532,85 @@ TEST_CASE
     REQUIRE(false == comparable_types<foo, bar>);
     
     REQUIRE(true == comparable_types_one_sided<uint32_t, uint64_t>);
+
     REQUIRE(true == comparable_types_one_sided<uint64_t, uint32_t>);
     REQUIRE(true == comparable_types<uint32_t, uint64_t>);
 }
 
+namespace get_index_type_test_space
+{
+    struct bar
+    {
+        using index_type = std::size_t;
+    };
+
+    struct foo {};
+
+    struct foobar 
+    {
+        using index_type = uint32_t;
+    };
+};
+
+TEST_CASE
+(
+    "get index type function gets the index type if it is defined.\n"
+    "if none exists, then it returns size_t.\n"
+)
+{
+    using namespace get_index_type_test_space;
+
+    REQUIRE(true == std::same_as<typename get_index_type<bar>::type, std::size_t>);
+    REQUIRE(false == std::same_as<typename get_index_type<bar>::type, uint64_t>);
+    REQUIRE(true == std::same_as<typename get_index_type<foo>::type, std::size_t>);
+    REQUIRE(false == std::same_as<typename get_index_type<foo>::type, uint64_t>);
+    REQUIRE(false == std::same_as<typename get_index_type<foobar>::type, std::size_t>);
+    REQUIRE(true == std::same_as<typename get_index_type<foobar>::type, uint32_t>);
+}
+
+TEST_CASE
+(
+    "valid dimensions concept returns false if R is zero or C is zero\n"
+    "and returns true when they're both greater than zero\n"
+)
+{
+    REQUIRE(false == template_dimensions<0, 0>);
+    REQUIRE(false == template_dimensions<20, 0>);
+    REQUIRE(false == template_dimensions<0, 5000>);
+    REQUIRE(true == template_dimensions<50, 50>);
+}
+
+TEST_CASE
+(
+    "valid fixed dimensions returns false if R is zero or C is zero\n"
+    "or if either is equal to dynamic_extent\n"
+    "and returns true if they're both greater than zero but not equal to dynamic extents.\n"
+)
+{
+    REQUIRE(false == fixed_template_dimensions<0, 0>);
+    REQUIRE(false == fixed_template_dimensions<20, 0>);
+    REQUIRE(false == fixed_template_dimensions<0, 5000>);
+    REQUIRE(false == fixed_template_dimensions<20, std::dynamic_extent>);
+    REQUIRE(false == fixed_template_dimensions<std::dynamic_extent, 300>);
+    REQUIRE(false == fixed_template_dimensions<std::dynamic_extent, std::dynamic_extent>);
+    REQUIRE(true == fixed_template_dimensions<50, 50>);
+}
+
+TEST_CASE
+(
+    "engine allocator concept allows the allocator type to be void only if\n"
+    "R and C are valid and fixed template dimensions.\n"
+)
+{
+    REQUIRE(true == engine_allocator<double, 2, 2, void>);
+    REQUIRE(false == engine_allocator<double, std::dynamic_extent, 2, void>);
+    REQUIRE(false == engine_allocator<double, 2, std::dynamic_extent, void>);
+    REQUIRE(false == engine_allocator<double, std::dynamic_extent, std::dynamic_extent, void>);
+    
+    REQUIRE(true == engine_allocator<double, std::dynamic_extent, 5, std::allocator<double>>);
+    REQUIRE(true == engine_allocator<double, 5, 5, std::allocator<double>>);
+    REQUIRE(true == engine_allocator<double, std::dynamic_extent, std::dynamic_extent, std::allocator<double>>);
+}
 
 /*
  * BEGIN matrix_storage_engine tests
@@ -601,6 +676,7 @@ TEST_CASE
 #include "test_inport_boxed_view.cpp"
 //#include "test_view_expressions.cpp"
 
-#include "test_expand_view.cpp"
-
+//#include "test_expand_view.cpp"
+#include "test_view_compositions.cpp"
+//#include "test_view_funs.cpp"
  

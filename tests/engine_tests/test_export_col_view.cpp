@@ -40,8 +40,31 @@ TEST_CASE
     REQUIRE(false == reshapeable_engine<M>);
     REQUIRE(false == row_reshapeable_engine<M>);
     REQUIRE(false == col_reshapeable_engine<M>);
-    
-    
+}
+
+
+TEST_CASE
+(
+    "IF m is a type export col view engine\n"
+    "THEN is constexpr col returns true\n"
+    "THEN engine ct extents returns constexpr col == 1\n"
+    "THEN colvec dimensions concept returns true.\n"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+    using M = engine_view<K, export_views::col>;
+
+    REQUIRE(true == engine_ct_extents<M>::is_constexpr_cols());
+    REQUIRE(1 == engine_ct_extents<M>::cols());
+    REQUIRE(true == colvec_dimensions<M>);
 }
 
 TEST_CASE

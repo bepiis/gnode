@@ -46,6 +46,31 @@ TEST_CASE
 
 TEST_CASE
 (
+    "IF m is a type const row view engine\n"
+    "THEN is constexpr rows returns true\n"
+    "THEN engine ct extents returns constexpr rows == 1\n"
+    "THEN rowvec dimensions concept returns true.\n"
+)
+{
+    using dtype = int64_t;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+    using M = engine_view<K, export_views::row>;
+
+    REQUIRE(true == engine_ct_extents<M>::is_constexpr_rows());
+    REQUIRE(1 == engine_ct_extents<M>::rows());
+    REQUIRE(true == rowvec_dimensions<M>);
+
+}
+
+TEST_CASE
+(
   "IF M is a type const row view engine\n"
   "THEN it is a base engine\n"
   "THEN it is a readable engine\n"

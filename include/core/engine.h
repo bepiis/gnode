@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <complex>
 #include <tuple>
+#include <functional>
 
 template<typename From, typename To>
 struct static_value_caster
@@ -54,13 +55,13 @@ inline constexpr bool is_constexpr(...)
 
 // detects whether cols, rows or size methods are constexpr (see above note referencing [1])
 template<typename Egn>
-constexpr inline bool is_col_ct_v = is_constexpr([]{Egn().cols();});
+inline constexpr bool col_constexpr = is_constexpr([]{Egn().cols();});
 
 template<typename Egn>
-constexpr inline bool is_row_ct_v = is_constexpr([]{Egn().rows();});
+inline constexpr bool row_constexpr = is_constexpr([]{Egn().rows();});
 
 template<typename Egn>
-constexpr inline bool is_size_ct_v = is_constexpr([]{Egn().size();});
+inline constexpr bool size_constexpr = is_constexpr([]{Egn().size();});
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -94,6 +95,11 @@ struct has_owning_engine_type_alias<Egn, std::void_t<typename Egn::owning_engine
     using owning_engine_type = typename Egn::owning_engine_type;
 };
 
+template<typename Egn>
+inline constexpr bool is_owning_engine = has_owning_engine_type_alias<Egn>::is_owning;
+
+template<typename Egn>
+using get_owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -130,14 +136,29 @@ public:
         return get_ct_value([]{ return static_cast<size_t>(Egn().size());});
     }
 
+    static constexpr bool is_constexpr_size()
+    {
+        return size() != 0 && size_constexpr<Egn>;
+    }
+
     static constexpr size_t rows()
     {
         return get_ct_value([]{ return static_cast<size_t>(Egn().rows());});
     }
 
+    static constexpr bool is_constexpr_rows()
+    {
+        return rows() != 0 && row_constexpr<Egn>;
+    }
+
     static constexpr size_t cols()
     {
         return get_ct_value([]{ return static_cast<size_t>(Egn().cols());});
+    }
+
+    static constexpr bool is_constexpr_cols()
+    {
+        return (cols() != 0) && col_constexpr<Egn>;
     }
 };
 
@@ -171,6 +192,29 @@ struct matrix_orientation
 
         return std::make_tuple(major, minor);
     }
+};
+
+
+template<typename X, typename = void>
+struct get_index_type : public std::false_type
+{
+    using type = std::size_t;
+};
+
+// I used "index_type" instead of "size_type" up until now, and did not realize
+// that the standard library typically uses "size_type" for the indexing type,
+// so that's why there are two overloads here.
+/*
+template<typename X>
+struct get_index_type<X, std::void_t<typename X::size_type>> : public std::true_type
+{
+    using type = typename X::size_type;
+};*/
+
+template<typename X>
+struct get_index_type<X, std::void_t<typename X::index_type>> : public std::true_type
+{
+    using type = typename X::index_type;
 };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -215,8 +259,8 @@ struct get_engine_transpose_orientation<matrix_orientation::row_major>
 // and thus cannot be readble and thus cannot be writable. 
 template<typename L>
 concept valid_storage_orientation = 
-    std::is_same_v<L, matrix_orientation::row_major> or
-    std::is_same_v<L, matrix_orientation::col_major>;
+    std::same_as<L, matrix_orientation::row_major> or
+    std::same_as<L, matrix_orientation::col_major>;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -234,9 +278,16 @@ template<typename Egn>
 concept floating_point_engine = std::floating_point<typename Egn::data_type>;
 
 template<typename X>
-concept valid_unary_minus_operator = requires(X const& x)
+concept valid_unary_minus_operator = requires(X && x)
 {
     { -x } -> std::convertible_to<X>;
+};
+
+template<typename X>
+concept valid_binary_star_operator = requires(X && x1, X && x2)
+{
+    { x1 * x2 } -> std::convertible_to<X>;
+    { x2 * x1 } -> std::convertible_to<X>;
 };
 
 template<typename T1, typename T2>
@@ -292,6 +343,38 @@ concept convertible_refs =
     std::convertible_to<typename Egn::const_reference, typename Egn::data_type> and 
     std::convertible_to<typename Egn::reference, typename Egn::data_type>;
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Applies constraint that compile-time
+ * dimensions cannot be zero, even if they're std::dynamic_extent
+ * 
+ */
+template<size_t R, size_t C>
+concept template_dimensions = 
+    (R > 0) and (C > 0);
+
+template<size_t R, size_t C>
+concept fixed_template_dimensions = 
+    (R > 0) and (R != std::dynamic_extent) and 
+    (C > 0) and (C != std::dynamic_extent);
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Allocator support
+ * 
+ */
+#include "allocator_support.h"
+
+/*
+ * The allocator type for a storage engine can be void only if
+ * fixed template dimensions are also supplied.
+ */
+
+template<typename T, size_t R, size_t C, typename Alloc>
+concept engine_allocator = 
+    (allocator_type_is_void<Alloc> and fixed_template_dimensions<R, C>) or
+    (base_allocator_interface<Alloc> and template_dimensions<R, C>);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -319,12 +402,35 @@ concept dimensions =
     static_dimensions<X, IT, void> or
     static_dimensions<X, IT, C>;
 
+template<typename X>
+concept rowvec_dimensions = 
+    1 == engine_ct_extents<X>::rows();
+
+template<typename X>
+concept colvec_dimensions = 
+    1 == engine_ct_extents<X>::cols();
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Checks for checking whether the type X has a access operator
+ *      X : (engine) type
+ *      CT: constructor type (ctor type), usually engine_type& or const&
+ *      IT: index type
+ *      C : return type, usually reference, or const reference or data type
+ */
 
 template<typename X, typename CT, typename IT, typename C>
 concept static_evaluation = requires(CT && ct, IT && it)
 {
-    { X::eval(ct, it, it) } -> std::same_as<C>;
+    { X::operator()(ct, it, it) } -> std::same_as<C>;
 };
+
+template<typename X, typename CT, typename IT, typename C>
+concept non_static_evalutation = requires(X && x, CT && ct, IT && it)
+{
+    { x(ct, it, it) } -> std::same_as<C>;
+};
+
 
 
 template<typename Egn>
@@ -336,11 +442,7 @@ concept consistent_return_sizes = requires (Egn && eng)
 template<typename Egn>
 concept consistent_return_lengths = 
     non_static_dimensions<Egn, typename Egn::index_type>;
- /*requires (X && x)
-{
-    { x.rows() } -> std::same_as<typename Egn::index_type>;
-    { x.cols() } -> std::same_as<typename Egn::index_type>;
-};*/
+
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -371,6 +473,7 @@ concept immutable_access = requires(Egn const& eng, typename Egn::index_type x)
     { eng(x, x) } -> valid_immutable_access_return_type<Egn>;
     { eng(x) } -> valid_immutable_access_return_type<Egn>;
 };
+
 
 template<typename I, typename Egn>
 concept valid_mutable_access_return_type =
