@@ -21,6 +21,12 @@ struct static_value_caster
     }
 };
 
+template<typename T>
+using literal2D = std::initializer_list<std::initializer_list<T>>;
+
+template<typename T>
+using literal1D = std::initializer_list<T>;
+
 // https://stackoverflow.com/questions/31762958/check-if-class-is-a-template-specialization
 template<typename T, template<typename ...> typename Tmplte>
 struct is_specialization : std::false_type

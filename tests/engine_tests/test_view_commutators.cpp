@@ -1,5 +1,5 @@
 //
-//  test_transpose_view_engine.cpp
+//  test_view_commutators.cpp
 //  Created by Ben Westcott on 11/29/24.
 //
 
@@ -52,5 +52,53 @@ TEST_CASE
     using RCVI = engine_view<engine_view<MTI, inport_views::row>, inport_views::col>;
     REQUIRE(true == rowvec_dimensions<RCVI>);
     REQUIRE(true == colvec_dimensions<RCVI>);
+
+}
+
+/*
+ *
+ * View commutator tests
+ * 
+ */
+
+TEST_CASE
+(
+    "IF M is a storage engine type\n" 
+    "and K is a transparent view type\n"
+    "then K commutes with transpose view.\n"
+)
+{
+    using dtype = std::complex<double>;
+    using atype = std::allocator<dtype>;
+    
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    using COM_TTR = basic_view_commutator<engine_view, export_views::transparent, 
+                                     engine_view, export_views::transpose, M>;
+    
+    const literal2D<std::complex<double>> data_in =
+        {{1.0 - 0.5i, 3.0 - 2.5i, 5.0 - 4.5i, 7.0 - 6.5i, 9.0 - 8.5i},
+         {1.5 - 1.0i, 3.5 - 3.0i, 5.5 - 5.0i, 7.5 - 7.0i, 9.5 - 9.0i},
+         {2.0 - 1.5i, 4.0 - 3.5i, 6.0 - 5.5i, 8.0 - 7.5i, 10.0 - 9.5i},
+         {2.5 - 2.0i, 4.5 - 4.0i, 6.5 - 6.0i, 8.5 - 8.0i, 10.5 - 10.0i}};
+
+    M m(data_in);
+
+    auto com = COM_TTR::do_commute(m);
+
+    std::cout << com.first << "\t" << com.second << "\n";
+
+    using COM_TRCNJ = basic_view_commutator<engine_view, export_views::transpose,
+                                            engine_view, export_views::conjugate, M>;
+
+    com = COM_TRCNJ::do_commute(m);
+    std::cout << com.first << "\t" << com.second << "\n";
+
+
 
 }

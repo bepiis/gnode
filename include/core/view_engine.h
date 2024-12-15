@@ -139,6 +139,71 @@ concept inportable =
 #include "view_engines/col_view.h"
 #include "view_engines/boxed_view.h"
 
+template<template<typename...> typename VwTmA, typename VwA,
+         template<typename...> typename VwTmB, typename VwB,
+         typename ComEgn>
+requires
+    immutable_view<VwTmA<ComEgn, VwA>> and
+    immutable_view<VwTmB<ComEgn, VwB>> and
+    exportable<ComEgn>
+struct basic_view_commutator
+{
+private:
+    using common_engine_type = ComEgn;
+    using data_type = typename ComEgn::data_type;
+    using index_type = typename ComEgn::index_type;
+
+public:
+    static constexpr auto do_commute(common_engine_type const& com)
+    -> std::pair<uint16_t, uint16_t>
+    {
+        using Atype = VwTmA<ComEgn, VwA>;
+        using Btype = VwTmB<ComEgn, VwB>;
+
+        uint16_t commutator = 0;
+        uint16_t anti_commutator = 0;
+
+        uint16_t shift_c = 0;
+        uint16_t shift_ac = 0;
+
+        VwTmA<Btype, VwA> a = VwTmA<Btype, VwA>(Btype(com));
+        VwTmB<Atype, VwB> b = VwTmB<Atype, VwB>(Atype(com));
+
+        auto accum = [&shift_c, &commutator](bool pred) mutable 
+            { commutator |= ((pred ? 0b0 : 0b1) << shift_c++);};
+
+        auto anti_accum = [&shift_ac, &anti_commutator](bool pred) mutable 
+            { anti_commutator |= ((pred ? 0b0 : 0b1) << shift_ac++);};
+
+        accum(a.rows() == b.rows());
+        accum(a.cols() == b.cols());
+        accum(a.size() == b.size());
+
+        if(engine_helper::compare1D_exact(a, b))
+        {
+            accum(true);
+        }
+        else
+        {
+            for(; shift_c < 16; ++shift_c)
+            {
+                accum(false);
+            }
+        }
+
+        anti_accum(a.rows() == b.cols());
+        anti_accum(a.cols() == b.rows());
+        anti_accum(a.rows() == b.size());
+        anti_accum(a.cols() == b.size());
+        anti_accum(a.size() == b.rows());
+        anti_accum(a.size() == b.cols());
+
+        std::cout << shift_ac << "\n";
+
+        return std::make_pair(commutator + 1, anti_commutator + 1);
+    }
+};
+
 struct product_views
 {
     struct inner {};
