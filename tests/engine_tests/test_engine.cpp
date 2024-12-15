@@ -700,7 +700,7 @@ TEST_CASE
 #include "test_export_row_view.cpp"
 #include "test_inport_col_view.cpp"
 #include "test_export_col_view.cpp"
-#include "test_inport_boxed_view.cpp"
+#include "test_inport_box_view.cpp"
 //#include "test_view_expressions.cpp"
 
 //#include "test_expand_view.cpp"

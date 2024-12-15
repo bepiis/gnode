@@ -26,7 +26,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<K, export_views::transpose>;
+    using M = engine_view<export_views::transpose, K>;
     
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
     REQUIRE(false == owning_engine<M>);
@@ -65,7 +65,7 @@ TEST_CASE
     using ltype = matrix_orientation::col_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<K, export_views::transpose>;
+    using M = engine_view<export_views::transpose, K>;
     
     REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
@@ -95,7 +95,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<K, export_views::transpose>;
+    using M = engine_view<export_views::transpose, K>;
     
     REQUIRE(true == std::is_same_v<M::data_type, K::data_type>);
     REQUIRE(true == std::is_same_v<M::index_type, K::index_type>);
@@ -106,7 +106,7 @@ TEST_CASE
     REQUIRE(true == std::is_same_v<M::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<M::engine_type, K>);
     
-    using S = engine_view<M, export_views::transpose>;
+    using S = engine_view<export_views::transpose, M>;
     
     REQUIRE(true == std::is_same_v<S::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<S::engine_type, M>);
@@ -135,7 +135,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<K, export_views::transpose>;
+    using M = engine_view<export_views::transpose, K>;
     
     REQUIRE(true == std::is_trivially_copyable_v<M>);
     REQUIRE(true == std::is_trivially_copy_constructible_v<M>);
@@ -163,7 +163,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<K, export_views::transpose>;
+    using M = engine_view<export_views::transpose, K>;
     
     M m;
     
@@ -204,8 +204,8 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<K, export_views::transpose>;
-    using S = engine_view<M, export_views::transpose>;
+    using M = engine_view<export_views::transpose, K>;
+    using S = engine_view<export_views::transpose, M>;
     
     const literal2D<double> data_in  =
        {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
@@ -312,7 +312,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<K, export_views::transpose>;
+    using M = engine_view<export_views::transpose, K>;
     
     const literal2D<std::complex<double>> data_in =
        {{1.0 + 0.5i, 1.5 + 1.0i, 2.0 + 1.5i, 2.5 + 2.0i},

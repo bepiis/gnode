@@ -53,7 +53,9 @@
  *      
  * }
  */
-template<typename Egn, typename Vw>
+//template<typename Egn, typename Vw>
+//struct engine_view;
+template<typename Vw, typename Egn, typename ...>
 struct engine_view;
 
 /*
@@ -137,14 +139,14 @@ concept inportable =
 #include "view_engines/transpose_view.h"
 #include "view_engines/row_view.h"
 #include "view_engines/col_view.h"
-#include "view_engines/boxed_view.h"
+#include "view_engines/box_view.h"
 
 template<template<typename...> typename VwTmA, typename VwA,
          template<typename...> typename VwTmB, typename VwB,
          typename ComEgn>
 requires
-    immutable_view<VwTmA<ComEgn, VwA>> and
-    immutable_view<VwTmB<ComEgn, VwB>> and
+    immutable_view<VwTmA<VwA, ComEgn>> and
+    immutable_view<VwTmB<VwB, ComEgn>> and
     exportable<ComEgn>
 struct basic_view_commutator
 {
@@ -154,11 +156,25 @@ private:
     using index_type = typename ComEgn::index_type;
 
 public:
+    /*
+     * NOTE:
+     *
+     *  [?] https://en.wikipedia.org/wiki/Commutator
+     * 
+     * The commutator below satisfies the definition of
+     * a commutator [1]:
+     * 
+     * [g, h] = g^-1 * h^-1 * g * h
+     * 
+     * Right now, the anti commutator does not strictly follow
+     * the definition of the generally defined anti commutator.
+     * 
+     */
     static constexpr auto do_commute(common_engine_type const& com)
     -> std::pair<uint16_t, uint16_t>
     {
-        using Atype = VwTmA<ComEgn, VwA>;
-        using Btype = VwTmB<ComEgn, VwB>;
+        using Atype = VwTmA<VwA, ComEgn>;
+        using Btype = VwTmB<VwB, ComEgn>;
 
         uint16_t commutator = 0;
         uint16_t anti_commutator = 0;
@@ -166,8 +182,8 @@ public:
         uint16_t shift_c = 0;
         uint16_t shift_ac = 0;
 
-        VwTmA<Btype, VwA> a = VwTmA<Btype, VwA>(Btype(com));
-        VwTmB<Atype, VwB> b = VwTmB<Atype, VwB>(Atype(com));
+        VwTmA<VwA, Btype> a = VwTmA<VwA, Btype>(Btype(com));
+        VwTmB<VwB, Atype> b = VwTmB<VwB, Atype>(Atype(com));
 
         auto accum = [&shift_c, &commutator](bool pred) mutable 
             { commutator |= ((pred ? 0b0 : 0b1) << shift_c++);};
@@ -198,8 +214,6 @@ public:
         anti_accum(a.size() == b.rows());
         anti_accum(a.size() == b.cols());
 
-        std::cout << shift_ac << "\n";
-
         return std::make_pair(commutator + 1, anti_commutator + 1);
     }
 };
@@ -209,27 +223,6 @@ struct product_views
     struct inner {};
     struct outer {};
     struct scalar {};
-};
-
-template<typename TLHS, typename TRHS, typename Prod>
-struct product_view;
-
-struct engine_traits_promoter
-{
-    template<typename From, typename To, bool>
-    struct promote_to
-    {}; 
-
-    template<typename From, typename To>
-    struct promote_to<From, To, true>
-    {
-        using orientation_type = typename get_engine_orientation<To>::owning_engine_type;
-        using data_type = typename To::data_type;
-        using index_type = typename To::index_type;
-        using reference = typename To::reference;
-        using const_reference = typename To::const_reference;
-    };
-
 };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -358,7 +351,7 @@ requires
     exportable<TRHS> and
     std::convertible_to<typename TLHS::data_type, typename TRHS::data_type> and
     rowvec_dimensions<TLHS> and (not rowvec_dimensions<TRHS>)
-struct product_view<TLHS, TRHS, product_views::inner>
+struct engine_view<product_views::inner, TLHS, TRHS>
 {
 
 public:
@@ -372,7 +365,7 @@ private:
     using rhs_pointer = TRHS const*;
 
     using rhs_sz_extract = engine_ct_extents<TRHS>;
-    using rhs_col_view_type = engine_view<TRHS, export_views::col>;
+    using rhs_col_view_type = engine_view<export_views::col, TRHS>;
 
 public:
 
@@ -392,12 +385,12 @@ private:
 
 public:
 
-    constexpr product_view() noexcept
+    constexpr engine_view() noexcept
     : m_lhs_eng_ptr(nullptr), m_rhs_eng_ptr(nullptr), m_data(), m_inner_computed()
     {}
 
     explicit
-    constexpr product_view(TLHS const& lhs, TRHS const& rhs)
+    constexpr engine_view(TLHS const& lhs, TRHS const& rhs)
     : m_lhs_eng_ptr(&lhs), m_rhs_eng_ptr(&rhs), m_data(rhs.cols()), m_inner_computed(rhs.cols())
     {
         if(lhs.cols() != rhs.rows())
@@ -456,7 +449,7 @@ public:
         return m_data[j];
     }
 
-    constexpr void swap(product_view & rhs) noexcept
+    constexpr void swap(engine_view & rhs) noexcept
     {
         engine_helper::swap(*this, rhs);
     }
@@ -495,7 +488,7 @@ public:
  * 
  *      virtual expansion can only increase the percieved size, not decrease it 
  */
-
+/*
 template<typename OP, typename ...Args>
 concept valid_expander = 
     std::invocable<OP, Args...> and
@@ -519,7 +512,7 @@ concept expandable =
         std::same_as<typename OP::const_reference, typename VEgn::const_reference> or
         std::same_as<typename OP::const_reference, typename VEgn::data_type>
     );
-
+*/
 /*
  * view expander ctor type I (static, no OP requires no initialization)
  * 
@@ -534,7 +527,7 @@ concept expandable =
  * The following template overload (by constraints) only accepts OPs which have only
  * static callables
  */
-    
+/*
 template<typename VEgn, template<typename...> typename TmOP, typename ...Args>
 requires 
     expandable<VEgn, TmOP<VEgn, Args...>> and
@@ -564,7 +557,6 @@ private:
     static constexpr bool op_is_rc_constructible = 
         std::constructible_from<op_type, index_type, index_type>;
 
-/* view engine private data requirements */
 private:
     pointer_type m_eng_ptr;
 
@@ -600,7 +592,6 @@ public:
 
 public:
 
-    /* rule of zero */
     
     // required for readable_engine (consistant_return_lengths):
     //      rows() -> index_type
@@ -657,7 +648,7 @@ private:
         cols_fun = std::bind(&op_type::cols, *m_eng_ptr);
     }
 };
-
+*/
 
 /*
  * view expander ctor type II (op_type is a parameter)
@@ -709,11 +700,12 @@ private:
  * Any view composition must satisfy this requirement
  * If there is a mutable view, it must be on the LHS, i.e. VEgnY
  */ 
+/*
 template<typename VEgnY, typename VEgnX, typename OP>
 requires 
     (immutable_view<VEgnY> or mutable_view<VEgnY>) and
     immutable_view<VEgnX>
-struct view_composer;
+struct view_composer;*/
 
 /*
  * view composer partial specialization
@@ -721,11 +713,12 @@ struct view_composer;
  * enabled if VEgnX's elements are invocable with
  * VEgnY's element type
  */ 
+/*
 template<typename VEgnY, typename VEgnX>
 requires
     std::invocable<typename VEgnX::data_type, typename VEgnY::data_type>
 struct view_composer<VEgnY, VEgnX, void>
-{};
+{};*/
 
 /*
  * Dual view engine:

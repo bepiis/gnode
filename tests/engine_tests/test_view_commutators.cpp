@@ -18,38 +18,38 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
 
     using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using MTE = engine_view<M, export_views::transpose>;
-    using MTI = engine_view<M, inport_views::transpose>;
+    using MTE = engine_view<export_views::transpose, M>;
+    using MTI = engine_view<inport_views::transpose, M>;
 
-    using RVE = engine_view<MTE, export_views::row>;
+    using RVE = engine_view<export_views::row, MTE>;
     REQUIRE(true == rowvec_dimensions<RVE>);
 
-    using RVI = engine_view<MTI, inport_views::row>;    
+    using RVI = engine_view<inport_views::row, MTI>;    
     REQUIRE(true == rowvec_dimensions<RVI>);
 
-    using RVET = engine_view<RVE, export_views::transpose>;
+    using RVET = engine_view<export_views::transpose, RVE>;
     REQUIRE(true == colvec_dimensions<RVET>);
 
-    using RVIT = engine_view<RVI, inport_views::transpose>;    
+    using RVIT = engine_view<inport_views::transpose, RVI>;    
     REQUIRE(true == colvec_dimensions<RVIT>);
 
-    using CVE = engine_view<MTE, export_views::col>;
+    using CVE = engine_view<export_views::col, MTE>;
     REQUIRE(true == colvec_dimensions<CVE>);
 
-    using CVI = engine_view<MTI, inport_views::col>;
+    using CVI = engine_view<inport_views::col, MTI>;
     REQUIRE(true == colvec_dimensions<CVI>);
 
-    using CVET = engine_view<CVE, export_views::transpose>;
+    using CVET = engine_view<export_views::transpose, CVE>;
     REQUIRE(true == rowvec_dimensions<CVET>);
 
-    using CVIT = engine_view<CVI, inport_views::transpose>;
+    using CVIT = engine_view<inport_views::transpose, CVI>;
     REQUIRE(true == rowvec_dimensions<CVIT>);
 
-    using RCVE = engine_view<engine_view<MTE, export_views::row>, export_views::col>;
+    using RCVE = engine_view<export_views::col, engine_view<export_views::row, MTE>>;
     REQUIRE(true == rowvec_dimensions<RCVE>);
     REQUIRE(true == colvec_dimensions<RCVE>);
 
-    using RCVI = engine_view<engine_view<MTI, inport_views::row>, inport_views::col>;
+    using RCVI = engine_view<inport_views::col, engine_view<inport_views::row, MTI>>;
     REQUIRE(true == rowvec_dimensions<RCVI>);
     REQUIRE(true == colvec_dimensions<RCVI>);
 
@@ -66,6 +66,8 @@ TEST_CASE
     "IF M is a storage engine type\n" 
     "and K is a transparent view type\n"
     "then K commutes with transpose view.\n"
+    "This suite runs trivial commutators to test\n"
+    "the do_commute function.\n"
 )
 {
     using dtype = std::complex<double>;
@@ -90,15 +92,19 @@ TEST_CASE
     M m(data_in);
 
     auto com = COM_TTR::do_commute(m);
-
-    std::cout << com.first << "\t" << com.second << "\n";
+    REQUIRE(1 == com.first);
 
     using COM_TRCNJ = basic_view_commutator<engine_view, export_views::transpose,
                                             engine_view, export_views::conjugate, M>;
 
     com = COM_TRCNJ::do_commute(m);
-    std::cout << com.first << "\t" << com.second << "\n";
+    REQUIRE(1 == com.first);
 
+    using COM_RN = basic_view_commutator<engine_view, export_views::row,
+                                          engine_view, export_views::negation, M>;
 
-
+    com = COM_RN::do_commute(m);
+    REQUIRE(1 == com.first);
 }
+
+

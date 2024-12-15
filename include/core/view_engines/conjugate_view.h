@@ -9,7 +9,7 @@ template<typename Egn>
 requires
     exportable<Egn> and
     has_conjugate<typename Egn::data_type>
-struct engine_view<Egn, export_views::conjugate>
+struct engine_view<export_views::conjugate, Egn>
 {
     
 /* view engine public type alias requirements */

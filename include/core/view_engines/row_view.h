@@ -8,7 +8,7 @@
 template<typename Egn>
 requires 
     inportable<Egn>
-struct engine_view<Egn, inport_views::row>
+struct engine_view<inport_views::row, Egn>
 {
 
 /* view engine public type alias requirements */
@@ -120,7 +120,7 @@ public:
 template<typename Egn>
 requires 
     exportable<Egn>
-struct engine_view<Egn, export_views::row>
+struct engine_view<export_views::row, Egn>
 {
 
 /* view engine public type alias requirements */

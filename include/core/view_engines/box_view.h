@@ -1,12 +1,12 @@
 //
-//  boxed_view.h
+//  box_view.h
 //  Created by Ben Westcott on 12/1/24.
 //
 
 template<typename Egn>
 requires
     inportable<Egn>
-struct engine_view<Egn, inport_views::box>
+struct engine_view<inport_views::box, Egn>
 {
 
 /* view engine public type alias requirements */

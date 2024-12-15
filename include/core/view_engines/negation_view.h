@@ -9,7 +9,7 @@ template<typename Egn>
 requires
     exportable<Egn> and
     valid_unary_minus_operator<typename Egn::data_type>
-struct engine_view<Egn, export_views::negation>
+struct engine_view<export_views::negation, Egn>
 {
     
 /* view engine public type alias requirements */
