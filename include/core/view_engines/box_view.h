@@ -49,6 +49,11 @@ public:
     constexpr engine_view() noexcept
     : m_eng_ptr(nullptr), start_row(0), nbr_rows(0), start_col(0), nbr_cols(0)
     {}
+
+    explicit
+    constexpr engine_view(engine_type & rhs)
+    : m_eng_ptr(&rhs), start_row(0), nbr_rows(rhs.rows()), start_col(0), nbr_cols(rhs.cols())
+    {}
     
     explicit
     constexpr engine_view

@@ -55,7 +55,7 @@
  */
 //template<typename Egn, typename Vw>
 //struct engine_view;
-template<typename Vw, typename Egn, typename ...>
+template<typename Vw, typename Egn, typename...>
 struct engine_view;
 
 /*
@@ -103,6 +103,7 @@ template<typename VEgn>
 concept view_basics = 
     readable_engine<VEgn> and
     std::is_nothrow_swappable_v<VEgn&> and
+    std::constructible_from<typename VEgn::engine_type> and
     not owning_engine<VEgn>;
 
 template<typename X>
@@ -140,6 +141,52 @@ concept inportable =
 #include "view_engines/row_view.h"
 #include "view_engines/col_view.h"
 #include "view_engines/box_view.h"
+
+/*
+ * 
+ *
+ * 
+ * Commutators between unary view types (only considers one common engine type):
+ *  - TODO: view_basics should really be unary_view_basics, as binary_view_basics will
+ *          require two common engines (which may or may not be common to each other)
+ *  - claim: the unary views which are purely functional, i.e. conj, negation, transparent commute
+ *    with all other view types. 
+ *  - claim: row and column views commute.
+ *  - claim: transpose views commute with all purely functional unary views.
+ *  - note: The first issue that arises with box views is that:
+ *              - Box * (Row or Col) -> Row or Col
+ *              - (Row or Col) * Box -> Row or Col
+ *          BUT, 
+ *              
+ * 
+ * 
+ */
+
+template<typename ComEgn>
+struct view_commutator
+{
+    using common_engine_type = ComEgn;
+    using data_type = typename ComEgn::data_type;
+    using index_type = typename ComEgn::index_type;
+
+    template<typename VwA, typename... AArgs>
+    struct A
+    {
+        template<typename VwB, typename... BArgs>
+        struct B
+        {
+            static constexpr auto commute(common_engine_type const& com)
+            -> std::pair<uint16_t, uint16_t>
+            {
+                using View1 = engine_view<VwA, engine_view<VwB, ComEgn, BArgs...>, AArgs...>;
+                using View2 = engine_view<VwB, engine_view<VwA, ComEgn, AArgs...>, BArgs...>;
+
+                // ...
+            }
+        };
+    };
+};
+
 
 template<template<typename...> typename VwTmA, typename VwA,
          template<typename...> typename VwTmB, typename VwB,
