@@ -17,7 +17,7 @@ public:
     using engine_type = Egn;
 
 private:
-    using pointer_type = engine_type*;
+    using pointer = engine_type*;
     using ctor_type = engine_type &;
 
     using sz_extract = engine_ct_extents<engine_type>;
@@ -40,7 +40,7 @@ public:
 
 /* view engine private data requirements */
 private:
-    pointer_type m_eng_ptr;
+    pointer m_eng_ptr;
     index_type m_row;
 
 /* view engine public method requirements */
@@ -129,7 +129,7 @@ public:
     using engine_type = Egn;
 
 private:
-    using pointer_type = engine_type const*;
+    using pointer = engine_type const*;
     using ctor_type = engine_type const&;
 
     using sz_extract = engine_ct_extents<engine_type>;
@@ -153,7 +153,7 @@ public:
 
 /* view engine private data requirements */
 private:
-    pointer_type m_eng_ptr;
+    pointer m_eng_ptr;
     index_type m_row;
 
 /* view engine public method requirements */

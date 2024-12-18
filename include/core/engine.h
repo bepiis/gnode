@@ -36,6 +36,30 @@ template<template<typename ...> typename Tmplte, typename ... Args>
 struct is_specialization<Tmplte<Args...>, Tmplte> : std::true_type
 {};
 
+template<typename T>
+static constexpr bool type_is_complex = 
+        is_specialization<T, std::complex>::value;
+
+template<typename TL, typename TR>
+static constexpr bool neither_type_is_complex = 
+        not (type_is_complex<TL> and type_is_complex<TR>);
+
+
+template<typename>
+struct get_complex_type : std::false_type
+{};
+
+template<template<typename> typename CxTm, typename T>
+requires
+    std::same_as<CxTm<T>, std::complex<T>>
+struct get_complex_type<CxTm<T>> : std::true_type
+{
+    using type = T;
+};
+
+template<typename T>
+using get_complex_type_t = typename get_complex_type<T>::type;
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * see:
@@ -289,11 +313,10 @@ concept valid_unary_minus_operator = requires(X && x)
     { -x } -> std::convertible_to<X>;
 };
 
-template<typename X>
-concept valid_binary_star_operator = requires(X && x1, X && x2)
+template<typename RT>
+concept valid_binary_star_operator = requires(RT && rt)
 {
-    { x1 * x2 } -> std::convertible_to<X>;
-    { x2 * x1 } -> std::convertible_to<X>;
+    { rt * rt } -> std::convertible_to<RT>;
 };
 
 template<typename T1, typename T2>
@@ -321,7 +344,7 @@ concept has_conjugate = requires(X const& x)
  * 
  */
 template<typename Egn>
-concept base_types = requires (Egn const& eng)
+concept base_types = requires
 {
     typename Egn::data_type;
     typename Egn::index_type;
@@ -550,6 +573,32 @@ template<typename Egn, typename T>
 concept comparable_engine_and_literal2D = 
     readable_engine<Egn> and
     comparable_types<typename Egn::data_type, T>;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  The following two concepts determine whether
+ *  an engine's elements are callable. The first
+ *  one only checks whether a given engine type can be
+ *  invoked with a supplied set of arguments, 
+ * 
+ *  whereas the second provides a guarentee that 
+ *  if supplied two engines, that one's elements is
+ *  callable with the other's elements as parameters. 
+ * 
+ */
+template<typename Egn, typename... Args>
+concept engine_has_invocable_elements = 
+    base_engine<Egn> and
+    std::invocable<typename Egn::data_type, Args...>;
+
+template<typename RT, typename IvEgn, typename InEgn, typename ...Args>
+concept engine_invocable_with =
+    readable_engine<IvEgn> and
+    readable_engine<InEgn> and
+    engine_has_invocable_elements<IvEgn, typename InEgn::data_type, Args...> and
+    std::same_as<RT, std::invoke_result_t<typename IvEgn::data_type, typename InEgn::data_type, Args...>>;
+
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -1041,6 +1090,7 @@ struct engine_helper
 
 #define ENGINE_SUPPORTED
 
+#include "custom_binary_common_type.h"
 #include "storage_engine.h"
 #include "view_engine.h"
 

@@ -1,11 +1,11 @@
 //
-//  test_box_view_engine.cpp
-//  Created by Ben Westcott on 12/1/24.
+//  test_export_box_view.cpp
+//  Created by Ben Westcott on 12/16/24.
 //
 
 TEST_CASE
 (
-  "IF M is a box view engine\n"
+  "IF M is an export box view engine\n"
   "THEN it has an owning engine type alias whose is_owning member is false\n"
   "THEN it is NOT an owning engine\n"
   "THEN it has mutable access\n"
@@ -26,13 +26,13 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<inport_views::box, K>;
+    using M = engine_view<export_views::box, K>;
     
     REQUIRE(false == has_owning_engine_type_alias<M>::is_owning);
     REQUIRE(false == owning_engine<M>);
-    REQUIRE(true == mutable_access<M>);
+    REQUIRE(false == mutable_access<M>);
     REQUIRE(true == immutable_access<M>);
-    REQUIRE(true == consistent_mutable_ref_type<M>);
+    REQUIRE(false == consistent_mutable_ref_type<M>);
     REQUIRE(true == consistent_immutable_ref_type<M>);
     REQUIRE(true == consistent_return_sizes<M>);
     REQUIRE(true == consistent_return_lengths<M>);
@@ -44,7 +44,7 @@ TEST_CASE
 
 TEST_CASE
 (
-  "IF M is a type box view engine\n"
+  "IF M is a type export box view engine\n"
   "THEN it is a base_engine\n"
   "THEN it is a readable engine\n"
   "THEN it is a writable engine\n"
@@ -64,24 +64,24 @@ TEST_CASE
     
     REQUIRE(true == writable_engine<K>);
     
-    using M = engine_view<inport_views::box, K>;
+    using M = engine_view<export_views::box, K>;
     
     REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
-    REQUIRE(true == writable_engine<M>);
+    REQUIRE(false == writable_engine<M>);
     REQUIRE(true == view_basics<M>);
     REQUIRE(true == unary_view<M>);
-    REQUIRE(true == mutable_view<M>);
-    REQUIRE(false == immutable_view<M>);
+    REQUIRE(false == mutable_view<M>);
+    REQUIRE(true == immutable_view<M>);
 }
 
 TEST_CASE
 (
-  "IF M is a box view engine AND K is its owning engine\n"
+  "IF M is an export box view engine AND K is its owning engine\n"
   "THEN M and K have the same base types\n"
   "THEN M's owning engine type is K\n"
   "THEN M's engine type is K.\n"
-  "THEN IF S is a box view engine and M is its owning engine\n"
+  "THEN IF S is an export box view engine and M is its owning engine\n"
   "THEN S's owning engine is K\n"
   "THEN S's engine type is M\n"
 )
@@ -95,18 +95,18 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<inport_views::box, K>;
+    using M = engine_view<export_views::box, K>;
     
     REQUIRE(true == std::is_same_v<M::data_type, K::data_type>);
     REQUIRE(true == std::is_same_v<M::index_type, K::index_type>);
-    REQUIRE(true == std::is_same_v<M::reference, K::reference>);
+    REQUIRE(true == std::is_same_v<M::reference, K::const_reference>);
     REQUIRE(true == std::is_same_v<M::const_reference, K::const_reference>);
     REQUIRE(true == std::is_same_v<M::orientation_type, K::orientation_type>);
     
     REQUIRE(true == std::is_same_v<M::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<M::engine_type, K>);
     
-    using S = engine_view<inport_views::box, M>;
+    using S = engine_view<export_views::box, M>;
     
     REQUIRE(true == std::is_same_v<S::owning_engine_type, K>);
     REQUIRE(true == std::is_same_v<S::engine_type, M>);
@@ -115,7 +115,7 @@ TEST_CASE
 
 TEST_CASE
 (
-  "IF M is a box view engine\n"
+  "IF M is an export box view engine\n"
   "THEN it is trivially copyable\n"
   "THEN it is trivially copy constructible\n"
   "THEN it is trivially move constructible\n"
@@ -135,7 +135,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<inport_views::box, K>;
+    using M = engine_view<export_views::box, K>;
     
     REQUIRE(true == std::is_trivially_copyable_v<M>);
     REQUIRE(true == std::is_trivially_copy_constructible_v<M>);
@@ -149,7 +149,7 @@ TEST_CASE
 
 TEST_CASE
 (
-  "IF m is a box view engine\n"
+  "IF m is an export box view engine\n"
   "THEN IF it is default constructed\n"
   "THEN m's engine ptr is nullptr.\n"
   "THEN 0 equals rows, cols and size.\n"
@@ -164,7 +164,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<inport_views::box, K>;
+    using M = engine_view<export_views::box, K>;
     
     M m;
     
@@ -177,7 +177,7 @@ TEST_CASE
 TEST_CASE
 (
     "IF k is a matrix storage engine which is literal2D constructed\n"
-    "THEN if m is a box view engine constructed with k, and a box of size l * w = k's size\n"
+    "THEN if m is an export box view engine constructed with k, and a box of size l * w = k's size\n"
     "THEN m's rows equals l equals k's rows\n"
     "THEN m's cols equals w equals k's cols\n"
     "THEN m's size equals l * w equals k's size\n"
@@ -197,7 +197,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<inport_views::box, K>;
+    using M = engine_view<export_views::box, K>;
     
     const literal2D<double> data_in  =
        {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
@@ -234,12 +234,12 @@ TEST_CASE
 TEST_CASE
 (
     "IF k is a matrix storage engine which is literal2D constructed\n"
-    "THEN if m is a box view engine constructed with k, and a box of size l * w = k's size\n"
+    "THEN if m is an export box view engine constructed with k, and a box of size l * w = k's size\n"
     "THEN m's rows equals l equals k's rows\n"
     "THEN m's cols equals w equals k's cols\n"
     "THEN m's size equals l * w equals k's size\n"
     "THEN compare exact m, data_in_sub returns true\n"
-    "THEN IF two boxed views, my and mz are swapped\n"
+    "THEN IF two export box views, my and mz are swapped\n"
     "THEN their dimensions and data are swapped.\n"
     "THEN IF all boxed views overwrite their view data with 1\n"
     "THEN the result is reflected in k\n"
@@ -254,7 +254,7 @@ TEST_CASE
     using ltype = matrix_orientation::row_major;
     
     using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
-    using M = engine_view<inport_views::box, K>;
+    using M = engine_view<export_views::box, K>;
     
     const literal2D<double> data_in  =
        {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10},
@@ -336,18 +336,5 @@ TEST_CASE
 
     REQUIRE(true == eh::compare2D_exact(my, data_in_sub_z));   
 
-    const literal2D<double> data_in_modified  =
-       {{1.00, 1.00, 1.00, 1.00, 1.04, 1.00, 1.00, -1.10},
-        {1.00, 1.00, 1.00, 1.00, 1.10, 1.00, 1.00, -2.20},
-        {1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, -3.30},
-        {1.18, 1.19, 1.20, 1.00, 1.00, 1.00, 1.00, -4.40},
-        {1.24, 1.25, 1.26, 1.00, 1.00, 1.00, 1.00, -5.50},
-        {1.30, 1.31, 1.32, 1.33, 1.34, 1.35, -6.00, -6.60}};   
-
-    eh::fill_cols(mx, 0, mx.cols(), 1.00);
-    eh::fill_cols(my, 0, my.cols(), 1.00);
-    eh::fill_cols(mz, 0, mz.cols(), 1.00);
-
-    REQUIRE(true == eh::compare2D_exact(k, data_in_modified));
 }
 

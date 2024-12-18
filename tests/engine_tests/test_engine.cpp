@@ -639,6 +639,30 @@ TEST_CASE
     REQUIRE(true == engine_allocator<double, std::dynamic_extent, std::dynamic_extent, std::allocator<double>>);
 }
 
+TEST_CASE
+(
+    "get complex type accurately returns the right type\n"
+)
+{
+    REQUIRE(true == std::same_as<get_complex_type_t<std::complex<double>>, double>);
+    REQUIRE(true == std::same_as<get_complex_type_t<std::complex<int64_t>>, int64_t>);
+    REQUIRE(true == std::same_as<get_complex_type_t<std::complex<long double>>, long double>);
+
+
+    REQUIRE(is_specialization<std::common_type_t<std::complex<double>, double>, std::complex>::value);
+    REQUIRE(std::same_as<std::common_type_t<std::complex<double>, double>, std::complex<double>>);
+
+    // issue 1:
+    REQUIRE(std::same_as<std::common_type_t<std::complex<int64_t>, double>, std::complex<int64_t>>);
+
+    REQUIRE(std::same_as<std::common_type_t<int64_t, double>, double>);
+    REQUIRE(std::same_as<std::common_type_t<uint32_t, float>, float>);
+
+
+    REQUIRE(std::same_as<std::common_type_t<float, double>, double>);
+    REQUIRE(std::same_as<std::common_type_t<double, long double>, long double>);
+}
+
 /*
  * BEGIN matrix_storage_engine tests
  * NOTES:
@@ -701,9 +725,33 @@ TEST_CASE
 #include "test_inport_col_view.cpp"
 #include "test_export_col_view.cpp"
 #include "test_inport_box_view.cpp"
+#include "test_export_box_view.cpp"
 //#include "test_view_expressions.cpp"
+
+TEST_CASE
+(
+    "product view promoter patches the issue with common type\n"
+    "and std complex not choosing the more precise type.\n"
+)
+{
+    using cxd = std::complex<double>;
+    using cxld = std::complex<long double>;
+    using cxi64 = std::complex<int64_t>;
+
+    REQUIRE(std::same_as<double, patched_common_type<uint32_t, double>::type>);
+    REQUIRE(std::same_as<long double, patched_common_type<double, long double>::type>);
+    REQUIRE(std::same_as<int64_t, patched_common_type<int64_t, int32_t>::type>);
+
+    REQUIRE(std::same_as<cxd, patched_common_type<cxd, cxi64>::type>);
+    REQUIRE(std::same_as<cxld, patched_common_type<cxld, cxd>::type>);
+
+}
+
+
 
 //#include "test_expand_view.cpp"
 #include "test_view_commutators.cpp"
 //#include "test_view_funs.cpp"
+
+#include "test_inner_product_view.cpp"
  

@@ -70,6 +70,8 @@ TEST_CASE
     REQUIRE(true == base_engine<M>);
     REQUIRE(true == readable_engine<M>);
     REQUIRE(true == writable_engine<M>);
+    REQUIRE(true == view_basics<M>);
+    REQUIRE(true == unary_view<M>);
     REQUIRE(true == mutable_view<M>);
     REQUIRE(false == immutable_view<M>);
 }

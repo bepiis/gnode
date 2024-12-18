@@ -15,7 +15,7 @@ public:
     using engine_type = Egn;
 
 private:
-    using pointer_type = engine_type*;
+    using pointer = engine_type *;
     using ctor_type = engine_type &;
 
 /* engine public type alias requirements */
@@ -36,7 +36,7 @@ public:
     
 /* view engine private data requirements */
 private:
-    pointer_type m_eng_ptr;
+    pointer m_eng_ptr;
     
     index_type start_row;
     index_type nbr_rows;
@@ -116,6 +116,98 @@ public:
         return (*m_eng_ptr)(i);
     }
     
+    constexpr void swap(engine_view & rhs) noexcept
+    {
+        engine_helper::swap(*this, rhs);
+    }
+};
+
+template<typename Egn>
+requires
+    exportable<Egn>
+struct engine_view<export_views::box, Egn>
+{
+public:
+    using owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
+    using engine_type = Egn;
+
+private:
+    using pointer = engine_type const*;
+    using ctor_type = engine_type const&;
+
+public:
+    using orientation_type = typename get_engine_orientation<engine_type>::type;
+    using data_type = typename engine_type::data_type;
+    using index_type = typename engine_type::index_type;
+    using reference = typename engine_type::const_reference;
+    using const_reference = typename engine_type::const_reference;
+
+private:
+    pointer m_eng_ptr;
+    
+    index_type start_row;
+    index_type nbr_rows;
+    index_type start_col;
+    index_type nbr_cols;
+
+public:
+
+    constexpr engine_view() noexcept
+    : m_eng_ptr(nullptr), start_row(0), nbr_rows(0), start_col(0), nbr_cols(0)
+    {}
+
+    explicit
+    constexpr engine_view(engine_type const& rhs)
+    : m_eng_ptr(&rhs), start_row(0), nbr_rows(rhs.rows()), start_col(0), nbr_cols(rhs.cols())
+    {}
+
+    explicit
+    constexpr engine_view
+    (
+        engine_type const& rhs,
+        index_type sr,
+        index_type nr, 
+        index_type cs,
+        index_type nc
+    ) //$ [NG]
+    : m_eng_ptr(&rhs), start_row(sr), nbr_rows(nr), start_col(cs), nbr_cols(nc)
+    {}
+
+    constexpr bool has_view() const
+    {
+        return m_eng_ptr != nullptr;
+    }
+
+public:
+
+    /* rule of zero */
+
+    constexpr index_type rows() const noexcept
+    {
+        return nbr_rows;
+    }
+
+    constexpr index_type cols() const noexcept
+    {
+        return nbr_cols;
+    }
+
+    constexpr index_type size() const noexcept
+    {
+        return nbr_rows * nbr_cols;
+    }
+
+    constexpr const_reference operator()(index_type i, index_type j) const
+    {
+        return (*m_eng_ptr)(start_row + i, start_col + j);
+    }
+
+    // TODO: 
+    constexpr const_reference operator()(index_type i) const
+    {
+        return (*m_eng_ptr)(i);
+    }
+
     constexpr void swap(engine_view & rhs) noexcept
     {
         engine_helper::swap(*this, rhs);

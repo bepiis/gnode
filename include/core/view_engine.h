@@ -103,8 +103,16 @@ template<typename VEgn>
 concept view_basics = 
     readable_engine<VEgn> and
     std::is_nothrow_swappable_v<VEgn&> and
-    std::constructible_from<typename VEgn::engine_type> and
     not owning_engine<VEgn>;
+
+template<typename VEgn>
+concept unary_view = 
+    view_basics<VEgn> and
+    requires
+    {
+        typename VEgn::engine_type;
+    }
+    and std::constructible_from<VEgn, typename VEgn::engine_type&>;
 
 template<typename X>
 concept has_immutable_view_ref =
@@ -143,9 +151,6 @@ concept inportable =
 #include "view_engines/box_view.h"
 
 /*
- * 
- *
- * 
  * Commutators between unary view types (only considers one common engine type):
  *  - TODO: view_basics should really be unary_view_basics, as binary_view_basics will
  *          require two common engines (which may or may not be common to each other)
@@ -156,7 +161,7 @@ concept inportable =
  *  - note: The first issue that arises with box views is that:
  *              - Box * (Row or Col) -> Row or Col
  *              - (Row or Col) * Box -> Row or Col
- *          BUT, 
+ *          BUT only their shape commutes. Data does not. 
  *              
  * 
  * 
@@ -182,6 +187,8 @@ struct view_commutator
                 using View2 = engine_view<VwB, engine_view<VwA, ComEgn, AArgs...>, BArgs...>;
 
                 // ...
+
+                return std::make_pair(0, 0);
             }
         };
     };
@@ -272,6 +279,23 @@ struct product_views
     struct scalar {};
 };
 
+
+
+
+template<typename VEgn>
+concept binary_view =
+    view_basics<VEgn> and
+    requires
+    {
+        typename VEgn::lhs_engine_type;
+        typename VEgn::rhs_engine_type;
+    }
+    and std::constructible_from<VEgn, typename VEgn::lhs_engine_type&, 
+                                      typename VEgn::rhs_engine_type&>;
+
+template<typename VwClass, typename TLHS, typename TRHS>
+struct view_promoter;
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * inner product view:
  *     If TLHS and TRHS are both exportable and either TLHS is explicitly a row vector type
@@ -341,25 +365,28 @@ struct product_views
  * 
  */
 
-template<typename TLHS, typename TRHS, bool SizeGuard = true>
+template<typename TLHS, typename TRHS, typename RT, bool SizeGuard = true>
 requires
     exportable<TLHS> and 
     exportable<TRHS> and
-    std::convertible_to<typename TLHS::data_type, typename TRHS::data_type> and
+    valid_binary_star_operator<RT> and
+    std::convertible_to<RT, typename TLHS::data_type> and
+    std::convertible_to<RT, typename TRHS::data_type> and
     rowvec_dimensions<TLHS> and
     colvec_dimensions<TRHS>
 static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
--> typename TLHS::data_type
+-> RT
 {
     using lhs_it = typename TLHS::index_type;
     using rhs_it = typename TRHS::index_type;
 
-    using dtype = typename TLHS::data_type;
+    using dtype = RT;
 
     lhs_it j = 0;
     rhs_it i = 0;
     dtype sum = 0;
 
+    
     /*
        specifying the size guard adds a call to min to find
        the stop index in the case where lhs and rhs were not 
@@ -368,6 +395,7 @@ static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
        size guard in the case where they're certain that
        the two have the right dimensions.
     */
+   
     if constexpr(SizeGuard)
     {
         using it = std::common_type_t<lhs_it, rhs_it, std::size_t>;
@@ -375,40 +403,97 @@ static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
         it k = 0;
         it stop = std::min(static_cast<it>(lhs.cols()), 
                            static_cast<it>(rhs.rows()));
-
-        for(; k < stop; i++, j++)
+        
+        for(; k < stop; ++k, ++i, ++j)
         {
-            sum += lhs(0, j) * static_cast<dtype>(rhs(i, 0));
+            sum += static_cast<RT>(lhs(0, j)) * static_cast<RT>(rhs(i, 0));
         }
     }
     else
     {
-        for(; j < lhs.cols(); i++, j++)
+        for(; j < lhs.cols(); ++i, ++j)
         {
-            sum += lhs(0, j) * static_cast<dtype>(rhs(i, 0));
+            sum += static_cast<RT>(lhs(0, j)) * static_cast<RT>(rhs(i, 0));
         }
     }
 
     return sum;
+
+
 }
+
+template<typename TLHS, typename TRHS, typename RT, bool SizeGuard = true>
+requires
+    exportable<TLHS> and
+    exportable<TRHS> and
+    engine_invocable_with<RT, TLHS, TRHS> and
+    rowvec_dimensions<TLHS> and
+    colvec_dimensions<TRHS>
+static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
+-> RT
+{
+    using lhs_it = typename TLHS::index_type;
+    using rhs_it = typename TRHS::index_type;
+
+    using dtype = RT;
+
+    lhs_it j = 0;
+    rhs_it i = 0;
+    dtype sum = 0;
+
+    if constexpr(SizeGuard)
+    {
+        using it = std::common_type_t<lhs_it, rhs_it, std::size_t>;
+
+        it k = 0;
+        it stop = std::min(static_cast<it>(lhs.cols()), 
+                           static_cast<it>(rhs.rows()));
+        
+        for(; k < stop; ++k, ++i, ++j)
+        {
+            sum += static_cast<RT>(lhs(0, j)(rhs(i, 0)));
+        }
+    }
+    else
+    {
+        for(; j < lhs.cols(); ++i, ++j)
+        {
+            sum += static_cast<RT>(lhs(0, j)(rhs(i, 0)));
+        }
+    }    
+
+    return sum;
+}
+
+
+template<typename TLHS, typename TRHS>
+concept common_data_types =
+    base_types<TLHS> and
+    base_types<TRHS> and
+    patched_common_type<typename TLHS::data_type, typename TRHS::data_type>::value;
 
 template<typename TLHS, typename TRHS>
 requires
     exportable<TLHS> and 
     exportable<TRHS> and
-    std::convertible_to<typename TLHS::data_type, typename TRHS::data_type> and
+    common_data_types<TLHS, TRHS> and
     rowvec_dimensions<TLHS> and (not rowvec_dimensions<TRHS>)
 struct engine_view<product_views::inner, TLHS, TRHS>
 {
 
 public:
     using owning_engine_type = typename has_owning_engine_type_alias<TLHS>::owning_engine_type;
-    using engine_type = TLHS;
+    using lhs_engine_type = TLHS;
+    using rhs_engine_type = TRHS;
 
     static constexpr bool quasi_owner_type = true;
 
 private:
-    using lhs_pointer = engine_type const*;
+
+    using common_data_type = patched_common_type<typename TLHS::data_type, typename TRHS::data_type>;
+    using common_index_type = std::common_type<typename TLHS::index_type, typename TRHS::data_type>;
+
+    using lhs_pointer = TLHS const*;
     using rhs_pointer = TRHS const*;
 
     using rhs_sz_extract = engine_ct_extents<TRHS>;
@@ -416,11 +501,11 @@ private:
 
 public:
 
-    using orientation_type = typename get_engine_orientation<engine_type>::type;
-    using data_type = typename engine_type::data_type;
-    using index_type = typename engine_type::index_type;
-    using reference = typename engine_type::data_type;
-    using const_reference = typename engine_type::data_type;
+    using orientation_type = matrix_orientation::row_major;
+    using data_type = typename common_data_type::type;
+    using index_type = typename common_index_type::type;
+    using reference = typename common_data_type::type;
+    using const_reference = typename common_data_type::type;
 
 private:
 
@@ -475,16 +560,16 @@ public:
         return cols();
     }
 
-    constexpr const_reference operator()(index_type i, index_type j) const
+    constexpr const_reference operator()(index_type i, index_type j)
     {
         return (*this)(j);
     }
 
-    constexpr const_reference operator()(index_type j) const
+    constexpr const_reference operator()(index_type j)
     {
         if(!m_inner_computed[j])
         {
-            m_data[j] = inner_product<TLHS, rhs_col_view_type, false>
+            m_data[j] = inner_product<TLHS, rhs_col_view_type, data_type, false>
             (
                 *m_lhs_eng_ptr,
                 rhs_col_view_type(*m_rhs_eng_ptr, j)
