@@ -8,12 +8,6 @@ using namespace std::complex_literals;
 using std::size_t;
 using eh = engine_helper;
 
-template<typename T>
-using literal2D = std::initializer_list<std::initializer_list<T>>;
-
-template<typename T>
-using literal1D = std::initializer_list<T>;
-
 const literal2D<int64_t> ex_1x1i = {{2}};
 const literal2D<int64_t> ex_1x2i = {{2, 3}};
 const literal2D<int64_t> ex_1x4i = {{9, 8, 7, 6}};
@@ -730,7 +724,7 @@ TEST_CASE
 
 TEST_CASE
 (
-    "product view promoter patches the issue with common type\n"
+    "patched common type fixed the issue with common type\n"
     "and std complex not choosing the more precise type.\n"
 )
 {
@@ -744,7 +738,27 @@ TEST_CASE
 
     REQUIRE(std::same_as<cxd, patched_common_type<cxd, cxi64>::type>);
     REQUIRE(std::same_as<cxld, patched_common_type<cxld, cxd>::type>);
+}
 
+TEST_CASE
+(
+    "std is arithmetic returns true for int, float, double, etc..\n"
+    "but not for std::complex<int>, std::complex<float>, ...\n"
+)
+{
+    REQUIRE(true == std::is_arithmetic_v<int>);
+    REQUIRE(true == std::is_arithmetic_v<int64_t>);
+    REQUIRE(true == std::is_arithmetic_v<uint8_t>);
+    REQUIRE(true == std::is_arithmetic_v<float>);
+    REQUIRE(true == std::is_arithmetic_v<double>);
+    REQUIRE(true == std::is_arithmetic_v<long double>);
+    
+    REQUIRE(false == std::is_arithmetic_v<std::complex<int>>);
+    REQUIRE(false == std::is_arithmetic_v<std::complex<int64_t>>);
+    REQUIRE(false == std::is_arithmetic_v<std::complex<uint8_t>>);
+    REQUIRE(false == std::is_arithmetic_v<std::complex<float>>);
+    REQUIRE(false == std::is_arithmetic_v<std::complex<double>>);
+    REQUIRE(false == std::is_arithmetic_v<std::complex<long double>>);
 }
 
 

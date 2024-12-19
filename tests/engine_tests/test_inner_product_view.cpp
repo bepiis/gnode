@@ -243,4 +243,163 @@ TEST_CASE
     std::cout << res << "\n";
 } 
 
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, M share the same data type,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN inner<RVT, CVT>\n"
+    "produces the expected product.\n"
+)
+{
+
+    using dtype = double;
+    using atype = std::allocator<double>;
+
+    using CVT = matrix_storage_engine<dtype, atype, std::dynamic_extent, 1, matrix_orientation::row_major>;
+    using RVT  = matrix_storage_engine<dtype, atype, 1, std::dynamic_extent, matrix_orientation::col_major>;
+
+    using IP1 = engine_view<product_views::inner, RVT, CVT>;
+
+    const literal2D<double> data_in_2 = 
+        {{1.00, 1.01, 1.02, 1.03, 1.04, 1.05, -1.00, -1.10}};
+
+    const literal2D<double> data_in_3 = 
+        {{1.00}, {1.01}, {1.02}, {1.03}, {1.04}, {1.05}, {-1.00}, {-1.10}};
+
+    const literal2D<double> data_in_4 =
+        {{1.00, 1.06, 1.12, 1.18, 1.24, 1.30},
+         {1.01, 1.07, 1.13, 1.19, 1.25, 1.31},
+         {1.02, 1.08, 1.14, 1.20, 1.26, 1.32}, 
+         {1.03, 1.09, 1.15, 1.21, 1.27, 1.33},
+         {1.04, 1.10, 1.16, 1.22, 1.28, 1.34},
+         {1.05, 1.11, 1.17, 1.23, 1.29, 1.35},
+         {-1.00, -2.00, -3.00, -4.00, -5.00, -6.00},
+         {-1.10, -2.20, -3.30, -4.40, -5.50, -6.60}};
+
+    double expected_out = 8.5155;
+
+    RVT n1t(data_in_2);
+    CVT n1(data_in_3);
+
+    IP1 ip1(n1t, n1);
+
+    REQUIRE(1 == ip1.rows());
+    REQUIRE(1 == ip1.cols());
+    REQUIRE(1 == ip1.size());
+    REQUIRE_THAT(ip1(0, 0), Catch::Matchers::WithinRel(expected_out, 1E-10));
+/*
+    using cxd = std::complex<double>;
+    using Nc =  matrix_storage_engine<cxd, std::allocator<cxd>, 1, std::dynamic_extent, matrix_orientation::col_major>;
+    using IPcx = engine_view<product_views::inner, Nc, N>;
+
+    const literal2D<cxd> data_in_5 = 
+        {{2.00 + 1.00i, 3.00 + 1.01i, 4.00 + 1.02i, 5.00 + 1.03i, 6.00 + 1.04i, 7.00 + 1.05i, 8.00 - 1.00i, 9.00 - 1.10i}};
+
+    Nc nc(data_in_5);
+
+    IPcx ipcx(nc, n);
+
+    eh::print(ipcx);*/
+
+}
+
+TEST_CASE
+(
+    "IF RVT, M are both storage engine types,\n"
+    "RVT, M share the same data type,\n"
+    "RVT satisfies rowvec dimensions,\n"
+    "M does not satisfy row or colvec dimensions,\n"
+    "then engine view with inner product tag produces a rowvec dimension\n"
+    "type with the expected computed products and size 1 by m.cols().\n"
+)
+{
+    using dtype = long double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t rvt_nrows = 1;
+    constexpr size_t rvt_ncols = std::dynamic_extent;
+
+    constexpr size_t m_nrows = std::dynamic_extent;
+    constexpr size_t m_ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype, atype, rvt_nrows, rvt_ncols, ltype>;
+
+    const literal2D<dtype> data_in_rvt = 
+        {{5.00, 10.00, 15.00, 20.00, 25.00, 30.00, 35.00, 40.00}};
+
+    RVT rv(data_in_rvt);
+    
+    using M = matrix_storage_engine<dtype, atype, m_nrows, m_ncols, ltype>;
+
+    const literal2D<dtype> data_in_m =
+        {{1.00, 1.06, 1.12, 1.18, 1.24, 1.30},
+         {1.01, 1.07, 1.13, 1.19, 1.25, 1.31},
+         {1.02, 1.08, 1.14, 1.20, 1.26, 1.32}, 
+         {1.03, 1.09, 1.15, 1.21, 1.27, 1.33},
+         {1.04, 1.10, 1.16, 1.22, 1.28, 1.34},
+         {1.05, 1.11, 1.17, 1.23, 1.29, 1.35},
+         {-1.00, -2.00, -3.00, -4.00, -5.00, -6.00},
+         {-1.10, -2.20, -3.30, -4.40, -5.50, -6.60}};
+
+    M m(data_in_m);
+
+    using IP = engine_view<product_views::inner, RVT, M>;
+
+    IP ip(rv, m);
+
+    REQUIRE(std::same_as<dtype, decltype(ip(0, 0))>);
+
+    const literal2D<dtype> expected_out = 
+        {{2.950E1, -4.320E1, -1.159E2, -1.886E2, -2.613E2, -3.340E2}};
+
+    REQUIRE(expected_out.begin()->size() == ip.cols());
+    REQUIRE(expected_out.size() == ip.rows());
+
+    auto exp_ptr = expected_out.begin()->begin();
+    size_t ipidx = 0;
+
+    for(; exp_ptr != expected_out.begin()->end(); ++exp_ptr, ++ipidx)
+    {
+        REQUIRE_THAT(ip(0, ipidx), Catch::Matchers::WithinRel(*exp_ptr, 1E-10));
+    }
+}
+
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, CVT do not have the same data type but neither are complex\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN engine view with inner product tag produces a rowvec dimension type\n"
+    "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+)
+{
+    using dtype_rv = double;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    using dtype_cv = long double;
+    using atype_cv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_cv = std::dynamic_extent;
+    constexpr size_t ncols_cv = 1;
+
+    using ltype_cv = matrix_orientation::row_major;
+
+    using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+
+
+
+}
+
 

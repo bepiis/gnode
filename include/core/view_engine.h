@@ -100,8 +100,17 @@ struct inport_views
  *     - It must be noexcept swappable with others of the same view type and owning engine type
  */
 template<typename VEgn>
-concept view_basics = 
-    readable_engine<VEgn> and
+concept view_access = 
+    base_types<VEgn> and 
+    requires(VEgn && eng, typename VEgn::index_type x)
+    {
+        { eng(x, x) };
+    };
+
+template<typename VEgn>
+concept view_basics =  
+    base_engine<VEgn> and
+    view_access<VEgn> and
     std::is_nothrow_swappable_v<VEgn&> and
     not owning_engine<VEgn>;
 
@@ -280,8 +289,6 @@ struct product_views
 };
 
 
-
-
 template<typename VEgn>
 concept binary_view =
     view_basics<VEgn> and
@@ -292,9 +299,6 @@ concept binary_view =
     }
     and std::constructible_from<VEgn, typename VEgn::lhs_engine_type&, 
                                       typename VEgn::rhs_engine_type&>;
-
-template<typename VwClass, typename TLHS, typename TRHS>
-struct view_promoter;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * inner product view:
@@ -370,8 +374,8 @@ requires
     exportable<TLHS> and 
     exportable<TRHS> and
     valid_binary_star_operator<RT> and
-    std::convertible_to<RT, typename TLHS::data_type> and
-    std::convertible_to<RT, typename TRHS::data_type> and
+    std::convertible_to<typename TLHS::data_type, RT> and
+    std::convertible_to<typename TRHS::data_type, RT> and
     rowvec_dimensions<TLHS> and
     colvec_dimensions<TRHS>
 static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
@@ -477,7 +481,8 @@ requires
     exportable<TLHS> and 
     exportable<TRHS> and
     common_data_types<TLHS, TRHS> and
-    rowvec_dimensions<TLHS> and (not rowvec_dimensions<TRHS>)
+    rowvec_dimensions<TLHS> and 
+    (not rowvec_dimensions<TRHS>)
 struct engine_view<product_views::inner, TLHS, TRHS>
 {
 
@@ -491,7 +496,7 @@ public:
 private:
 
     using common_data_type = patched_common_type<typename TLHS::data_type, typename TRHS::data_type>;
-    using common_index_type = std::common_type<typename TLHS::index_type, typename TRHS::data_type>;
+    using common_index_type = std::common_type<typename TLHS::index_type, typename TRHS::data_type, std::size_t>;
 
     using lhs_pointer = TLHS const*;
     using rhs_pointer = TRHS const*;

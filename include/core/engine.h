@@ -11,6 +11,10 @@
 #include <complex>
 #include <tuple>
 #include <functional>
+#include <iostream>
+#include <iomanip>
+
+
 
 template<typename From, typename To>
 struct static_value_caster
@@ -59,6 +63,9 @@ struct get_complex_type<CxTm<T>> : std::true_type
 
 template<typename T>
 using get_complex_type_t = typename get_complex_type<T>::type;
+
+#include "custom_binary_common_type.h"
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -298,14 +305,6 @@ concept valid_storage_orientation =
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-template<typename Egn>
-concept arithmetic_engine = std::is_arithmetic_v<typename Egn::data_type>;
-
-template<typename Egn>
-concept integral_engine = std::integral<typename Egn::data_type>;
-
-template<typename Egn>
-concept floating_point_engine = std::floating_point<typename Egn::data_type>;
 
 template<typename X>
 concept valid_unary_minus_operator = requires(X && x)
@@ -330,6 +329,18 @@ concept comparable_types =
     comparable_types_one_sided<T1, T2> and 
     comparable_types_one_sided<T2, T1>;
 
+template<typename RelT>
+concept valid_absdiff_operator =
+    std::convertible_to<decltype(std::abs(std::declval<RelT>() - std::declval<RelT>())), RelT>;
+/*
+template<typename T1, typename T2>
+concept absdiff_comparable_types = 
+    comparable_types<T1, T2> and
+    std::same_as
+    <
+        decltype(std::abs(std::declval<T1>() - std::declval<T2>())),
+        typename patched_common_type<T1, T2>::type
+    >;*/
 
 template<typename X>
 concept has_conjugate = requires(X const& x)
@@ -497,7 +508,7 @@ concept valid_immutable_access_return_type =
     std::same_as<I, typename Egn::data_type>;
 
 template<typename Egn>
-concept immutable_access = requires(Egn const& eng, typename Egn::index_type x)
+concept immutable_access = requires(Egn && eng, typename Egn::index_type x)
 {
     { eng(x, x) } -> valid_immutable_access_return_type<Egn>;
     { eng(x) } -> valid_immutable_access_return_type<Egn>;
@@ -1063,7 +1074,7 @@ struct engine_helper
     }
     
     template<typename Egn>
-    static constexpr void print(Egn const& rhs)
+    static constexpr void print(Egn & rhs, uint8_t precision = 2)
     requires
         readable_engine<Egn>
     {
@@ -1071,7 +1082,7 @@ struct engine_helper
         {
             for(size_t c=0; c < rhs.cols(); c++)
             {
-                 std::cout << std::setprecision(2) << std::scientific << rhs(r, c) << "\t";
+                 std::cout << std::setprecision(precision) << std::scientific << rhs(r, c) << "\t";
             }
             std::cout << "\n";
         }
@@ -1088,9 +1099,11 @@ struct engine_helper
 };
 
 
+
 #define ENGINE_SUPPORTED
 
-#include "custom_binary_common_type.h"
 #include "storage_engine.h"
 #include "view_engine.h"
+
+
 

@@ -23,9 +23,10 @@ int* generate_random_ints(size_t nbr, size_t modulus)
     return res;
 }
 
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
-
+/*
 #include "matrix.h"
 #include "result.h"
 #include "products.h"
@@ -34,7 +35,7 @@ int* generate_random_ints(size_t nbr, size_t modulus)
 #include "givens.h"
 #include "jacobi.h"
 #include "gram_schmidt.h"
-#include "permutation.h"
+#include "permutation.h"*/
 #include "tdpool.h"
 
 constexpr size_t mult_pool_size = 6;
