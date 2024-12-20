@@ -371,11 +371,14 @@ TEST_CASE
 TEST_CASE
 (
     "IF RVT, CVT are types storage engine,\n"
-    "RVT, CVT do not have the same data type but neither are complex\n"
-    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions\n"
+    "RVT, CVT do not have the same data type but neither are complex,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions,\n"
     "IP is type engine view specialized with inner product tag\n"
     "THEN engine view with inner product tag produces a rowvec dimension type\n"
     "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+    "rowvec_type = double\n"
+    "colvec_type = long double\n"
+    "ipt_type should be long double\n"
 )
 {
     using dtype_rv = double;
@@ -388,18 +391,544 @@ TEST_CASE
 
     using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
 
-    using dtype_cv = long double;
-    using atype_cv = std::allocator<dtype_rv>;
+    const literal2D<dtype_rv> data_in_rvt = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
 
-    constexpr size_t nrows_cv = std::dynamic_extent;
-    constexpr size_t ncols_cv = 1;
+    RVT rvt(data_in_rvt);
+
+    using dtype_cv = long double;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
 
     using ltype_cv = matrix_orientation::row_major;
 
     using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+    using RCTC = engine_view<export_views::transpose, RCT>;
+
+    const literal2D<dtype_cv> data_in_rct = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
+
+    RCT rct(data_in_rct);
+    RCTC rctc = RCTC(rct);
+
+    using IPT = engine_view<product_views::inner, RVT, RCTC>;
+
+    IPT ipt(rvt, rctc);
+
+    using IPT_dtype = long double;
+    IPT_dtype expected_out = 2870;
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), IPT_dtype>);
+    REQUIRE(expected_out == ipt(0, 0));
+    REQUIRE(1 == ipt.rows());
+    REQUIRE(1 == ipt.cols());
+    REQUIRE(1 == ipt.size());
+}
+
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, CVT do not have the same data type but neither are complex,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions,\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN engine view with inner product tag produces a rowvec dimension type\n"
+    "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+    "rowvec_type = long double\n"
+    "colvec_type = double\n"
+    "ipt_type should be long double\n"
+)
+{
+    using dtype_rv = long double;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    const literal2D<dtype_rv> data_in_rvt = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
+
+    RVT rvt(data_in_rvt);
+
+    using dtype_cv = double;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
+
+    using ltype_cv = matrix_orientation::row_major;
+
+    using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+    using RCTC = engine_view<export_views::transpose, RCT>;
+
+    const literal2D<dtype_cv> data_in_rct = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
+
+    RCT rct(data_in_rct);
+    RCTC rctc = RCTC(rct);
+
+    using IPT = engine_view<product_views::inner, RVT, RCTC>;
+
+    IPT ipt(rvt, rctc);
+
+    using IPT_dtype = long double;
+    IPT_dtype expected_out = 2870;
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), IPT_dtype>);
+    REQUIRE(expected_out == ipt(0, 0));
+    REQUIRE(1 == ipt.rows());
+    REQUIRE(1 == ipt.cols());
+    REQUIRE(1 == ipt.size());
+}
+
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, CVT do not have the same data type but neither are complex,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions,\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN engine view with inner product tag produces a rowvec dimension type\n"
+    "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+    "rowvec_type = int64_t\n"
+    "colvec_type = uint16_t\n"
+    "ipt_type should be int64_t\n"
+)
+{
+    using dtype_rv = int64_t;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    const literal2D<dtype_rv> data_in_rvt = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
+
+    RVT rvt(data_in_rvt);
+
+    using dtype_cv = uint16_t;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
+
+    using ltype_cv = matrix_orientation::row_major;
+
+    using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+    using RCTC = engine_view<export_views::transpose, RCT>;
+
+    const literal2D<dtype_cv> data_in_rct = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
+
+    RCT rct(data_in_rct);
+    RCTC rctc = RCTC(rct);
+
+    using IPT = engine_view<product_views::inner, RVT, RCTC>;
+
+    IPT ipt(rvt, rctc);
+
+    using IPT_dtype = int64_t;
+    IPT_dtype expected_out = 2870;
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), IPT_dtype>);
+    REQUIRE(expected_out == ipt(0, 0));
+    REQUIRE(1 == ipt.rows());
+    REQUIRE(1 == ipt.cols());
+    REQUIRE(1 == ipt.size());
+}
+
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, CVT do not have the same data type,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions,\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN engine view with inner product tag produces a rowvec dimension type\n"
+    "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+    "rowvec_type = complex<long double>\n"
+    "colvec_type = double\n"
+    "ipt_type should be complex<long double>\n"
+)
+{
+    using cxld = std::complex<long double>;
+
+    using dtype_rv = cxld;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    const literal2D<dtype_rv> data_in_rvt = 
+        {{1.00 + 1.00i, 2.00 + 2.00i, 3.00 + 3.00i, 4.00 + 4.00i, 5.00 + 5.00i, 
+          6.00 + 6.00i, 7.00 + 7.00i, 8.00 + 8.00i, 9.00 + 9.00i, 10.00 + 10.00i, 
+          11.00 + 11.00i, 12.00 + 12.00i, 13.00 + 13.00i, 14.00 + 14.00i, 15.00 + 15.00i, 
+          16.00 + 16.00i, 17.00 + 17.00i, 18.00 + 18.00i, 19.00 + 19.00i, 20.00 + 20.00i}};
+
+    RVT rvt(data_in_rvt);
+
+    using dtype_cv = double;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
+
+    using ltype_cv = matrix_orientation::row_major;
+
+    using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+    using RCTC = engine_view<export_views::transpose, RCT>;
+
+    const literal2D<dtype_cv> data_in_rct = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
+
+    RCT rct(data_in_rct);
+    RCTC rctc = RCTC(rct);
+
+    using IPT = engine_view<product_views::inner, RVT, RCTC>;
+
+    IPT ipt(rvt, rctc);
+
+    using IPT_dtype = cxld;
+    IPT_dtype expected_out = 2870.00 + 2870.00i;
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), IPT_dtype>);
+    REQUIRE(expected_out == ipt(0, 0));
+    REQUIRE(1 == ipt.rows());
+    REQUIRE(1 == ipt.cols());
+    REQUIRE(1 == ipt.size());
+}
+
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, CVT do not have the same data type,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions,\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN engine view with inner product tag produces a rowvec dimension type\n"
+    "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+    "rowvec_type = complex<double>\n"
+    "colvec_type = long double\n"
+    "ipt_type should be complex<long double>\n"
+)
+{
+    using cxd = std::complex<double>;
+    using cxld = std::complex<long double>;
+
+    using dtype_rv = cxd;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    const literal2D<dtype_rv> data_in_rvt = 
+        {{1.00 + 1.00i, 2.00 + 2.00i, 3.00 + 3.00i, 4.00 + 4.00i, 5.00 + 5.00i, 
+          6.00 + 6.00i, 7.00 + 7.00i, 8.00 + 8.00i, 9.00 + 9.00i, 10.00 + 10.00i, 
+          11.00 + 11.00i, 12.00 + 12.00i, 13.00 + 13.00i, 14.00 + 14.00i, 15.00 + 15.00i, 
+          16.00 + 16.00i, 17.00 + 17.00i, 18.00 + 18.00i, 19.00 + 19.00i, 20.00 + 20.00i}};
+
+    RVT rvt(data_in_rvt);
+
+    using dtype_cv = long double;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
+
+    using ltype_cv = matrix_orientation::row_major;
+
+    using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+    using RCTC = engine_view<export_views::transpose, RCT>;
+
+    const literal2D<dtype_cv> data_in_rct = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
+
+    RCT rct(data_in_rct);
+    RCTC rctc = RCTC(rct);
+
+    using IPT = engine_view<product_views::inner, RVT, RCTC>;
+
+    IPT ipt(rvt, rctc);
+
+    using IPT_dtype = cxld;
+    IPT_dtype expected_out = 2870.00 + 2870.00i;
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), IPT_dtype>);
+    REQUIRE(expected_out == ipt(0, 0));
+    REQUIRE(1 == ipt.rows());
+    REQUIRE(1 == ipt.cols());
+    REQUIRE(1 == ipt.size());
+}
+
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, CVT do not have the same data type,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions,\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN engine view with inner product tag produces a rowvec dimension type\n"
+    "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+    "rowvec_type = long double\n"
+    "colvec_type = complex<double>\n"
+    "ipt_type should be complex<long double>\n"
+)
+{
+    using cxd = std::complex<double>;
+    using cxld = std::complex<long double>;
+
+    using dtype_rv = long double;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    const literal2D<dtype_rv> data_in_rvt = 
+        {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}};
 
 
+    RVT rvt(data_in_rvt);
 
+    using dtype_cv = cxd;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
+
+    using ltype_cv = matrix_orientation::row_major;
+
+    using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+    using RCTC = engine_view<export_views::transpose, RCT>;
+
+    const literal2D<dtype_cv> data_in_rct = 
+        {{1.00 + 1.00i, 2.00 + 2.00i, 3.00 + 3.00i, 4.00 + 4.00i, 5.00 + 5.00i, 
+          6.00 + 6.00i, 7.00 + 7.00i, 8.00 + 8.00i, 9.00 + 9.00i, 10.00 + 10.00i, 
+          11.00 + 11.00i, 12.00 + 12.00i, 13.00 + 13.00i, 14.00 + 14.00i, 15.00 + 15.00i, 
+          16.00 + 16.00i, 17.00 + 17.00i, 18.00 + 18.00i, 19.00 + 19.00i, 20.00 + 20.00i}};
+
+    RCT rct(data_in_rct);
+    RCTC rctc = RCTC(rct);
+
+    using IPT = engine_view<product_views::inner, RVT, RCTC>;
+
+    IPT ipt(rvt, rctc);
+
+    using IPT_dtype = cxld;
+    IPT_dtype expected_out = 2870.00 + 2870.00i;
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), IPT_dtype>);
+    REQUIRE(expected_out == ipt(0, 0));
+    REQUIRE(1 == ipt.rows());
+    REQUIRE(1 == ipt.cols());
+    REQUIRE(1 == ipt.size());
+}
+
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, CVT do not have the same data type,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions,\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN engine view with inner product tag produces a rowvec dimension type\n"
+    "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+    "rowvec_type = complex<long double>\n"
+    "colvec_type = complex<double>\n"
+    "ipt_type should be complex<long double>\n"
+)
+{
+    using cxd = std::complex<double>;
+    using cxld = std::complex<long double>;
+
+    using dtype_rv = cxld;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    const literal2D<dtype_rv> data_in_rvt = 
+        {{1.00 + 1.00i, 2.00 + 2.00i, 3.00 + 3.00i, 4.00 + 4.00i, 5.00 + 5.00i, 
+          6.00 + 6.00i, 7.00 + 7.00i, 8.00 + 8.00i, 9.00 + 9.00i, 10.00 + 10.00i, 
+          11.00 + 11.00i, 12.00 + 12.00i, 13.00 + 13.00i, 14.00 + 14.00i, 15.00 + 15.00i, 
+          16.00 + 16.00i, 17.00 + 17.00i, 18.00 + 18.00i, 19.00 + 19.00i, 20.00 + 20.00i}};
+
+    RVT rvt(data_in_rvt);
+
+    using dtype_cv = cxd;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
+
+    using ltype_cv = matrix_orientation::row_major;
+
+    using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+    using RCTC = engine_view<export_views::transpose, RCT>;
+
+    const literal2D<dtype_cv> data_in_rct = 
+        {{1.00 + 1.00i, 2.00 + 2.00i, 3.00 + 3.00i, 4.00 + 4.00i, 5.00 + 5.00i, 
+          6.00 + 6.00i, 7.00 + 7.00i, 8.00 + 8.00i, 9.00 + 9.00i, 10.00 + 10.00i, 
+          11.00 + 11.00i, 12.00 + 12.00i, 13.00 + 13.00i, 14.00 + 14.00i, 15.00 + 15.00i, 
+          16.00 + 16.00i, 17.00 + 17.00i, 18.00 + 18.00i, 19.00 + 19.00i, 20.00 + 20.00i}};
+
+    RCT rct(data_in_rct);
+    RCTC rctc = RCTC(rct);
+
+    using IPT = engine_view<product_views::inner, RVT, RCTC>;
+
+    IPT ipt(rvt, rctc);
+
+    using IPT_dtype = cxld;
+    IPT_dtype expected_out = 0.00 + 5740.00i;
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), IPT_dtype>);
+    REQUIRE(expected_out == ipt(0, 0));
+    REQUIRE(1 == ipt.rows());
+    REQUIRE(1 == ipt.cols());
+    REQUIRE(1 == ipt.size());
+}
+
+TEST_CASE
+(
+    "IF RVT, CVT are types storage engine,\n"
+    "RVT, CVT do not have the same data type,\n"
+    "CVT satisfies colvec dimensions and RVT satisfies rowvec dimensions,\n"
+    "IP is type engine view specialized with inner product tag\n"
+    "THEN engine view with inner product tag produces a rowvec dimension type\n"
+    "which is size 1 by 1, and whose data type is the more precise of the two types.\n"
+    "rowvec_type = complex<double>\n"
+    "colvec_type = complex<long double>\n"
+    "ipt_type should be complex<long double>\n"
+)
+{
+    using cxd = std::complex<double>;
+    using cxld = std::complex<long double>;
+
+    using dtype_rv = cxd;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    const literal2D<dtype_rv> data_in_rvt = 
+        {{1.00 + 1.00i, 2.00 + 2.00i, 3.00 + 3.00i, 4.00 + 4.00i, 5.00 + 5.00i, 
+          6.00 + 6.00i, 7.00 + 7.00i, 8.00 + 8.00i, 9.00 + 9.00i, 10.00 + 10.00i, 
+          11.00 + 11.00i, 12.00 + 12.00i, 13.00 + 13.00i, 14.00 + 14.00i, 15.00 + 15.00i, 
+          16.00 + 16.00i, 17.00 + 17.00i, 18.00 + 18.00i, 19.00 + 19.00i, 20.00 + 20.00i}};
+
+    RVT rvt(data_in_rvt);
+
+    using dtype_cv = cxld;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
+
+    using ltype_cv = matrix_orientation::row_major;
+
+    using RCT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+    using RCTC = engine_view<export_views::transpose, RCT>;
+
+    const literal2D<dtype_cv> data_in_rct = 
+        {{1.00 + 1.00i, 2.00 + 2.00i, 3.00 + 3.00i, 4.00 + 4.00i, 5.00 + 5.00i, 
+          6.00 + 6.00i, 7.00 + 7.00i, 8.00 + 8.00i, 9.00 + 9.00i, 10.00 + 10.00i, 
+          11.00 + 11.00i, 12.00 + 12.00i, 13.00 + 13.00i, 14.00 + 14.00i, 15.00 + 15.00i, 
+          16.00 + 16.00i, 17.00 + 17.00i, 18.00 + 18.00i, 19.00 + 19.00i, 20.00 + 20.00i}};
+
+    RCT rct(data_in_rct);
+    RCTC rctc = RCTC(rct);
+
+    using IPT = engine_view<product_views::inner, RVT, RCTC>;
+
+    IPT ipt(rvt, rctc);
+
+    using IPT_dtype = cxld;
+    IPT_dtype expected_out = 0.00 + 5740.00i;
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), IPT_dtype>);
+    REQUIRE(expected_out == ipt(0, 0));
+    REQUIRE(1 == ipt.rows());
+    REQUIRE(1 == ipt.cols());
+    REQUIRE(1 == ipt.size());
+}
+
+TEST_CASE
+(
+    "inner product view type satisfies binary view concept\n"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 1;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    using TV = engine_view<export_views::transpose, M>;
+
+    using IPT = engine_view<product_views::inner, M, TV>;
+
+    REQUIRE(binary_view<IPT>);
 }
 
 
+TEST_CASE
+(
+    "test\n"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = 1;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    using TV = engine_view<export_views::transpose, M>;
+
+    using IPT = engine_view<product_views::inner, M, TV>;
+
+    //REQUIRE(true == rowvec_dimensions<TV>);
+
+    const literal2D<double> data_in = {{1, 2, 3, 4, 5}};
+
+    M m1(data_in);
+    M m2(data_in);
+
+    TV tv1(m1);
+    TV tv2(m2);
+
+    IPT ipt(m1, tv2);
+
+    //REQUIRE(binary_view<IPT>);
+}

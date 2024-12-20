@@ -450,6 +450,11 @@ template<typename X>
 concept colvec_dimensions = 
     1 == engine_ct_extents<X>::cols();
 
+template<typename X>
+concept nonvec_dimensions = 
+    (not rowvec_dimensions<X>) and
+    (not colvec_dimensions<X>);
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *  Checks for checking whether the type X has a access operator

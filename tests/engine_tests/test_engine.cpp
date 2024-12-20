@@ -25,6 +25,7 @@ const literal2D<int64_t> ex_3x3ic =
 const literal2D<int64_t> ex_boundsi = ex_3x3ic;
 const literal2D<int64_t> ex_invalidi = {{2, 3, 3}, {2, 1, 2}, {2, 1}};
 
+
 const literal2D<int64_t> ex_8x3ia =
    {{1, 2, 3},
     {4, 5, 6},
