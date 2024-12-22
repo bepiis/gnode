@@ -161,17 +161,13 @@ concept inportable =
 
 /*
  * Commutators between unary view types (only considers one common engine type):
- *  - TODO: view_basics should really be unary_view_basics, as binary_view_basics will
- *          require two common engines (which may or may not be common to each other)
  *  - claim: the unary views which are purely functional, i.e. conj, negation, transparent commute
  *    with all other view types. 
- *  - claim: row and column views commute.
  *  - claim: transpose views commute with all purely functional unary views.
- *  - note: The first issue that arises with box views is that:
- *              - Box * (Row or Col) -> Row or Col
- *              - (Row or Col) * Box -> Row or Col
- *          BUT only their shape commutes. Data does not. 
- *              
+ *  - claim: transpose views do not commute with row, col and sub **TODO: there is an exception**
+ *  - claim: the types of row, col and submatrix commute, but not nessesarily
+ *           their constructors.
+ * 
  * 
  * 
  */
@@ -283,11 +279,52 @@ public:
 
 struct product_views
 {
+    // F : K^(1xm), H^(mxn) -> G^(1xm) where G <- common_type<K, H>
     struct inner {};
+
+    // F : K^(nx1), H^(1xm) -> G^(nxm) where G <- common_type<K, H>
     struct outer {};
+
+    // F : K^(nxm) -> G^(nxm) where G <- common_type<K, S>
     struct scalar {};
 };
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * 
+ * Binary Views:
+ * 
+ * Two distinct types so far:
+ *      - ones which takes two readable types A, B and does some operation
+ *        on them to get type C. 
+ *          - inner product, when given two numeric types (communtative ring)
+ *            produces a row vector type which is the sum of the products of the
+ *            elements, and the resulting type is the more precise of the two.
+ *          - when given a type which is invocable on the other, then the
+ *            resulting type is a row vector whose type is the return type of
+ *            invoking one type on the other. 
+ * 
+ * 
+ */
+
+
+/*
+ * Do the two supplied engine types
+ * have a common type?
+ * 
+ * There is a descrepency with std::common_type
+ * regarding std::complex. Specifically, evaluating common_type
+ * with parameters of the following:
+ *  
+ * common_type<complex<double>, F> 
+ * 
+ * in the case where F may be long double, for example
+ * std::common_type will give you std::complex<double>
+ * rather than std::complex<long double>.
+ * 
+ * Further, if F is some type of std::complex<integer>, then 
+ * std::common_type will give back std::complex<integer>
+ * 
+ */
 template<typename TLHS, typename TRHS>
 concept common_data_types =
     base_types<TLHS> and
@@ -305,6 +342,20 @@ concept binary_view =
     and std::constructible_from<VEgn, typename VEgn::lhs_engine_type&, 
                                       typename VEgn::rhs_engine_type&>;
 
+/*
+ * product invocable is a metafunction
+ * which takes two engine types, and determines
+ * whether the data type of one is callable with
+ * the data type of the other as input.
+ * 
+ * The resulting type will be the return type
+ * of that callable. 
+ * 
+ * Note that since the data_type must be defined for 
+ * the entire range of the engine, that only one function
+ * type is allowed, however, the function itself need not be
+ * as long as it agrees with the interface specified here. 
+ */
 template<typename, typename>
 struct product_invocable : std::false_type 
 {};
@@ -335,6 +386,20 @@ struct product_invocable<TLHS, TRHS> : std::true_type
                                            typename TIN::data_type>;
 };
 
+/*
+ * product traits takes the patched common type
+ * function and the product invocable function
+ * and obscures details about whether the inner product will
+ * be a sum of products of numeric types, or if it will
+ * be a sum of functions acting on data, which allows
+ * us to use the same engine_view interface regardless of the
+ * operation specifics. 
+ * 
+ * Also, see the inner product functions in inner_product_view
+ * as they were designed take the same function invocation
+ * regardless of whether the operation is a sum of products or
+ * a sum of functions.
+ */
 template<typename, typename>
 struct product_traits : std::false_type 
 {};
@@ -345,6 +410,8 @@ requires
     (not product_invocable<TLHS, TRHS>::value)
 struct product_traits<TLHS, TRHS> : std::true_type
 {
+    using TOP = TLHS;
+    using TIN = TRHS;
     using data_type = typename patched_common_type<typename TLHS::data_type, 
                                                    typename TRHS::data_type>::type;
 };
@@ -362,8 +429,6 @@ public:
     using TIN = typename traits::TIN;
     using data_type = typename traits::data_type;
 };
-
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * inner product view:

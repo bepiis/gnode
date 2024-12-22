@@ -14,8 +14,6 @@
 #include <iostream>
 #include <iomanip>
 
-
-
 template<typename From, typename To>
 struct static_value_caster
 {
@@ -47,7 +45,6 @@ static constexpr bool type_is_complex =
 template<typename TL, typename TR>
 static constexpr bool neither_type_is_complex = 
         not (type_is_complex<TL> and type_is_complex<TR>);
-
 
 template<typename>
 struct get_complex_type : std::false_type
@@ -457,7 +454,7 @@ concept nonvec_dimensions =
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- *  Checks for checking whether the type X has a access operator
+ *  Checking whether the type X has a access operator
  *      X : (engine) type
  *      CT: constructor type (ctor type), usually engine_type& or const&
  *      IT: index type
@@ -604,7 +601,7 @@ concept comparable_engine_and_literal2D =
  */
 template<typename Egn, typename... Args>
 concept engine_has_invocable_elements = 
-    base_engine<Egn> and
+    base_types<Egn> and
     std::invocable<typename Egn::data_type, Args...>;
 
 template<typename RT, typename IvEgn, typename InEgn, typename ...Args>

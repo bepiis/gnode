@@ -134,7 +134,8 @@ private:
 
     using ptraits = product_traits<TLHS, TRHS>;
     //using common_data_type = patched_common_type<typename TLHS::data_type, typename TRHS::data_type>;
-    using common_index_type = std::common_type<typename TLHS::index_type, typename TRHS::index_type, std::size_t>;
+    using common_index_type = std::common_type<typename TLHS::index_type, 
+                                               typename TRHS::index_type, std::size_t>;
 
     using lhs_pointer = TLHS const*;
     using rhs_pointer = TRHS const*;
