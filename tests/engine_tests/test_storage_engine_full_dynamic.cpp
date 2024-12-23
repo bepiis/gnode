@@ -43,8 +43,8 @@ TEST_CASE
     REQUIRE(true == consistent_immutable_ref_type<M>);
     REQUIRE(true == consistent_return_sizes<M>);
     REQUIRE(true == consistent_return_lengths<M>);
-    REQUIRE(true == mutable_access<M>);
-    REQUIRE(true == immutable_access<M>);
+    REQUIRE(true == mutable2D_access<M>);
+    REQUIRE(true == immutable2D_access<M>);
 
     REQUIRE(true == reshapeable_engine<M>);
     REQUIRE(true == row_reshapeable_engine<M>);

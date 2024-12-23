@@ -932,3 +932,62 @@ TEST_CASE
 
     //REQUIRE(binary_view<IPT>);
 }
+
+TEST_CASE
+(
+    "IF RVT and CVT are row and col vec types respectively,\n"
+    "and the data type of RVT is invocable with the the data type of CVT,\n"
+    "THEN inner product view computes a scalar such that:\n"
+    "result = FR(C1) + FR(C2) + ... + FR(Cn).\n"
+)
+{
+    using dtype_cv = std::complex<double>;
+    using atype_cv = std::allocator<dtype_cv>;
+
+    constexpr size_t nrows_cv = 1;
+    constexpr size_t ncols_cv = std::dynamic_extent;
+
+    using ltype_cv = matrix_orientation::col_major;
+
+    using CVT = matrix_storage_engine<dtype_cv, atype_cv, nrows_cv, ncols_cv, ltype_cv>;
+
+    using dtype_rv = std::function<double(dtype_cv)>;
+    using atype_rv = std::allocator<dtype_rv>;
+
+    constexpr size_t nrows_rv = 1;
+    constexpr size_t ncols_rv = std::dynamic_extent;
+
+    using ltype_rv = matrix_orientation::row_major;
+
+    using RVT = matrix_storage_engine<dtype_rv, atype_rv, nrows_rv, ncols_rv, ltype_rv>;
+
+    const literal2D<std::function<double(dtype_cv)>> data_in_rv = 
+    {{
+        [](dtype_cv c) -> double { return std::abs(c); },
+        [](dtype_cv c) -> double { return std::abs(c); },
+        [](dtype_cv c) -> double { return std::abs(c); },
+        [](dtype_cv c) -> double { return std::abs(c); },
+        [](dtype_cv c) -> double { return std::abs(c); }
+    }};
+
+    const literal2D<dtype_cv> data_in_cv = 
+    {{1.00 + 1.00i, 2.00 + 2.00i, 3.00 + 3.00i, 4.00 + 4.00i, 5.00 + 5.00i}};
+
+    using CVTT = engine_view<export_views::transpose, CVT>;
+
+    CVT cvt(data_in_cv);
+    CVTT cvtt(cvt);
+
+    RVT rvt(data_in_rv);
+
+    using IPT = engine_view<product_views::inner, RVT, CVTT>;
+
+    REQUIRE(true == product_invocable<RVT, CVTT>::value);
+    REQUIRE(true == product_traits<RVT, CVTT>::value);
+
+    IPT ipt(rvt, cvtt);
+
+    double expected_out = 21.213203435596427;
+
+    REQUIRE_THAT(ipt(0, 0),  Catch::Matchers::WithinRel(expected_out, 1E-10));
+}

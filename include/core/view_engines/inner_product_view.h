@@ -12,8 +12,8 @@ requires
     valid_binary_star_operator<RT> and
     std::convertible_to<typename TLHS::data_type, RT> and
     std::convertible_to<typename TRHS::data_type, RT> and
-    rowvec_dimensions<TLHS> and
-    colvec_dimensions<TRHS>
+    vec_type<TLHS> and 
+    vec_type<TRHS>
 static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
 -> RT
 {
@@ -46,14 +46,14 @@ static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
         
         for(; k < stop; ++k, ++i, ++j)
         {
-            sum += static_cast<RT>(lhs(0, j)) * static_cast<RT>(rhs(i, 0));
+            sum += static_cast<RT>(lhs(j)) * static_cast<RT>(rhs(i));
         }
     }
     else
     {
         for(; j < lhs.cols(); ++i, ++j)
         {
-            sum += static_cast<RT>(lhs(0, j)) * static_cast<RT>(rhs(i, 0));
+            sum += static_cast<RT>(lhs(j)) * static_cast<RT>(rhs(i));
         }
     }
 
@@ -67,8 +67,8 @@ requires
     exportable<TLHS> and
     exportable<TRHS> and
     engine_invocable_with<RT, TLHS, TRHS> and
-    rowvec_dimensions<TLHS> and
-    colvec_dimensions<TRHS>
+    vec_type<TLHS> and
+    vec_type<TRHS>
 static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
 -> RT
 {
@@ -86,19 +86,19 @@ static constexpr auto inner_product(TLHS const& lhs, TRHS const& rhs)
         using it = std::common_type_t<lhs_it, rhs_it, std::size_t>;
 
         it k = 0;
-        it stop = std::min(static_cast<it>(lhs.cols()), 
-                           static_cast<it>(rhs.rows()));
+        it stop = std::min(static_cast<it>(lhs.size()), 
+                           static_cast<it>(rhs.size()));
         
         for(; k < stop; ++k, ++i, ++j)
         {
-            sum += static_cast<RT>(lhs(0, j)(rhs(i, 0)));
+            sum += static_cast<RT>(lhs(j)(rhs(i)));
         }
     }
     else
     {
-        for(; j < lhs.cols(); ++i, ++j)
+        for(; j < lhs.size(); ++i, ++j)
         {
-            sum += static_cast<RT>(lhs(0, j)(rhs(i, 0)));
+            sum += static_cast<RT>(lhs(j)(rhs(i)));
         }
     }    
 

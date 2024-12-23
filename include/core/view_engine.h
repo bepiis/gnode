@@ -83,6 +83,17 @@ struct export_views
     struct box {};
 };
 
+struct expand_views
+{
+    // constructed w/ data_type, and
+    // repeats value at each index
+    struct row {};
+    struct col {};
+    struct box {};
+
+
+};
+
 struct inport_views
 {
     struct transparent {};
@@ -100,17 +111,9 @@ struct inport_views
  *     - It must be noexcept swappable with others of the same view type and owning engine type
  */
 template<typename VEgn>
-concept view_access = 
-    base_types<VEgn> and 
-    requires(VEgn && eng, typename VEgn::index_type x)
-    {
-        { eng(x, x) };
-    };
-
-template<typename VEgn>
 concept view_basics =  
     base_engine<VEgn> and
-    view_access<VEgn> and
+    readable_engine<VEgn> and
     std::is_nothrow_swappable_v<VEgn&> and
     not owning_engine<VEgn>;
 
@@ -373,6 +376,7 @@ struct product_invocable<TLHS, TRHS> : std::true_type
                                            typename TIN::data_type>;
 };
 
+
 template<typename TLHS, typename TRHS>
 requires
     base_types<TLHS> and
@@ -410,8 +414,8 @@ requires
     (not product_invocable<TLHS, TRHS>::value)
 struct product_traits<TLHS, TRHS> : std::true_type
 {
-    using TOP = TLHS;
-    using TIN = TRHS;
+    //using TOP = TLHS;
+    //using TIN = TRHS;
     using data_type = typename patched_common_type<typename TLHS::data_type, 
                                                    typename TRHS::data_type>::type;
 };
@@ -419,14 +423,14 @@ struct product_traits<TLHS, TRHS> : std::true_type
 template<typename TLHS, typename TRHS>
 requires
     product_invocable<TLHS, TRHS>::value
-struct product_traits<TLHS, TRHS>
+struct product_traits<TLHS, TRHS> : std::true_type
 {
 private:
     using traits = product_invocable<TLHS, TRHS>;
 
 public:
-    using TOP = typename traits::TOP;
-    using TIN = typename traits::TIN;
+    //using TOP = typename traits::TOP;
+    //using TIN = typename traits::TIN;
     using data_type = typename traits::data_type;
 };
 
@@ -520,6 +524,7 @@ public:
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
+#include "view_engines/outer_product_view.h"
 
 /*
  * virtual expansion:

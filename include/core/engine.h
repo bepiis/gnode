@@ -510,12 +510,16 @@ concept valid_immutable_access_return_type =
     std::same_as<I, typename Egn::data_type>;
 
 template<typename Egn>
-concept immutable_access = requires(Egn && eng, typename Egn::index_type x)
+concept immutable2D_access = requires(Egn && eng, typename Egn::index_type x)
 {
     { eng(x, x) } -> valid_immutable_access_return_type<Egn>;
-    { eng(x) } -> valid_immutable_access_return_type<Egn>;
 };
 
+template<typename Egn>
+concept immutable1D_access = requires(Egn && eng, typename Egn::index_type x)
+{
+    { eng(x) } -> valid_immutable_access_return_type<Egn>;
+};
 
 template<typename I, typename Egn>
 concept valid_mutable_access_return_type =
@@ -523,9 +527,14 @@ concept valid_mutable_access_return_type =
     std::same_as<I, typename Egn::reference>;
 
 template<typename Egn>
-concept mutable_access = requires(Egn & eng, typename Egn::index_type x)
+concept mutable2D_access = requires(Egn & eng, typename Egn::index_type x)
 {
     { eng(x, x) } -> valid_mutable_access_return_type<Egn>;
+};
+
+template<typename Egn>
+concept mutable1D_access = requires(Egn & eng, typename Egn::index_type x)
+{
     { eng(x) } -> valid_mutable_access_return_type<Egn>;
 };
 
@@ -559,11 +568,27 @@ concept same_owning_engine =
 template<typename Egn>
 concept readable_engine = 
     base_engine<Egn> and
-    //(immutable_access<Egn> or mutable_access<Egn>);
-    immutable_access<Egn>;
+    immutable2D_access<Egn>;
     // TODO: maybe swappable?
 
 
+template<typename Egn>
+concept rowvec_type= 
+    readable_engine<Egn> and
+    immutable1D_access<Egn> and
+    rowvec_dimensions<Egn>;
+
+template<typename Egn>
+concept colvec_type = 
+    readable_engine<Egn> and
+    immutable1D_access<Egn> and
+    colvec_dimensions<Egn>;
+
+template<typename Egn>
+concept vec_type = 
+    rowvec_type<Egn> or
+    colvec_type<Egn>;
+    
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -574,7 +599,7 @@ concept readable_engine =
 template<typename Egn>
 concept writable_engine = 
     readable_engine<Egn> and 
-    mutable_access<Egn>;
+    mutable2D_access<Egn>;
 
 template<typename EgnX, typename EgnY>
 concept comparable_engines = 
@@ -1007,7 +1032,9 @@ struct engine_helper
     template<typename EgnX, typename EgnY>
     static constexpr bool compare1D_exact(EgnX const& lhs, EgnY const& rhs)
     requires
-        comparable_engines<EgnX, EgnY>
+        comparable_engines<EgnX, EgnY> and
+        immutable1D_access<EgnX> and
+        immutable1D_access<EgnY>
     {
         using itl = typename EgnX::index_type;
         using itr = typename EgnY::index_type;
