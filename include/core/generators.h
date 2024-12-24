@@ -3,7 +3,12 @@
 //  Created by Ben Westcott on 12/19/24.
 //
 
-template<typename SeqT, typename GenT, typename...>
+struct generator_types
+{
+    struct basic {};
+};
+
+template<typename GenT, typename SeqT, std::size_t R, std::size_t C, typename...>
 struct generator;
 
 /*
@@ -39,3 +44,192 @@ struct generator;
  *      LG(a_n ; x) = a_n . x^n/(1-x^n)
  * 
  */
+
+/*
+ * GenT basic:
+ *  - Takes callable (thus data type)
+ *  - Size and orientation
+ *  - No allocator
+ */
+template<std::size_t R, std::size_t C>
+struct gen_dimensions
+{
+    using index_type = std::size_t;
+
+    static constexpr bool row_dynamic = false;
+    static constexpr bool col_dynamic = false;
+
+    static constexpr index_type m_rows = R;
+    static constexpr index_type m_cols = C;
+
+    constexpr gen_dimensions()
+    {}
+};
+
+template<std::size_t R>
+struct gen_dimensions<R, std::dynamic_extent>
+{
+    using index_type = std::size_t;
+
+
+    static constexpr bool row_dynamic = false;
+    static constexpr bool col_dynamic = true;
+
+    static constexpr index_type m_rows = R;
+    index_type m_cols;
+    
+    constexpr gen_dimensions()
+    : m_cols(0) 
+    {}
+};
+
+template<std::size_t C>
+struct gen_dimensions<std::dynamic_extent, C>
+{
+    using index_type = std::size_t;
+
+    static constexpr bool row_dynamic = true;
+    static constexpr bool col_dynamic = false;
+
+    index_type m_rows;
+    static constexpr index_type m_cols = C;
+
+    constexpr gen_dimensions()
+    : m_rows(0)
+    {}
+};
+
+template<>
+struct gen_dimensions<std::dynamic_extent, std::dynamic_extent>
+{
+    using index_type = std::size_t;
+
+    static constexpr bool row_dynamic = true;
+    static constexpr bool col_dynamic = true;
+
+    index_type m_rows;
+    index_type m_cols;
+
+    constexpr gen_dimensions()
+    : m_rows(0), m_cols(0)
+    {}
+};
+
+template<typename SeqT, std::size_t R, std::size_t C, typename L>
+requires
+    template_dimensions<R, C> and
+    valid_storage_orientation<L> and
+    std::invocable<SeqT, std::size_t, std::size_t>
+struct generator<generator_types::basic, SeqT, R, C, L>
+{
+
+public:
+    using orientation_type = L;
+    using index_type = std::size_t;
+
+private:
+    using seq_return_type = std::invoke_result_t<SeqT, index_type, index_type>;
+
+public:
+
+    using data_type = std::function<seq_return_type()>;
+    using reference = data_type;
+    using const_reference = data_type;
+
+    using gdims_type = gen_dimensions<R, C>;
+
+    static constexpr bool row_dynamic = gdims_type::row_dynamic;
+    static constexpr bool col_dynamic = gdims_type::col_dynamic;
+
+private: 
+    gdims_type m_dims;
+
+    SeqT seq;
+
+public:
+
+    constexpr generator() = default;
+    constexpr generator(generator const& other) = default;
+    constexpr generator(generator && other) = default;
+
+    constexpr generator & operator=(generator const& other) = default;
+    constexpr generator & operator=(generator && other) = default;
+
+    constexpr generator(index_type nbr_rows, index_type nbr_cols)
+    requires
+        row_dynamic and col_dynamic
+    : m_dims()
+    {
+        engine_helper::validate_length(nbr_rows);
+        engine_helper::validate_length(nbr_cols);
+
+        m_dims.m_rows = nbr_rows;
+        m_dims.m_cols = nbr_cols;
+    }
+
+    constexpr generator(index_type nbr_rows)
+    requires
+        row_dynamic and (not col_dynamic)
+    : m_dims()
+    {
+        engine_helper::validate_length(nbr_rows);
+
+        m_dims.m_rows = nbr_rows;
+    }
+
+    constexpr generator(index_type nbr_cols)
+    requires
+        (not row_dynamic) and col_dynamic
+    : m_dims()
+    {
+        engine_helper::validate_length(nbr_cols);
+
+        m_dims.m_cols = nbr_cols;
+    }
+
+    constexpr index_type rows() const noexcept
+    {
+        return m_dims.m_rows;
+    }
+
+    constexpr index_type cols() const noexcept
+    {
+        return m_dims.m_cols;
+    }
+
+    constexpr index_type size() const noexcept
+    {
+        return m_dims.m_rows * m_dims.m_cols;
+    }
+
+    constexpr const_reference operator()(index_type i, index_type j)
+    {
+        return std::bind(seq, i, j);
+    }
+
+
+
+    
+
+    
+    
+
+    
+
+
+
+
+
+
+
+
+
+};
+
+/*
+template<typename SeqT, typename VEgn>
+struct generator<generator_types::basic, SeqT, VEgn>
+{
+
+};
+*/

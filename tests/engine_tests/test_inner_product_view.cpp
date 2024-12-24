@@ -3,8 +3,6 @@
 //  Created by Ben Westcott on 12/16/24.
 //
 
-#include <utility>
-
 TEST_CASE
 (
     "IF M, N are storage engine types\n"
@@ -27,7 +25,7 @@ TEST_CASE
     //const literal2D<dtypeM> data_in_m = {{1, 2, 3, 4, 5, 6, 7, 8}};
     //M m(data_in_m);
 
-    REQUIRE(true == rowvec_dimensions<M>);
+    REQUIRE(true == rowvec_dimension<M>);
     REQUIRE(true == exportable<M>);
 
     using dtypeN = int64_t;
@@ -43,7 +41,7 @@ TEST_CASE
     //const literal2D<dtypeN> data_in_n = {{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}};
     //N n(data_in_n);
 
-    REQUIRE(true == colvec_dimensions<N>);
+    REQUIRE(true == colvec_dimension<N>);
     REQUIRE(true == exportable<N>);
 
     using dtypeR = double;
@@ -878,6 +876,91 @@ TEST_CASE
 
 TEST_CASE
 (
+    "basic inner product view type checks for <RV|CV>\n"
+    "where RV is a rowvec type and CV is a colvec type.\n"
+)
+{
+
+    using dtype1 = long double;
+    using atype1 = std::allocator<dtype1>;
+
+    constexpr size_t nrows = 1;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using RV1 = matrix_storage_engine<dtype1, atype1, nrows, ncols, ltype>;
+    using RV = RV1;
+
+    using dtype2 = double;
+    using atype2 = std::allocator<dtype2>;
+
+    using RV2 = matrix_storage_engine<dtype2, atype2, nrows, ncols, ltype>;
+    using CV = engine_view<export_views::transpose, RV2>;
+
+    using IPT = engine_view<product_views::inner, RV, CV>;
+
+    REQUIRE(true == common_data_types<RV, CV>);
+
+    REQUIRE(true == view_basics<IPT>);
+    REQUIRE(false == unary_view<IPT>);
+    REQUIRE(true == has_immutable_view_ref<IPT>);
+    REQUIRE(false == mutable_view<IPT>);
+    REQUIRE(true == immutable_view<IPT>);
+    REQUIRE(true == exportable<IPT>);
+    REQUIRE(false == inportable<IPT>);
+}
+
+TEST_CASE
+(
+    "basic inner product view type checks for <RV|M>\n"
+    "where RV is a rowvec type, and M is a nonvec type.\n"
+)
+{
+
+    using dtype1 = long double;
+    using atype1 = std::allocator<dtype1>;
+
+    constexpr size_t nrows1 = 1;
+    constexpr size_t ncols1 = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using RV1 = matrix_storage_engine<dtype1, atype1, nrows1, ncols1, ltype>;
+    using RV = RV1;
+
+    using dtype2 = double;
+    using atype2 = std::allocator<dtype2>;
+
+    constexpr size_t nrows2 = std::dynamic_extent;
+    constexpr size_t ncols2 = std::dynamic_extent;
+
+    using RV2 = matrix_storage_engine<dtype2, atype2, nrows2, ncols2, ltype>;
+    using CV = engine_view<export_views::transpose, RV2>;
+
+    using IPT = engine_view<product_views::inner, RV, CV>;
+
+    REQUIRE(true == common_data_types<RV, CV>);
+
+    REQUIRE(base_types<IPT>);
+    REQUIRE(convertible_refs<IPT>);
+    REQUIRE(dimensions<IPT>);
+    REQUIRE(immutable2D_access<IPT>);
+    REQUIRE(readable_engine<IPT>);
+    REQUIRE(std::is_nothrow_swappable_v<IPT&>);
+    REQUIRE(!owning_engine<IPT>);
+
+    REQUIRE(true == view_basics<IPT>);
+    REQUIRE(false == unary_view<IPT>);
+    REQUIRE(true == has_immutable_view_ref<IPT>);
+    REQUIRE(false == mutable_view<IPT>);
+    REQUIRE(true == immutable_view<IPT>);
+    REQUIRE(true == exportable<IPT>);
+    REQUIRE(false == inportable<IPT>);
+}
+
+TEST_CASE
+(
     "inner product view type satisfies binary view concept\n"
 )
 {
@@ -983,11 +1066,13 @@ TEST_CASE
     using IPT = engine_view<product_views::inner, RVT, CVTT>;
 
     REQUIRE(true == product_invocable<RVT, CVTT>::value);
-    REQUIRE(true == product_traits<RVT, CVTT>::value);
+    REQUIRE(true == valid_product_view_traits<RVT, CVTT>);
 
     IPT ipt(rvt, cvtt);
 
     double expected_out = 21.213203435596427;
 
     REQUIRE_THAT(ipt(0, 0),  Catch::Matchers::WithinRel(expected_out, 1E-10));
+
+    REQUIRE(std::same_as<decltype(ipt(0, 0)), double>);
 }

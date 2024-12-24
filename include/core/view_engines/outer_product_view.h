@@ -15,7 +15,7 @@ concept outer_product_view_basics =
 template<typename TLHS, typename TRHS>
 requires
     outer_product_view_basics<TLHS, TRHS> and
-    product_traits<TLHS, TRHS>::value
+    valid_product_view_traits<TLHS, TRHS>
 struct engine_view<product_views::outer, TLHS, TRHS>
 {
 
@@ -27,7 +27,7 @@ public:
     using rhs_engine_type = TRHS;
 
 private:
-    using ptraits = product_traits<TLHS, TRHS>;
+    using ptraits = product_view_traits<TLHS, TRHS>;
     using common_index_type = std::common_type<typename TLHS::index_type, 
                                                typename TRHS::index_type, std::size_t>;
 
@@ -123,7 +123,8 @@ public:
     requires
         common_data_types<TLHS, TRHS>
     {
-        return (*m_lhs_eng_ptr)(i) * (*m_rhs_eng_ptr)(j);
+        return static_cast<data_type>((*m_lhs_eng_ptr)(i)) * 
+               static_cast<data_type>((*m_rhs_eng_ptr)(j));
     }
 
     constexpr void swap(engine_view & rhs)

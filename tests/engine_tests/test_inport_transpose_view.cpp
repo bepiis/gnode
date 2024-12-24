@@ -32,10 +32,7 @@ TEST_CASE
     REQUIRE(false == owning_engine<M>);
     REQUIRE(true == mutable2D_access<M>);
     REQUIRE(true == immutable2D_access<M>);
-    REQUIRE(true == consistent_mutable_ref_type<M>);
-    REQUIRE(true == consistent_immutable_ref_type<M>);
-    REQUIRE(true == consistent_return_sizes<M>);
-    REQUIRE(true == consistent_return_lengths<M>);
+    REQUIRE(true == dimensions<M>);
     
     REQUIRE(false == reshapeable_engine<M>);
     REQUIRE(false == row_reshapeable_engine<M>);

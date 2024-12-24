@@ -22,36 +22,36 @@ TEST_CASE
     using MTI = engine_view<inport_views::transpose, M>;
 
     using RVE = engine_view<export_views::row, MTE>;
-    REQUIRE(true == rowvec_dimensions<RVE>);
+    REQUIRE(true == rowvec_dimension<RVE>);
 
     using RVI = engine_view<inport_views::row, MTI>;    
-    REQUIRE(true == rowvec_dimensions<RVI>);
+    REQUIRE(true == rowvec_dimension<RVI>);
 
     using RVET = engine_view<export_views::transpose, RVE>;
-    REQUIRE(true == colvec_dimensions<RVET>);
+    REQUIRE(true == colvec_dimension<RVET>);
 
     using RVIT = engine_view<inport_views::transpose, RVI>;    
-    REQUIRE(true == colvec_dimensions<RVIT>);
+    REQUIRE(true == colvec_dimension<RVIT>);
 
     using CVE = engine_view<export_views::col, MTE>;
-    REQUIRE(true == colvec_dimensions<CVE>);
+    REQUIRE(true == colvec_dimension<CVE>);
 
     using CVI = engine_view<inport_views::col, MTI>;
-    REQUIRE(true == colvec_dimensions<CVI>);
+    REQUIRE(true == colvec_dimension<CVI>);
 
     using CVET = engine_view<export_views::transpose, CVE>;
-    REQUIRE(true == rowvec_dimensions<CVET>);
+    REQUIRE(true == rowvec_dimension<CVET>);
 
     using CVIT = engine_view<inport_views::transpose, CVI>;
-    REQUIRE(true == rowvec_dimensions<CVIT>);
+    REQUIRE(true == rowvec_dimension<CVIT>);
 
     using RCVE = engine_view<export_views::col, engine_view<export_views::row, MTE>>;
-    REQUIRE(true == rowvec_dimensions<RCVE>);
-    REQUIRE(true == colvec_dimensions<RCVE>);
+    REQUIRE(true == rowvec_dimension<RCVE>);
+    REQUIRE(true == colvec_dimension<RCVE>);
 
     using RCVI = engine_view<inport_views::col, engine_view<inport_views::row, MTI>>;
-    REQUIRE(true == rowvec_dimensions<RCVI>);
-    REQUIRE(true == colvec_dimensions<RCVI>);
+    REQUIRE(true == rowvec_dimension<RCVI>);
+    REQUIRE(true == colvec_dimension<RCVI>);
 
 }
 

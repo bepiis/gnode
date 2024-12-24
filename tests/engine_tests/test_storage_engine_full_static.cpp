@@ -37,10 +37,7 @@ TEST_CASE
 
     REQUIRE(true == has_owning_engine_type_alias<M>::is_owning);
     REQUIRE(true == base_types<M>);
-    REQUIRE(true == consistent_mutable_ref_type<M>);
-    REQUIRE(true == consistent_immutable_ref_type<M>);
-    REQUIRE(true == consistent_return_sizes<M>);
-    REQUIRE(true == consistent_return_lengths<M>);
+    REQUIRE(true == dimensions<M>);
     REQUIRE(true == mutable2D_access<M>);
     REQUIRE(true == immutable2D_access<M>);
 

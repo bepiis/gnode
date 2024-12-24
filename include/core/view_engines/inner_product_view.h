@@ -110,14 +110,14 @@ template<typename TLHS, typename TRHS>
 concept inner_product_view_basics =
     exportable<TLHS> and
     exportable<TRHS> and
-    rowvec_dimensions<TLHS>;
+    rowvec_dimension<TLHS>;
 
 template<typename TLHS, typename TRHS>
 requires
     inner_product_view_basics<TLHS, TRHS> and
     //common_data_types<TLHS, TRHS> and
-    product_traits<TLHS, TRHS>::value and
-    nonvec_dimensions<TRHS>
+    valid_product_view_traits<TLHS, TRHS> and
+    nonvec_dimension<TRHS>
 struct engine_view<product_views::inner, TLHS, TRHS>
 {
 
@@ -132,7 +132,7 @@ public:
 
 private:
 
-    using ptraits = product_traits<TLHS, TRHS>;
+    using ptraits = product_view_traits<TLHS, TRHS>;
     //using common_data_type = patched_common_type<typename TLHS::data_type, typename TRHS::data_type>;
     using common_index_type = std::common_type<typename TLHS::index_type, 
                                                typename TRHS::index_type, std::size_t>;
@@ -236,12 +236,14 @@ template<typename TLHS, typename TRHS>
 requires
     inner_product_view_basics<TLHS, TRHS> and
     //common_data_types<TLHS, TRHS> and
-    product_traits<TLHS, TRHS>::value and
-    colvec_dimensions<TRHS>
+    product_view_traits<TLHS, TRHS>::value and
+    colvec_dimension<TRHS>
 struct engine_view<product_views::inner, TLHS, TRHS>
 {
 public:
-    using owning_engine_type = typename has_owning_engine_type_alias<TLHS>::owning_engine_type;
+    using lhs_owning_engine_type = typename has_owning_engine_type_alias<TLHS>::owning_engine_type;
+    using rhs_owning_engine_type = typename has_owning_engine_type_alias<TRHS>::owning_engine_type;
+    
     using lhs_engine_type = TLHS;
     using rhs_engine_type = TRHS;
 
@@ -250,7 +252,7 @@ public:
 private:
 
     //using common_data_type = patched_common_type<typename TLHS::data_type, typename TRHS::data_type>;
-    using ptraits = product_traits<TLHS, TRHS>;
+    using ptraits = product_view_traits<TLHS, TRHS>;
     using common_index_type = std::common_type<typename TLHS::index_type, typename TRHS::index_type, std::size_t>;
 
     using lhs_pointer = TLHS const*;

@@ -115,6 +115,24 @@ inline constexpr bool size_constexpr = is_constexpr([]{Egn().size();});
  *  to an owning engine, or in some way is associated with an owning engine, but doesnt locally own any data. 
  * 
  */
+
+template<typename Egn>
+concept unary_owning_engine_type_alias = requires
+{
+    typename Egn::owning_engine_type;
+};
+
+template<typename Egn>
+concept binary_owning_engine_type_alias = requires
+{
+    typename Egn::lhs_owning_engine_type;
+    typename Egn::rhs_owning_engine_type;
+};
+
+template<typename Egn>
+inline constexpr bool is_owning_engine = 
+    not (unary_owning_engine_type_alias<Egn> or binary_owning_engine_type_alias<Egn>);
+
 template<typename Egn, typename = void>
 struct has_owning_engine_type_alias : public std::false_type
 {
@@ -128,9 +146,6 @@ struct has_owning_engine_type_alias<Egn, std::void_t<typename Egn::owning_engine
     static constexpr bool is_owning = false;
     using owning_engine_type = typename Egn::owning_engine_type;
 };
-
-template<typename Egn>
-inline constexpr bool is_owning_engine = has_owning_engine_type_alias<Egn>::is_owning;
 
 template<typename Egn>
 using get_owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
@@ -235,16 +250,6 @@ struct get_index_type : public std::false_type
     using type = std::size_t;
 };
 
-// I used "index_type" instead of "size_type" up until now, and did not realize
-// that the standard library typically uses "size_type" for the indexing type,
-// so that's why there are two overloads here.
-/*
-template<typename X>
-struct get_index_type<X, std::void_t<typename X::size_type>> : public std::true_type
-{
-    using type = typename X::size_type;
-};*/
-
 template<typename X>
 struct get_index_type<X, std::void_t<typename X::index_type>> : public std::true_type
 {
@@ -257,13 +262,11 @@ struct get_index_type<X, std::void_t<typename X::index_type>> : public std::true
  *  to extract the matrix orientation of the supplied engine type
  * 
  */
-
 template<typename Egn, typename = void>
 struct get_engine_orientation
 {
     using type = matrix_orientation::none;
 };
-
 
 template<typename Egn>
 struct get_engine_orientation<Egn, std::void_t<typename Egn::orientation_type>>
@@ -301,8 +304,6 @@ concept valid_storage_orientation =
  * Engine concepts
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-
 template<typename X>
 concept valid_unary_minus_operator = requires(X && x)
 {
@@ -329,15 +330,6 @@ concept comparable_types =
 template<typename RelT>
 concept valid_absdiff_operator =
     std::convertible_to<decltype(std::abs(std::declval<RelT>() - std::declval<RelT>())), RelT>;
-/*
-template<typename T1, typename T2>
-concept absdiff_comparable_types = 
-    comparable_types<T1, T2> and
-    std::same_as
-    <
-        decltype(std::abs(std::declval<T1>() - std::declval<T2>())),
-        typename patched_common_type<T1, T2>::type
-    >;*/
 
 template<typename X>
 concept has_conjugate = requires(X const& x)
@@ -359,20 +351,6 @@ concept base_types = requires
     typename Egn::reference;
     typename Egn::const_reference;
 };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *  Checks for ensuring that reference type aliases are consistent with
- *  taking a reference of the stated data type alias.
- * 
- */
-template<typename Egn>
-concept consistent_mutable_ref_type = 
-    std::same_as<typename Egn::reference, typename Egn::data_type&>;
-
-template<typename Egn>
-concept consistent_immutable_ref_type = 
-    std::same_as<typename Egn::const_reference, typename Egn::data_type const&>;
 
 // enforces requirement that engine data type can be converted from reference types
 template<typename Egn>
@@ -424,6 +402,7 @@ concept non_static_dimensions = requires (X && x)
 {
     { x.rows() } -> std::same_as<IT>;
     { x.cols() } -> std::same_as<IT>;
+    { x.size() } -> std::same_as<IT>;
 };
 
 template<typename X, typename IT, typename C>
@@ -431,26 +410,27 @@ concept static_dimensions = requires (C && c)
 {
     { X::rows(c) } -> std::same_as<IT>;
     { X::cols(c) } -> std::same_as<IT>;
+    { X::size(c) } -> std::same_as<IT>;
 };
 
-template<typename X, typename IT, typename C>
+template<typename X, typename IT = typename X::index_type, typename C = void>
 concept dimensions = 
     non_static_dimensions<X, IT> or
     static_dimensions<X, IT, void> or
     static_dimensions<X, IT, C>;
 
 template<typename X>
-concept rowvec_dimensions = 
-    1 == engine_ct_extents<X>::rows();
+concept rowvec_dimension = 
+    (1 == engine_ct_extents<X>::rows());
 
 template<typename X>
-concept colvec_dimensions = 
-    1 == engine_ct_extents<X>::cols();
+concept colvec_dimension = 
+    (1 == engine_ct_extents<X>::cols());
 
 template<typename X>
-concept nonvec_dimensions = 
-    (not rowvec_dimensions<X>) and
-    (not colvec_dimensions<X>);
+concept nonvec_dimension = 
+    (not rowvec_dimension<X>) and
+    (not colvec_dimension<X>);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -473,20 +453,6 @@ concept non_static_evalutation = requires(X && x, CT && ct, IT && it)
     { x(ct, it, it) } -> std::same_as<C>;
 };
 
-
-
-template<typename Egn>
-concept consistent_return_sizes = requires (Egn && eng)
-{
-    { eng.size() } -> std::same_as<typename Egn::index_type>;
-};
-
-template<typename Egn>
-concept consistent_return_lengths = 
-    non_static_dimensions<Egn, typename Egn::index_type>;
-
-
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Concepts used to require mutable and immutable access.
@@ -496,12 +462,6 @@ concept consistent_return_lengths =
  *  - non-const view types need only mutable access
  * 
  */
-/*
-template<typename T, typename Egn>
-concept valid_immutable_access_return_type = 
-    consistent_immutable_ref_type<Egn> and
-    std::same_as<T, typename Egn::const_reference>;
-*/
 
 template<typename I, typename Egn>
 concept valid_immutable_access_return_type = 
@@ -523,7 +483,7 @@ concept immutable1D_access = requires(Egn && eng, typename Egn::index_type x)
 
 template<typename I, typename Egn>
 concept valid_mutable_access_return_type =
-    consistent_mutable_ref_type<Egn> and
+    std::same_as<typename Egn::reference, typename Egn::data_type&> and
     std::same_as<I, typename Egn::reference>;
 
 template<typename Egn>
@@ -542,13 +502,12 @@ template<typename Egn>
 concept base_engine = 
     base_types<Egn> and
     convertible_refs<Egn> and
-    consistent_return_sizes<Egn> and
-    consistent_return_lengths<Egn>;
+    dimensions<Egn>;
 
 template<typename Egn>
 concept owning_engine =
     base_engine<Egn> and
-    has_owning_engine_type_alias<Egn>::is_owning;
+    is_owning_engine<Egn>;
 
 template<typename Egn>
 concept non_owning_engine = base_engine<Egn> and not owning_engine<Egn>;
@@ -571,25 +530,23 @@ concept readable_engine =
     immutable2D_access<Egn>;
     // TODO: maybe swappable?
 
-
 template<typename Egn>
 concept rowvec_type= 
     readable_engine<Egn> and
     immutable1D_access<Egn> and
-    rowvec_dimensions<Egn>;
+    rowvec_dimension<Egn>;
 
 template<typename Egn>
 concept colvec_type = 
     readable_engine<Egn> and
     immutable1D_access<Egn> and
-    colvec_dimensions<Egn>;
+    colvec_dimension<Egn>;
 
 template<typename Egn>
 concept vec_type = 
     rowvec_type<Egn> or
     colvec_type<Egn>;
     
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *  States the baseline requirements for an engine to
@@ -635,8 +592,6 @@ concept engine_invocable_with =
     readable_engine<InEgn> and
     engine_has_invocable_elements<IvEgn, typename InEgn::data_type, Args...> and
     std::same_as<RT, std::invoke_result_t<typename IvEgn::data_type, typename InEgn::data_type, Args...>>;
-
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -1133,6 +1088,7 @@ struct engine_helper
 
 #include "storage_engine.h"
 #include "view_engine.h"
+#include "generators.h"
 
 
 

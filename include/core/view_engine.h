@@ -53,8 +53,6 @@
  *      
  * }
  */
-//template<typename Egn, typename Vw>
-//struct engine_view;
 template<typename Vw, typename Egn, typename...>
 struct engine_view;
 
@@ -90,8 +88,6 @@ struct expand_views
     struct row {};
     struct col {};
     struct box {};
-
-
 };
 
 struct inport_views
@@ -112,7 +108,6 @@ struct inport_views
  */
 template<typename VEgn>
 concept view_basics =  
-    base_engine<VEgn> and
     readable_engine<VEgn> and
     std::is_nothrow_swappable_v<VEgn&> and
     not owning_engine<VEgn>;
@@ -376,7 +371,6 @@ struct product_invocable<TLHS, TRHS> : std::true_type
                                            typename TIN::data_type>;
 };
 
-
 template<typename TLHS, typename TRHS>
 requires
     base_types<TLHS> and
@@ -405,14 +399,14 @@ struct product_invocable<TLHS, TRHS> : std::true_type
  * a sum of functions.
  */
 template<typename, typename>
-struct product_traits : std::false_type 
+struct product_view_traits : std::false_type 
 {};
 
 template<typename TLHS, typename TRHS>
 requires
     common_data_types<TLHS, TRHS> and
     (not product_invocable<TLHS, TRHS>::value)
-struct product_traits<TLHS, TRHS> : std::true_type
+struct product_view_traits<TLHS, TRHS> : std::true_type
 {
     //using TOP = TLHS;
     //using TIN = TRHS;
@@ -423,7 +417,7 @@ struct product_traits<TLHS, TRHS> : std::true_type
 template<typename TLHS, typename TRHS>
 requires
     product_invocable<TLHS, TRHS>::value
-struct product_traits<TLHS, TRHS> : std::true_type
+struct product_view_traits<TLHS, TRHS> : std::true_type
 {
 private:
     using traits = product_invocable<TLHS, TRHS>;
@@ -433,6 +427,9 @@ public:
     //using TIN = typename traits::TIN;
     using data_type = typename traits::data_type;
 };
+
+template<typename TX, typename TY>
+concept valid_product_view_traits = product_view_traits<TX, TY>::value;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * inner product view:

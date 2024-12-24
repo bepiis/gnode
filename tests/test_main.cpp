@@ -5,6 +5,9 @@
 #include <chrono>
 #include <concepts>
 #include <type_traits>
+#include <utility>
+#include <numbers>
+#include <complex>
 
 //#define PY_SSIZE_T_CLEAN
 //#include <Python.h>
@@ -167,8 +170,6 @@ TEST_CASE("row dominant RandMatSizeGenerator")
 #ifndef TEST_NONE
 
 #include "core/engine.h"
-#include <numbers>
-#include <complex>
 #include "engine_tests/test_engine.cpp"
 //#include "test_mat.cpp"
 //#include "test_stats.cpp"

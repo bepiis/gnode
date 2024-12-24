@@ -769,4 +769,5 @@ TEST_CASE
 //#include "test_view_funs.cpp"
 
 #include "test_inner_product_view.cpp"
+#include "test_outer_product_view.cpp"
  

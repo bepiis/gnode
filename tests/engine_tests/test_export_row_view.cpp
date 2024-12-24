@@ -32,15 +32,13 @@ TEST_CASE
     REQUIRE(false == owning_engine<M>);
     REQUIRE(false == mutable2D_access<M>);
     REQUIRE(true == immutable2D_access<M>);
-    REQUIRE(false == consistent_mutable_ref_type<M>);
-    REQUIRE(true == consistent_immutable_ref_type<M>);
-    REQUIRE(true == consistent_return_sizes<M>);
-    REQUIRE(true == consistent_return_lengths<M>);
+    REQUIRE(true == dimensions<M>);
     
     REQUIRE(false == reshapeable_engine<M>);
     REQUIRE(false == row_reshapeable_engine<M>);
     REQUIRE(false == col_reshapeable_engine<M>);
-    
+
+
     
 }
 
@@ -65,8 +63,10 @@ TEST_CASE
 
     REQUIRE(true == engine_ct_extents<M>::is_constexpr_rows());
     REQUIRE(1 == engine_ct_extents<M>::rows());
-    REQUIRE(true == rowvec_dimensions<M>);
-
+    //REQUIRE(true == rowvec_dimensions<M>);
+    REQUIRE(true == rowvec_dimension<M>);
+    REQUIRE(true == rowvec_type<M>);
+    REQUIRE(true == vec_type<M>);
 }
 
 TEST_CASE
