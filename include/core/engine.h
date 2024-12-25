@@ -1056,6 +1056,45 @@ struct engine_helper
         }
         return true;
     }
+
+    /*
+     * The following two methods are supposed to transform
+     * a 1D access operator of some engine type to its
+     * 2D operator using its orientation type.
+     * 
+     * I am not sure whether this will be used as the user
+     * incurs a divide operation at every call just to retrieve
+     * the corresponding 2D indicies.
+     * 
+     * That being said, collapsing a 2D access operator into
+     * a 1D is not nearly as expensive 
+     */
+
+    template<typename X>
+    requires
+        readable_engine<X> and
+        std::same_as<matrix_orientation::row_major, get_engine_orientation<X>>
+    static constexpr decltype(auto) access2D(X && x, typename X::index_type i)
+    {
+        auto [m, n] = matrix_orientation::offset(i, x.cols());
+
+        return std::invoke(std::forward<X>(x), 
+                           std::forward<typename X::index_type>(m),
+                           std::forward<typename X::index_type>(n));
+    }
+
+    template<typename X>
+    requires
+        readable_engine<X> and
+        std::same_as<matrix_orientation::col_major, get_engine_orientation<X>>
+    static constexpr decltype(auto) access2D(X && x, typename X::index_type j)
+    {
+        auto [m, n] = matrix_orientation::offset(j, x.rows());
+
+        return std::invoke(std::forward<X>(x), 
+                           std::forward<typename X::index_type>(m),
+                           std::forward<typename X::index_type>(n));
+    }
     
     template<typename Egn>
     static constexpr void print(Egn & rhs, uint8_t precision = 2)

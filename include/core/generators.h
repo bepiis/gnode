@@ -115,6 +115,7 @@ struct gen_dimensions<std::dynamic_extent, std::dynamic_extent>
     {}
 };
 
+
 template<typename SeqT, std::size_t R, std::size_t C, typename L>
 requires
     template_dimensions<R, C> and
@@ -138,8 +139,11 @@ public:
 
     using gdims_type = gen_dimensions<R, C>;
 
-    static constexpr bool row_dynamic = gdims_type::row_dynamic;
-    static constexpr bool col_dynamic = gdims_type::col_dynamic;
+    static constexpr bool is_row_dynamic = gdims_type::row_dynamic;
+    static constexpr bool is_col_dynamic = gdims_type::col_dynamic;
+
+    static constexpr bool is_row_major = std::same_as<L, matrix_orientation::row_major>;
+    static constexpr bool is_col_major = std::same_as<L, matrix_orientation::col_major>;
 
 private: 
     gdims_type m_dims;
@@ -157,7 +161,7 @@ public:
 
     constexpr generator(index_type nbr_rows, index_type nbr_cols)
     requires
-        row_dynamic and col_dynamic
+        is_row_dynamic and is_col_dynamic
     : m_dims()
     {
         engine_helper::validate_length(nbr_rows);
@@ -169,7 +173,7 @@ public:
 
     constexpr generator(index_type nbr_rows)
     requires
-        row_dynamic and (not col_dynamic)
+        is_row_dynamic and (not is_col_dynamic)
     : m_dims()
     {
         engine_helper::validate_length(nbr_rows);
@@ -179,7 +183,7 @@ public:
 
     constexpr generator(index_type nbr_cols)
     requires
-        (not row_dynamic) and col_dynamic
+        (not is_row_dynamic) and is_col_dynamic
     : m_dims()
     {
         engine_helper::validate_length(nbr_cols);
@@ -202,29 +206,34 @@ public:
         return m_dims.m_rows * m_dims.m_cols;
     }
 
-    constexpr const_reference operator()(index_type i, index_type j)
+    constexpr const_reference operator()(index_type i, index_type j) const
+    requires
+        is_row_major
     {
         return std::bind(seq, i, j);
     }
 
+    constexpr const_reference operator()(index_type i, index_type j) const
+    requires
+        is_col_major
+    {
+        return std::bind(seq, j, i);
+    }
 
+    constexpr void swap(generator & rhs) noexcept
+    {
+        engine_helper::swap(*this, rhs);
+    }
 
-    
-
-    
-    
-
-    
-
-
-
-
-
-
-
-
-
+    /* not sure about this yet
+    constexpr const_reference operator()(index_type i) const
+    {
+        return engine_helper::access2D(*this, i);
+    }*/
 };
+
+
+
 
 /*
 template<typename SeqT, typename VEgn>
