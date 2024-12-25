@@ -168,6 +168,10 @@ public:
 private:
     pointer m_eng_ptr;
 
+    friend struct view_pipe;
+    friend struct view_tree;
+
+
 /* view engine public method requirements */
 public:
     

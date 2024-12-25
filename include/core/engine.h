@@ -1105,7 +1105,17 @@ struct engine_helper
         {
             for(size_t c=0; c < rhs.cols(); c++)
             {
-                 std::cout << std::setprecision(precision) << std::scientific << rhs(r, c) << "\t";
+                std::cout << std::setprecision(precision) << std::scientific;
+
+                if constexpr(std::invocable<typename Egn::data_type>)
+                {
+                     std::cout << rhs(r, c)();
+                }
+                else
+                {
+                    std::cout << rhs(r, c);
+                }
+                std::cout << "\t";
             }
             std::cout << "\n";
         }
@@ -1120,8 +1130,6 @@ struct engine_helper
     //static constexpr bool compare_exact(Egn & dst, Ctnr const& src)
 
 };
-
-
 
 #define ENGINE_SUPPORTED
 

@@ -770,4 +770,5 @@ TEST_CASE
 
 #include "test_inner_product_view.cpp"
 #include "test_outer_product_view.cpp"
+#include "test_generators.cpp"
  

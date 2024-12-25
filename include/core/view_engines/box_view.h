@@ -150,6 +150,10 @@ private:
     index_type start_col;
     index_type nbr_cols;
 
+    friend struct view_pipe;
+    friend struct view_tree;
+
+
 public:
 
     constexpr engine_view() noexcept

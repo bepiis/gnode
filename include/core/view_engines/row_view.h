@@ -156,6 +156,8 @@ private:
     pointer m_eng_ptr;
     index_type m_row;
 
+    friend struct view_pipe;
+    friend struct view_tree;
 /* view engine public method requirements */
 public:
 

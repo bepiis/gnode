@@ -130,6 +130,7 @@ public:
 
 private:
     using seq_return_type = std::invoke_result_t<SeqT, index_type, index_type>;
+    using gdims_type = gen_dimensions<R, C>;
 
 public:
 
@@ -137,7 +138,6 @@ public:
     using reference = data_type;
     using const_reference = data_type;
 
-    using gdims_type = gen_dimensions<R, C>;
 
     static constexpr bool is_row_dynamic = gdims_type::row_dynamic;
     static constexpr bool is_col_dynamic = gdims_type::col_dynamic;
@@ -147,7 +147,6 @@ public:
 
 private: 
     gdims_type m_dims;
-
     SeqT seq;
 
 public:

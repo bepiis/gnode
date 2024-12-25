@@ -58,6 +58,8 @@ private:
     lhs_pointer m_lhs_eng_ptr;
     rhs_pointer m_rhs_eng_ptr;
 
+    friend struct view_tree;
+
 public:
 
     constexpr engine_view() noexcept

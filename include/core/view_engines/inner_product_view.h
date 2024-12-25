@@ -160,6 +160,8 @@ private:
     std::vector<data_type> m_data;
     std::vector<bool> m_inner_computed;
 
+    friend struct view_tree;
+
 public:
 
     constexpr engine_view() noexcept

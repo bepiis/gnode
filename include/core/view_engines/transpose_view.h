@@ -52,7 +52,7 @@ public:
     explicit
     constexpr engine_view(engine_type & rhs)
     : m_eng_ptr(&rhs)
-    {}
+    {}    
     
     constexpr bool has_view() const
     {
@@ -168,6 +168,10 @@ public:
 /* view engine private data requirements */
 private:
     pointer m_eng_ptr;
+
+    friend struct view_pipe;
+    friend struct view_tree;
+
 
 /* view engine public method requirements */
 public:

@@ -147,6 +147,8 @@ concept inportable =
     mutable_view<Egn> or
     (writable_engine<Egn> and owning_engine<Egn>);
 
+struct view_ctor_chain_tag {};
+
 #include "view_funs.h"
 
 #include "view_engines/transparent_view.h"
