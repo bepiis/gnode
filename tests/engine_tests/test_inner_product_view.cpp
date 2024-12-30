@@ -1076,3 +1076,43 @@ TEST_CASE
 
     REQUIRE(std::same_as<decltype(ipt(0, 0)), double>);
 }
+
+TEST_CASE
+(
+    "Constructing an inner product view such that lhs.cols is\n"
+    "not equal to rhs.rows throws a runtime error.\n"
+)
+{
+    using dtype = double;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using N = matrix_storage_engine<dtype, atype, 1, ncols, ltype>;
+    using M = matrix_storage_engine<dtype, atype, nrows, 1, ltype>;
+
+    M m1(5, 5);
+    N n1(6, 6);
+
+    using IP = engine_view<product_views::inner, N, M>;
+
+    REQUIRE_THROWS_AS(IP(n1, m1), std::runtime_error);
+
+    N n2(5, 5);
+
+    REQUIRE_NOTHROW(IP(n2, m1));
+
+    using K = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    using IPK = engine_view<product_views::inner, N, K>;
+
+    N n3(100, 100);
+    K k1(200, 200);
+    K k2(100, 200);
+
+    REQUIRE_THROWS_AS(IPK(n3, k1), std::runtime_error);
+    REQUIRE_NOTHROW(IPK(n3, k2));
+}

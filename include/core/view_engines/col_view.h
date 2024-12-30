@@ -10,10 +10,8 @@ requires
     inportable<Egn>
 struct engine_view<inport_views::col, Egn>
 {
-
 /* view engine public type alias requirements */
 public:
-
     using owning_engine_type = typename has_owning_engine_type_alias<Egn>::owning_engine_type;
     using engine_type = Egn;
 

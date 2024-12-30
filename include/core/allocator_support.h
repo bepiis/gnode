@@ -33,6 +33,7 @@ concept base_allocator_interface =
     } and
     std::copy_constructible<Alloc> and
     std::equality_comparable<Alloc>;
+    
 
 template<typename Alloc>
 static inline constexpr bool allocator_type_is_void = std::same_as<Alloc, void>;

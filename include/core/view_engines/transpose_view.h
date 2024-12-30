@@ -184,6 +184,21 @@ public:
     constexpr engine_view(engine_type const& rhs)
     : m_eng_ptr(&rhs)
     {}
+
+    template<typename ...Args>
+    explicit
+    constexpr engine_view(view_pipe_tag, owning_engine_type const& oeng, Args ...args)
+    {
+        if constexpr(std::same_as<owning_engine_type, engine_type>)
+        {
+            m_eng_ptr = &oeng;
+        }
+        else
+        {
+            m_eng_ptr = new engine_type(view_pipe_tag(), oeng, args...);
+        }
+
+    }
     
     constexpr bool has_view() const
     {

@@ -11,6 +11,7 @@ struct generator_types
 template<typename GenT, typename SeqT, std::size_t R, std::size_t C, typename...>
 struct generator;
 
+
 /*
  * GenT: generator type
  *      - power series
@@ -137,7 +138,6 @@ public:
     using data_type = std::function<seq_return_type()>;
     using reference = data_type;
     using const_reference = data_type;
-
 
     static constexpr bool is_row_dynamic = gdims_type::row_dynamic;
     static constexpr bool is_col_dynamic = gdims_type::col_dynamic;

@@ -318,6 +318,23 @@ public:
         return *this;
     }
 
+    template<typename U>
+    constexpr matrix_storage_engine(literal1D<U> lst)
+    requires
+        std::convertible_to<U, data_type>
+    {
+        helper::copy2(lst, *this);
+    }
+
+    template<typename U>
+    constexpr matrix_storage_engine & operator=(literal1D<U> lst)
+    requires
+        std::convertible_to<U, data_type>
+    {
+        helper::copy2(lst, *this);
+        return *this;
+    }
+
     //template<typename R, typename IT, size_t X, size_t Y, typename LP, typename AP>
     //constexpr matrix_storage_engine(std::mdspan<R, std::extents<IT, X, Y>, LP, AP> const& other);
 

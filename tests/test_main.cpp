@@ -12,20 +12,6 @@
 //#define PY_SSIZE_T_CLEAN
 //#include <Python.h>
 
-#define S_RAND(N) ((size_t)(std::rand() % N))
-
-int* generate_random_ints(size_t nbr, size_t modulus)
-{
-    int *res = new int[nbr]();
-    
-    for(size_t i=0; i < nbr; i++)
-    {
-        res[i] = S_RAND(modulus);
-    }
-    
-    return res;
-}
-
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
@@ -40,6 +26,11 @@ int* generate_random_ints(size_t nbr, size_t modulus)
 #include "gram_schmidt.h"
 #include "permutation.h"*/
 #include "tdpool.h"
+
+static inline void println()
+{
+    std::cout << "\n";
+}
 
 constexpr size_t mult_pool_size = 6;
 tdpool mult_pool(mult_pool_size);

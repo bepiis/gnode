@@ -661,7 +661,7 @@ TEST_CASE
 /*
  * BEGIN matrix_storage_engine tests
  * NOTES:
- *    - Test cases may used mathods marked with test tags, be aware.
+ *    - Test cases may used methods marked with test tags, be aware.
  *  
  * All test code for this suite must start with the following layout:
  * {
@@ -684,10 +684,38 @@ TEST_CASE
 #include "test_storage_engine_row_static.cpp"
 #include "test_storage_engine_full_dynamic.cpp"
 
+namespace engine_invocable_elems_test_space
+{
+    template<typename A>
+    struct de1
+    {
+        using data_type = A;
+        using reference = data_type;
+        using const_reference = data_type;
+
+        using index_type = size_t;
+    };
+
+};
+
+
+TEST_CASE
+(
+    "engine has invocable elements gives true IFF engine type has defined base types\n"
+    "and the data type is invocable with the supplied argument types.\n"
+)
+{
+    using namespace engine_invocable_elems_test_space;
+
+    REQUIRE(true == engine_has_invocable_elements<de1<std::function<double(size_t, size_t)>>, size_t, size_t>);
+    REQUIRE(true == engine_has_invocable_elements<de1<std::function<double()>>>);
+    REQUIRE(false == engine_has_invocable_elements<de1<std::complex<double>>>);
+}
+
 /*
  * BEGIN matrix_view_engine tests
  * NOTES:
- *    - Test cases may used mathods marked with test tags, be aware.
+ *    - Test cases may used methods marked with test tags, be aware.
  *  
  * All test code for this suite must start with the following layout:
  * {
@@ -723,23 +751,8 @@ TEST_CASE
 #include "test_export_box_view.cpp"
 //#include "test_view_expressions.cpp"
 
-TEST_CASE
-(
-    "patched common type fixed the issue with common type\n"
-    "and std complex not choosing the more precise type.\n"
-)
-{
-    using cxd = std::complex<double>;
-    using cxld = std::complex<long double>;
-    using cxi64 = std::complex<int64_t>;
+#include "test_export_anchor_view.cpp"
 
-    REQUIRE(std::same_as<double, patched_common_type<uint32_t, double>::type>);
-    REQUIRE(std::same_as<long double, patched_common_type<double, long double>::type>);
-    REQUIRE(std::same_as<int64_t, patched_common_type<int64_t, int32_t>::type>);
-
-    REQUIRE(std::same_as<cxd, patched_common_type<cxd, cxi64>::type>);
-    REQUIRE(std::same_as<cxld, patched_common_type<cxld, cxd>::type>);
-}
 
 TEST_CASE
 (
@@ -762,6 +775,23 @@ TEST_CASE
     REQUIRE(false == std::is_arithmetic_v<std::complex<long double>>);
 }
 
+TEST_CASE
+(
+    "patched common type fixed the issue with common type\n"
+    "and std complex not choosing the more precise type.\n"
+)
+{
+    using cxd = std::complex<double>;
+    using cxld = std::complex<long double>;
+    using cxi64 = std::complex<int64_t>;
+
+    REQUIRE(std::same_as<double, patched_common_type<uint32_t, double>::type>);
+    REQUIRE(std::same_as<long double, patched_common_type<double, long double>::type>);
+    REQUIRE(std::same_as<int64_t, patched_common_type<int64_t, int32_t>::type>);
+
+    REQUIRE(std::same_as<cxd, patched_common_type<cxd, cxi64>::type>);
+    REQUIRE(std::same_as<cxld, patched_common_type<cxld, cxd>::type>);
+}
 
 
 //#include "test_expand_view.cpp"
@@ -771,4 +801,5 @@ TEST_CASE
 #include "test_inner_product_view.cpp"
 #include "test_outer_product_view.cpp"
 #include "test_generators.cpp"
+
  

@@ -48,3 +48,6 @@ struct patched_common_type<T1, T2> : std::true_type
 {
     using type = std::common_type_t<T1, T2>;
 };
+
+template<typename T1, typename T2>
+concept has_patched_common_type = patched_common_type<T1, T2>::value;

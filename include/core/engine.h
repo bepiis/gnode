@@ -305,22 +305,25 @@ concept valid_storage_orientation =
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 template<typename X>
-concept valid_unary_minus_operator = requires(X && x)
-{
-    { -x } -> std::convertible_to<X>;
-};
+concept valid_unary_minus_operator = 
+    requires(X && x)
+    {
+        { -x } -> std::convertible_to<X>;
+    };
 
 template<typename RT>
-concept valid_binary_star_operator = requires(RT && rt)
-{
-    { rt * rt } -> std::convertible_to<RT>;
-};
+concept valid_binary_star_operator = 
+    requires(RT && rt)
+    {
+        { rt * rt } -> std::convertible_to<RT>;
+    };
 
 template<typename T1, typename T2>
-concept comparable_types_one_sided = requires(T1 t1, T2 t2)
-{
-    { t1 == t2 } -> std::same_as<bool>;
-};
+concept comparable_types_one_sided = 
+    requires(T1 t1, T2 t2)
+    {
+        { t1 == t2 } -> std::same_as<bool>;
+    };
 
 template<typename T1, typename T2>
 concept comparable_types = 
@@ -328,14 +331,20 @@ concept comparable_types =
     comparable_types_one_sided<T2, T1>;
 
 template<typename RelT>
-concept valid_absdiff_operator =
+concept absdiff_operator =
     std::convertible_to<decltype(std::abs(std::declval<RelT>() - std::declval<RelT>())), RelT>;
 
+template<typename T1, typename T2>
+concept absdiff_comparable = 
+    has_patched_common_type<T1, T2> and
+    absdiff_operator<typename patched_common_type<T1, T2>::type>;
+
 template<typename X>
-concept has_conjugate = requires(X const& x)
-{
-    { std::conj(x) } -> std::convertible_to<X>;
-};
+concept has_conjugate = 
+    requires(X && x)
+    {
+        { std::conj(x) } -> std::convertible_to<X>;
+    };
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -344,13 +353,14 @@ concept has_conjugate = requires(X const& x)
  * 
  */
 template<typename Egn>
-concept base_types = requires
-{
-    typename Egn::data_type;
-    typename Egn::index_type;
-    typename Egn::reference;
-    typename Egn::const_reference;
-};
+concept base_types = 
+    requires
+    {
+        typename Egn::data_type;
+        typename Egn::index_type;
+        typename Egn::reference;
+        typename Egn::const_reference;
+    };
 
 // enforces requirement that engine data type can be converted from reference types
 template<typename Egn>
@@ -372,7 +382,6 @@ template<size_t R, size_t C>
 concept fixed_template_dimensions = 
     (R > 0) and (R != std::dynamic_extent) and 
     (C > 0) and (C != std::dynamic_extent);
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -398,20 +407,22 @@ concept engine_allocator =
  * 
  */
 template<typename X, typename IT>
-concept non_static_dimensions = requires (X && x)
-{
-    { x.rows() } -> std::same_as<IT>;
-    { x.cols() } -> std::same_as<IT>;
-    { x.size() } -> std::same_as<IT>;
-};
+concept non_static_dimensions = 
+    requires (X && x)
+    {
+        { x.rows() } -> std::same_as<IT>;
+        { x.cols() } -> std::same_as<IT>;
+        { x.size() } -> std::same_as<IT>;
+    };
 
 template<typename X, typename IT, typename C>
-concept static_dimensions = requires (C && c)
-{
-    { X::rows(c) } -> std::same_as<IT>;
-    { X::cols(c) } -> std::same_as<IT>;
-    { X::size(c) } -> std::same_as<IT>;
-};
+concept static_dimensions = 
+    requires (C && c)
+    {
+        { X::rows(c) } -> std::same_as<IT>;
+        { X::cols(c) } -> std::same_as<IT>;
+        { X::size(c) } -> std::same_as<IT>;
+    };
 
 template<typename X, typename IT = typename X::index_type, typename C = void>
 concept dimensions = 
@@ -442,16 +453,18 @@ concept nonvec_dimension =
  */
 
 template<typename X, typename CT, typename IT, typename C>
-concept static_evaluation = requires(CT && ct, IT && it)
-{
-    { X::operator()(ct, it, it) } -> std::same_as<C>;
-};
+concept static_evaluation = 
+    requires(CT && ct, IT && it)
+    {
+        { X::operator()(ct, it, it) } -> std::same_as<C>;
+    };
 
 template<typename X, typename CT, typename IT, typename C>
-concept non_static_evalutation = requires(X && x, CT && ct, IT && it)
-{
-    { x(ct, it, it) } -> std::same_as<C>;
-};
+concept non_static_evalutation = 
+    requires(X && x, CT && ct, IT && it)
+    {
+        { x(ct, it, it) } -> std::same_as<C>;
+    };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -470,16 +483,18 @@ concept valid_immutable_access_return_type =
     std::same_as<I, typename Egn::data_type>;
 
 template<typename Egn>
-concept immutable2D_access = requires(Egn && eng, typename Egn::index_type x)
-{
-    { eng(x, x) } -> valid_immutable_access_return_type<Egn>;
-};
+concept immutable2D_access = 
+    requires(Egn && eng, typename Egn::index_type x)
+    {
+        { eng(x, x) } -> valid_immutable_access_return_type<Egn>;
+    };
 
 template<typename Egn>
-concept immutable1D_access = requires(Egn && eng, typename Egn::index_type x)
-{
-    { eng(x) } -> valid_immutable_access_return_type<Egn>;
-};
+concept immutable1D_access = 
+    requires(Egn && eng, typename Egn::index_type x)
+    {
+        { eng(x) } -> valid_immutable_access_return_type<Egn>;
+    };
 
 template<typename I, typename Egn>
 concept valid_mutable_access_return_type =
@@ -487,16 +502,18 @@ concept valid_mutable_access_return_type =
     std::same_as<I, typename Egn::reference>;
 
 template<typename Egn>
-concept mutable2D_access = requires(Egn & eng, typename Egn::index_type x)
-{
-    { eng(x, x) } -> valid_mutable_access_return_type<Egn>;
-};
+concept mutable2D_access = 
+    requires(Egn & eng, typename Egn::index_type x)
+    {
+        { eng(x, x) } -> valid_mutable_access_return_type<Egn>;
+    };
 
 template<typename Egn>
-concept mutable1D_access = requires(Egn & eng, typename Egn::index_type x)
-{
-    { eng(x) } -> valid_mutable_access_return_type<Egn>;
-};
+concept mutable1D_access = 
+    requires(Egn & eng, typename Egn::index_type x)
+    {
+        { eng(x) } -> valid_mutable_access_return_type<Egn>;
+    };
 
 template<typename Egn>
 concept base_engine = 
@@ -565,7 +582,7 @@ concept comparable_engines =
     comparable_types<typename EgnX::data_type, typename EgnY::data_type>;
 
 template<typename Egn, typename T>
-concept comparable_engine_and_literal2D = 
+concept comparable_engine_and_literal = 
     readable_engine<Egn> and
     comparable_types<typename Egn::data_type, T>;
 
@@ -600,28 +617,31 @@ concept engine_invocable_with =
  */
 
 template<typename Egn>
-concept row_reshapeable_engine = writable_engine<Egn>
-and requires(Egn & eng, typename Egn::index_type x)
-{
-    { eng.row_reach() } -> std::same_as<typename Egn::index_type>;
-    { eng.reshape_rows(x, x) };
-};
+concept row_reshapeable_engine = 
+    writable_engine<Egn> and 
+    requires(Egn & eng, typename Egn::index_type x)
+    {
+        { eng.row_reach() } -> std::same_as<typename Egn::index_type>;
+        { eng.reshape_rows(x, x) };
+    };
 
 template<typename Egn>
-concept col_reshapeable_engine = writable_engine<Egn>
-and requires(Egn & eng, typename Egn::index_type x)
-{
-    { eng.col_reach() } -> std::same_as<typename Egn::index_type>;
-    { eng.reshape_cols(x, x) };
-};
+concept col_reshapeable_engine = 
+    writable_engine<Egn> and
+    requires(Egn & eng, typename Egn::index_type x)
+    {
+        { eng.col_reach() } -> std::same_as<typename Egn::index_type>;
+        { eng.reshape_cols(x, x) };
+    };
 
 template<typename Egn>
-concept reshapeable_engine = writable_engine<Egn>
-and requires(Egn & eng, typename Egn::index_type x)
-{
-    { eng.reach() } -> std::same_as<typename Egn::index_type>;
-    { eng.reshape(x, x, x, x) };
-};
+concept reshapeable_engine = 
+    writable_engine<Egn> and
+    requires(Egn & eng, typename Egn::index_type x)
+    {
+        { eng.reach() } -> std::same_as<typename Egn::index_type>;
+        { eng.reshape(x, x, x, x) };
+    };
 
 
 /*
@@ -667,12 +687,6 @@ and requires(Egn & eng, typename Egn::index_type x)
  */
 struct engine_helper
 {
-    template<typename T>
-    using literal2D = std::initializer_list<std::initializer_list<T>>;
-
-    template<typename T>
-    using literal1D = std::initializer_list<T>;
-
     template<typename X, typename Y>
     static constexpr bool sizes_equal(X x, Y y)
     {
@@ -863,6 +877,38 @@ struct engine_helper
             }
         }
     }
+
+    template<typename T, typename EgnY>
+    static constexpr void copy2(literal1D<T> src, EgnY & dst)
+    requires
+        std::convertible_to<T, typename EgnY::data_type> and
+        writable_engine<EgnY> and
+        vec_type<EgnY>
+    {
+
+        using index_type = typename EgnY::index_type;
+        using data_type = typename EgnY::data_type;
+
+        auto size = src.size();
+
+        if constexpr(rowvec_type<EgnY>)
+        {
+            validate(dst, 1, size);
+        }
+        else if constexpr(colvec_type<EgnY>)
+        {
+            validate(dst, size, 1);
+        }
+
+        index_type dst_i = 0;
+        auto src_i = src.begin();
+
+        for(; dst_i < dst.size(); dst_i++, src_i++)
+        {
+            dst(dst_i) = static_cast<data_type>(*src_i);
+        }
+
+    }
     
     //static constexpr void copy2(Egn & dst, mdspan<T, extents<IT, X0, X1>, SL, SA> const& src)
     //static constexpr void copy2(Egn & dst, Ctnr const& src)
@@ -943,8 +989,40 @@ struct engine_helper
         }
     }
 
+    template<typename Egn, typename IT>
+    requires 
+        readable_engine<Egn>
+    static constexpr auto eval2D_basic(Egn & eng, IT i, IT j)
+    {
+        if constexpr(std::invocable<typename Egn::data_type>)
+        {
+            return eng(i, j)();
+        }
+        else
+        {
+            return eng(i, j);
+        }
+    }
+
+    template<typename Egn, typename IT>
+    requires
+        readable_engine<Egn> and
+        immutable1D_access<Egn>
+    static constexpr auto eval1D_basic(Egn & eng, IT i)
+    {
+        if constexpr(std::invocable<typename Egn::data_type>)
+        {
+            return eng(i)();
+        }
+        else
+        {
+            return eng(i);
+        }
+
+    }
+
     template<typename EgnX, typename EgnY>
-    static constexpr bool compare2D_exact(EgnX const& lhs, EgnY const& rhs)
+    static constexpr bool compare2D_exact(EgnX & lhs, EgnY & rhs)
     requires 
         comparable_engines<EgnX, EgnY>
     {
@@ -975,7 +1053,7 @@ struct engine_helper
 
             for(; lhs_j < lhs_cols; lhs_j++, rhs_j++)
             {
-                if(lhs(lhs_i, lhs_j) !=  rhs(rhs_i, rhs_j))
+                if(eval2D_basic(lhs, lhs_i,  lhs_j) !=  eval2D_basic(rhs, rhs_i, rhs_j))
                 {
                     return false;
                 }
@@ -985,7 +1063,7 @@ struct engine_helper
     }
 
     template<typename EgnX, typename EgnY>
-    static constexpr bool compare1D_exact(EgnX const& lhs, EgnY const& rhs)
+    static constexpr bool compare1D_exact(EgnX & lhs, EgnY & rhs)
     requires
         comparable_engines<EgnX, EgnY> and
         immutable1D_access<EgnX> and
@@ -1010,7 +1088,37 @@ struct engine_helper
 
         for(; lhs_i < lhs.size(); lhs_i++, rhs_i++)
         {
-            if(lhs(lhs_i) != rhs(rhs_i))
+            if(eval1D_basic(lhs, lhs_i) !=  eval1D_basic(rhs, rhs_i))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template<typename Egn, typename T>
+    static constexpr bool compare1D_exact(Egn & lhs, literal1D<T> rhs)
+    requires
+        comparable_engine_and_literal<Egn, T> and
+        immutable1D_access<Egn>
+    {
+        using itl = typename Egn::index_type;
+
+        itl lhs_size = lhs.size();
+
+        auto rhs_size = rhs.size();
+
+        if(!sizes_compatible(1, lhs_size, 1, rhs_size))
+        {
+            return false;
+        }
+
+        itl lhs_i = 0;
+        auto rhs_i = rhs.begin();
+
+        for(; lhs_i < lhs_size; lhs_i++, rhs_i++)
+        {
+            if(eval1D_basic(lhs, lhs_i) != *rhs_i)
             {
                 return false;
             }
@@ -1020,9 +1128,9 @@ struct engine_helper
 
 
     template<typename Egn, typename T>
-    static constexpr bool compare2D_exact(Egn const& lhs, literal2D<T> rhs)
+    static constexpr bool compare2D_exact(Egn & lhs, literal2D<T> rhs)
     requires
-        comparable_engine_and_literal2D<Egn, T>
+        comparable_engine_and_literal<Egn, T>
     {
         using itl = typename Egn::index_type;
 
@@ -1048,7 +1156,7 @@ struct engine_helper
 
             for(; lhs_j < lhs_cols; lhs_j++, rhs_j++)
             {
-                if(lhs(lhs_i, lhs_j) != *rhs_j)
+                if(eval2D_basic(lhs, lhs_i, lhs_j) != *rhs_j)
                 {
                     return false;
                 }
@@ -1056,6 +1164,7 @@ struct engine_helper
         }
         return true;
     }
+
 
     /*
      * The following two methods are supposed to transform
@@ -1101,21 +1210,15 @@ struct engine_helper
     requires
         readable_engine<Egn>
     {
+        //const auto reset_precision { std::cout.precision() };
+
+        std::cout << std::setprecision(precision) << std::scientific;
+
         for(size_t r=0; r < rhs.rows(); r++)
         {
             for(size_t c=0; c < rhs.cols(); c++)
             {
-                std::cout << std::setprecision(precision) << std::scientific;
-
-                if constexpr(std::invocable<typename Egn::data_type>)
-                {
-                     std::cout << rhs(r, c)();
-                }
-                else
-                {
-                    std::cout << rhs(r, c);
-                }
-                std::cout << "\t";
+                std::cout << eval2D_basic(rhs, r, c) << "\t";
             }
             std::cout << "\n";
         }

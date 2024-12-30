@@ -99,7 +99,7 @@ TEST_CASE
     const literal2D<dtypeN> data_in_n =
         {
             {std::bind(fun, 0.25, std::placeholders::_1), std::bind(fun, -0.25, std::placeholders::_1)},
-            {std::bind(fun, 0.33, std::placeholders::_1), std::bind(fun, -0.33, std::placeholders::_1)},
+            {std::bind(fun, 0.10, std::placeholders::_1), std::bind(fun, -0.10, std::placeholders::_1)},
             {std::bind(fun, 0.50, std::placeholders::_1), std::bind(fun, -0.50, std::placeholders::_1)},
             {std::bind(fun, 1.00, std::placeholders::_1), std::bind(fun, -1.00, std::placeholders::_1)}
         };
@@ -111,7 +111,33 @@ TEST_CASE
 
     OP op(cv, rv);
 
-    eh::print(op);
+    REQUIRE(op.rows() == cv.rows());
+    REQUIRE(op.cols() == rv.cols());
+    REQUIRE(op.size() == rv.cols() * cv.rows());
+
+    const literal2D<dtypeM> expected_out = 
+        {
+            {3.8891 - 0.3536i, 4.5962 - 0.3536i, 5.3033 - 0.3536i, 6.0104 - 0.3536i},
+            {3.6257 + 1.4506i, 4.2557 + 1.771i, 4.8858 + 2.0926i, 5.5158 + 2.4136i},
+            {2.5000 - 3.0000i, 3.0000 - 3.5000i, 3.5000 - 4.0000i, 4.0000 - 4.5000i},
+            {-3.0000 - 2.5000i, -3.5000 - 3.0000i, -4.0000 - 3.5000i, -4.5000 - 4.0000i}
+        };
+
+    auto eout_i = expected_out.begin();
+    size_t op_i = 0;
+
+    for(; op_i < op.rows(); op_i++, eout_i++)
+    {
+        auto eout_j = eout_i->begin();
+        size_t op_j = 0;
+
+        for(; op_j < op.cols(); op_j++, eout_j++)
+        {
+            REQUIRE_THAT(std::real(op(op_i, op_j)), Catch::Matchers::WithinRel(std::real(*eout_j), 1E-3));
+            REQUIRE_THAT(std::imag(op(op_i, op_j)), Catch::Matchers::WithinRel(std::imag(*eout_j), 1E-3));
+        }
+    }
+
 }
 
 TEST_CASE
@@ -139,8 +165,7 @@ TEST_CASE
     const literal2D<dtypeN> data_in_n =
         {{1.0 + 0.5i, 1.5 + 1.0i, 2.0 + 1.5i, 2.5 + 2.0i},
          {3.0 + 2.5i, 3.5 + 3.0i, 4.0 + 3.5i, 4.5 + 4.0i},
-         {5.0 + 4.5i, 5.5 + 5.0i, 6.0 + 5.5i, 6.5 + 6.0i},
-         {7.0 + 6.5i, 7.5 + 7.0i, 8.0 + 7.5i, 8.5 + 8.0i}};
+         {5.0 + 4.5i, 5.5 + 5.0i, 6.0 + 5.5i, 6.5 + 6.0i}};
 
     N n(data_in_n);
     CV cv(n, 0);
@@ -161,8 +186,7 @@ TEST_CASE
         {
             {std::bind(fun, _1, 0, 0), std::bind(fun, _1, 0, 1), std::bind(fun, _1, 0, 2), std::bind(fun, _1, 0, 3)},
             {std::bind(fun, _1, 1, 0), std::bind(fun, _1, 1, 1), std::bind(fun, _1, 1, 2), std::bind(fun, _1, 1, 3)},
-            {std::bind(fun, _1, 2, 0), std::bind(fun, _1, 2, 1), std::bind(fun, _1, 2, 2), std::bind(fun, _1, 2, 3)},
-            {std::bind(fun, _1, 3, 0), std::bind(fun, _1, 3, 1), std::bind(fun, _1, 3, 2), std::bind(fun, _1, 3, 3)}
+            {std::bind(fun, _1, 2, 0), std::bind(fun, _1, 2, 1), std::bind(fun, _1, 2, 2), std::bind(fun, _1, 2, 3)}
         };
 
     using M = matrix_storage_engine<dtypeM, atypeM, nrows, ncols, ltype>;
@@ -175,13 +199,17 @@ TEST_CASE
 
     OP op(cv, rv);
 
-    std::cout << "\n";
+    const literal2D<dtypeN> expected_out = 
+        {
+            {0.50 - 1.00i, -1.00 - 0.50i, -0.50 + 1.00i, 1.00 + 0.50i},
+            {2.50 - 3.00i, -3.00 - 2.50i, -2.50 + 3.00i, 3.00 + 2.50i},
+            {4.50 - 5.00i, -5.00 - 4.50i, -4.50 + 5.00i, 5.00 + 4.50i}
+        };
 
-    eh::print(op);
-
-
-    
-
+    //REQUIRE(true == eh::compare2D_exact(op, expected_out));
 }
+
+
+
 
 

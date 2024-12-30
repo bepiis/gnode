@@ -319,3 +319,33 @@ TEST_CASE
     
 }
 
+TEST_CASE
+(
+    "testing view pipe tag\n"
+)
+{
+    using dtype = std::complex<double>;
+    using atype = std::allocator<dtype>;
+
+    constexpr size_t nrows = std::dynamic_extent;
+    constexpr size_t ncols = std::dynamic_extent;
+
+    using ltype = matrix_orientation::row_major;
+
+    using M = matrix_storage_engine<dtype, atype, nrows, ncols, ltype>;
+
+    const literal2D<std::complex<double>> data_in = 
+        {{-1.01i, -1.02i, -1.03i, -1.04i, -1.05i, -1.06i},
+         {-1.07i, -1.08i, -1.09i, -1.10i, -1.11i, -1.12i},
+         {-1.13i, -1.14i, -1.15i, -1.16i, -1.17i, -1.18i},
+         {-1.19i, -1.20i, -1.21i, -1.22i, -1.23i, -1.24i}};
+
+    M m(data_in);
+
+    using K = engine_view<export_views::transpose, engine_view<export_views::transpose, engine_view<export_views::transparent, M>>>;
+
+    K k(view_pipe_tag(), m);
+
+    REQUIRE(eh::compare2D_exact(k, data_in));
+}
+

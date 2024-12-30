@@ -79,6 +79,7 @@ struct export_views
     struct row {};
     struct col {};
     struct box {};
+    struct anchor {};
 };
 
 struct expand_views
@@ -147,7 +148,7 @@ concept inportable =
     mutable_view<Egn> or
     (writable_engine<Egn> and owning_engine<Egn>);
 
-struct view_ctor_chain_tag {};
+struct view_pipe_tag {};
 
 #include "view_funs.h"
 
@@ -158,6 +159,7 @@ struct view_ctor_chain_tag {};
 #include "view_engines/row_view.h"
 #include "view_engines/col_view.h"
 #include "view_engines/box_view.h"
+#include "view_engines/anchor_view.h"
 
 /*
  * Commutators between unary view types (only considers one common engine type):
